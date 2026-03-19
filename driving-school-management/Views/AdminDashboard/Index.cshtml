@@ -1,0 +1,96 @@
+﻿@using driving_school_management.ViewModels
+@model DashboardVM
+
+<div class="row">
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-primary shadow">
+            <div class="inner">
+                <h3>@Model.TotalUser</h3>
+                <p>Người dùng</p>
+            </div>
+            <div class="icon"><i class="fa fa-users"></i></div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-success shadow">
+            <div class="inner">
+                <h3>@Model.TotalHoSo</h3>
+                <p>Hồ sơ</p>
+            </div>
+            <div class="icon"><i class="fa fa-id-card"></i></div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-warning shadow">
+            <div class="inner">
+                <h3>@Model.TotalGPLX</h3>
+                <p>GPLX</p>
+            </div>
+            <div class="icon"><i class="fa fa-car"></i></div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-danger shadow">
+            <div class="inner">
+                <h3>@Model.TotalBaiThi</h3>
+                <p>Bài thi</p>
+            </div>
+            <div class="icon"><i class="fa fa-file"></i></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-4">
+
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header fw-bold">Trạng thái User</div>
+            <div class="card-body">
+                <p class="text-success">Active: @Model.UserActive</p>
+                <p class="text-danger">Inactive: @Model.UserInactive</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header fw-bold">User mới</div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.RecentUsers)
+                        {
+                            <tr>
+                                <td>@u.UserId</td>
+                                <td>@u.Username</td>
+                                <td>
+                                    @if (u.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

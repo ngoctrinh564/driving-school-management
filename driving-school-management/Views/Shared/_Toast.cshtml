@@ -1,0 +1,48 @@
+﻿@{
+    var success = TempData["Success"] as string;
+    var error = TempData["Error"] as string;
+    var info = TempData["Info"] as string;
+    var warning = TempData["Warning"] as string;
+    var errors = TempData["Errors"] as List<string>;
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: "4000"
+        };
+
+        @if (!string.IsNullOrEmpty(success))
+        {
+                <text>toastr.success("@success");</text>
+        }
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+                <text>toastr.error("@error");</text>
+        }
+
+        @if (errors != null)
+        {
+                foreach (var err in errors)
+                {
+                        <text>toastr.error("@err");</text>
+                }
+        }
+
+        @if (!string.IsNullOrEmpty(info))
+        {
+                <text>toastr.info("@info");</text>
+        }
+
+        @if (!string.IsNullOrEmpty(warning))
+        {
+                <text>toastr.warning("@warning");</text>
+        }
+
+    });
+</script>
