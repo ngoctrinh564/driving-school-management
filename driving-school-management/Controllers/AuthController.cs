@@ -37,15 +37,25 @@ namespace driving_school_management.Controllers
             HttpContext.Session.SetString("Username", result.Username);
             HttpContext.Session.SetInt32("RoleId", result.RoleId);
 
+            // CHECK HOCVIEN (EMAIL, SDT, CCCD)
+            var isCompleted = await _authService.IsProfileCompleted(result.UserId);
+
+            if (!isCompleted && result.RoleId != 1)
+            {
+                TempData["Warning"] = "Vui lòng cập nhật thông tin cá nhân";
+                return RedirectToAction("Edit", "User");
+            }
+
             if (result.RoleId == 1)
             {
                 TempData["Success"] = "Admin: " + username + " đăng nhập thành công";
                 return RedirectToAction("Index", "AdminDashboard");
             }
-                
+
             TempData["Success"] = username + " đăng nhập thành công";
             return RedirectToAction("Index", "Home");
         }
+
 
         // ================= REGISTER =================
         [HttpGet]
@@ -62,8 +72,16 @@ namespace driving_school_management.Controllers
                 return RedirectToAction("Register");
             }
 
-            TempData["Success"] = "Đăng ký thành công";
-            return RedirectToAction("Login");
+            // AUTO LOGIN SAU REGISTER
+            var login = await _authService.Login(username, password);
+
+            HttpContext.Session.SetInt32("UserId", login.UserId);
+            HttpContext.Session.SetString("Username", login.Username);
+            HttpContext.Session.SetInt32("RoleId", login.RoleId);
+
+            TempData["Success"] = "Đăng ký thành công, vui lòng cập nhật thông tin";
+
+            return RedirectToAction("Edit", "User");
         }
 
         // ================= RESET PASSWORD =================

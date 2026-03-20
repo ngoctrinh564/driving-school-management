@@ -69,10 +69,33 @@ BEGIN
 END;
 /
 
+-- kiểm tra đã có những thông tin cần thiết trước khi đăng nhập vào
+CREATE OR REPLACE FUNCTION FUNC_CHECK_USER_PROFILE
+(
+    p_userId IN NUMBER
+)
+RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_count
+    FROM HOCVIEN
+    WHERE USERID = p_userId
+      AND EMAIL IS NOT NULL
+      AND SDT IS NOT NULL
+      AND SOCMNDCCCD IS NOT NULL;
+
+    IF v_count = 0 THEN
+        RETURN 0; -- chưa đủ
+    END IF;
+
+    RETURN 1; -- đầy đủ
+END;
+/
 -- ============================================================
 -- ====================        ADMIN        ====================
 -- ============================================================
-
+-- DASHBOARD
 CREATE OR REPLACE PROCEDURE PROC_ADMIN_DASHBOARD
 (
     o_totalUser OUT NUMBER,
@@ -109,6 +132,96 @@ BEGIN
 
 END;
 /
+-- Exam: kì thi
+CREATE OR REPLACE VIEW VW_KYTHI_ADMIN AS
+SELECT 
+    kt.kyThiId,
+    kt.tenKyThi,
+    kt.loaiKyThi,
+    COUNT(ct.hoSoId) AS soLuongDangKy
+FROM KyThi kt
+LEFT JOIN ChiTietDangKyThi ct 
+    ON kt.kyThiId = ct.kyThiId
+GROUP BY 
+    kt.kyThiId, 
+    kt.tenKyThi, 
+    kt.loaiKyThi;
+    
+/
+CREATE OR REPLACE PROCEDURE SP_CREATE_KYTHI
+(
+    p_tenKyThi NVARCHAR2,
+    p_loaiKyThi NVARCHAR2
+)
+AS
+BEGIN
+    INSERT INTO KyThi (tenKyThi, loaiKyThi)
+    VALUES (p_tenKyThi, p_loaiKyThi);
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_UPDATE_KYTHI
+(
+    p_kyThiId NUMBER,
+    p_tenKyThi NVARCHAR2,
+    p_loaiKyThi NVARCHAR2
+)
+AS
+BEGIN
+    UPDATE KyThi
+    SET 
+        tenKyThi = p_tenKyThi,
+        loaiKyThi = p_loaiKyThi
+    WHERE kyThiId = p_kyThiId;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_DELETE_KYTHI
+(
+    p_kyThiId NUMBER
+)
+AS
+BEGIN
+    DELETE FROM KyThi
+    WHERE kyThiId = p_kyThiId;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_GET_KYTHI
+(
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+    SELECT * FROM VW_KYTHI_ADMIN
+    ORDER BY kyThiId DESC;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_CREATE_LICHTHI
+(
+    p_kyThiId NUMBER,
+    p_thoiGianThi TIMESTAMP,
+    p_diaDiem NVARCHAR2
+)
+AS
+BEGIN
+    INSERT INTO LichThi (kyThiId, thoiGianThi, diaDiem)
+    VALUES (p_kyThiId, p_thoiGianThi, p_diaDiem);
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_GET_LICHTHI_BY_KYTHI
+(
+    p_kyThiId NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+    SELECT *
+    FROM LichThi
+    WHERE kyThiId = p_kyThiId
+    ORDER BY thoiGianThi;
+END;
+/
+
 
 
 

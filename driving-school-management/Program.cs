@@ -12,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 //thêm services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AdminDashboardService>();
+builder.Services.AddScoped<AdminExamService>();
 
 //
 builder.Services.AddSession();

@@ -1,0 +1,68 @@
+﻿@model List<driving_school_management.Models.DTOs.LichThiDto>
+
+@{
+    var kyThiId = ViewBag.KyThiId;
+}
+
+<div class="container">
+    <div class="header">
+        <h2>Lịch thi</h2>
+    </div>
+
+    <div class="card">
+        <form method="post" action="/AdminExam/CreateLichThi">
+            <input type="hidden" name="kyThiId" value="@kyThiId" />
+
+            <div class="form-grid">
+                <input type="datetime-local" name="thoiGianThi" class="input" />
+                <input type="text" name="diaDiem" placeholder="Địa điểm" class="input" />
+                <button class="btn-primary">Thêm</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card mt">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Địa điểm</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.LichThiId</td>
+                        <td>@item.DiaDiem</td>
+                        <td>@item.ThoiGianThi</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.container { padding:20px; }
+.header { margin-bottom:16px; }
+.card {
+    background:#fff;
+    padding:20px;
+    border-radius:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.mt { margin-top:20px; }
+.form-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:10px;
+}
+.input { padding:10px; border:1px solid #e5e7eb; border-radius:8px; }
+.btn-primary { background:#2563eb; color:#fff; padding:10px 16px; border:none; border-radius:10px; }
+.table { width:100%; margin-top:10px; }
+.table th { text-align:left; padding:10px; color:#6b7280; }
+.table td { padding:10px; }
+.table tr:hover { background:#f9fafb; }
+</style>
