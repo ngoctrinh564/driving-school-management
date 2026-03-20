@@ -128,6 +128,14 @@
                         </li>
 
                         <li class="nav-item">
+                            <a asp-controller="AdminExam" asp-action="Index"
+                                   class="nav-link @(currentController == "AdminExam" ? "active" : "")">
+                                <i class="nav-icon fa fa-file-alt"></i>
+                                <p>Kỳ thi</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a asp-controller="AdminCourses" asp-action="Index"
                                    class="nav-link @(currentController == "AdminCourses" ? "active" : "")">
                                 <i class="nav-icon fa fa-book"></i>
