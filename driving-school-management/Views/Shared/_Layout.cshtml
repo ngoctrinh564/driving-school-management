@@ -1,81 +1,377 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - driving_school_management</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - GPLX System</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/driving_school_management.styles.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --text: #111827;
+            --sub: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * { font-family: 'Inter', sans-serif; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+        }
+
+        a { text-decoration: none !important; }
+
+        /* ================= NAVBAR ================= */
+        .navbar-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 10px 24px;
+
+            background: rgba(255,255,255,1);
+            backdrop-filter: blur(0px);
+            border-bottom: 1px solid var(--border);
+
+            transition: all 0.25s ease;
+        }
+
+        .navbar-scrolled {
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .navbar-custom:hover {
+            background: rgba(255,255,255,1) !important;
+            backdrop-filter: blur(0px) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 18px;
+            color: #111 !important;
+        }
+
+        /* MENU */
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item {
+            padding: 8px 14px;
+            border-radius: 8px;
+            color: var(--sub);
+            font-size: 14px;
+            transition: all .25s ease;
+        }
+
+        .menu-item:hover {
+            background: #f3f4f6;
+            color: #111;
+        }
+
+        .menu-active {
+            background: #111827;
+            color: #fff !important;
+        }
+
+        /* DROPDOWN */
+        .dropdown-custom { position: relative; }
+
+        .dropdown-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--sub);
+            font-size: 14px;
+        }
+
+        .dropdown-btn:hover {
+            background: #f3f4f6;
+            color: #111;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            min-width: 200px;
+            padding: 8px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            animation: fadeIn .2s ease;
+        }
+
+        .dropdown-custom:hover .dropdown-menu-custom {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .dropdown-item-custom:hover {
+            background: #f3f4f6;
+            color: #111;
+        }
+
+        /* BUTTON */
+        .right-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-auth {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all .25s ease;
+        }
+
+        .btn-login {
+            color: #374151;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-login:hover {
+            background: #e5e7eb;
+            color: #111;
+        }
+
+        .btn-register {
+            background: #111827;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-register:hover {
+            background: #000;
+        }
+
+        /* CONTENT */
+        .main-container {
+            padding: 24px;
+            margin-top: 70px;
+            min-height: 70vh;
+        }
+
+        /* ================= FOOTER ================= */
+        .footer-premium {
+            background: #fff;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+            gap: 30px;
+        }
+
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--sub);
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .footer-title {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .footer-col a {
+            color: var(--sub);
+        }
+
+        .footer-col a:hover {
+            color: #111827;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        /* ANIMATION */
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* MOBILE */
+        @@media (max-width: 768px) {
+            .navbar-custom {
+                background: #fff !important;
+                backdrop-filter: none !important;
+            }
+
+            .nav-center {
+                display: none;
+            }
+        }
+
+    </style>
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">driving_school_management</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (Context.Session.GetInt32("UserId") != null)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">
-                                    Xin chào, @Context.Session.GetString("Username")
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-outline-danger ms-2" asp-controller="Auth" asp-action="Logout">
-                                    Đăng xuất
-                                </a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="btn btn-outline-primary me-2" asp-controller="Auth" asp-action="Login">
-                                    Đăng nhập
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-primary" asp-controller="Auth" asp-action="Register">
-                                    Đăng ký
-                                </a>
-                            </li>
-                        }
-                    </ul>
+
+<!-- NAVBAR -->
+<nav class="navbar-custom">
+
+    <div class="d-flex align-items-center gap-4">
+
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+            GPLX System
+        </a>
+
+        <div class="nav-center">
+            <a class="menu-item menu-active" asp-controller="Home" asp-action="Index">Dashboard</a>
+            <a class="menu-item" href="#">Hồ sơ</a>
+
+            <div class="dropdown-custom">
+                <button class="dropdown-btn">Khóa học ▾</button>
+                <div class="dropdown-menu-custom">
+                    <a class="dropdown-item-custom" href="#">Danh sách khóa học</a>
+                    <a class="dropdown-item-custom" href="#">Khóa học của tôi</a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <a class="menu-item" href="#">Thi thử</a>
+            <a class="menu-item" href="#">Kết quả</a>
+            <a class="menu-item" href="#">Thanh toán</a>
+        </div>
+
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - driving_school_management - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <div class="right-box">
+
+        @if (Context.Session.GetInt32("UserId") != null)
+        {
+            <span class="text-muted small">
+                @Context.Session.GetString("Username")
+            </span>
+
+            <a class="btn-auth btn-login" asp-controller="Auth" asp-action="Logout">
+                Đăng xuất
+            </a>
+        }
+        else
+        {
+            <a class="btn-auth btn-login" asp-controller="Auth" asp-action="Login">
+                Đăng nhập
+            </a>
+
+            <a class="btn-auth btn-register" asp-controller="Auth" asp-action="Register">
+                Đăng ký
+            </a>
+        }
+
+    </div>
+
+</nav>
+
+<!-- CONTENT -->
+<div class="main-container">
+    @RenderBody()
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-premium">
+    <div class="footer-container">
+
+        <div class="footer-col">
+            <div class="footer-logo">GPLX System</div>
+            <div>Hệ thống đào tạo và quản lý lái xe hiện đại, tối ưu quy trình và trải nghiệm người dùng.</div>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await Html.PartialAsync("_Toast")
-    @await RenderSectionAsync("Scripts", required: false)
+
+        <div class="footer-col">
+            <div class="footer-title">Hệ thống</div>
+            <a href="#">Dashboard</a>
+            <a href="#">Khóa học</a>
+            <a href="#">Thi thử</a>
+            <a href="#">Thanh toán</a>
+        </div>
+
+        <div class="footer-col">
+            <div class="footer-title">Hỗ trợ</div>
+            <a href="#">FAQ</a>
+            <a href="#">Chính sách</a>
+            <a href="#">Điều khoản</a>
+        </div>
+
+        <div class="footer-col">
+            <div class="footer-title">Liên hệ</div>
+            <div>Email: support@gplx.vn</div>
+            <div>Hotline: 0905 123 456</div>
+            <div>Việt Nam</div>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 GPLX System
+    </div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const navbar = document.querySelector(".navbar-custom");
+
+    window.addEventListener("scroll", function () {
+        if (window.scrollY > 10) {
+            navbar.classList.add("navbar-scrolled");
+        } else {
+            navbar.classList.remove("navbar-scrolled");
+        }
+    });
+});
+</script>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await Html.PartialAsync("_Toast")
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
