@@ -1,14 +1,24 @@
-using System.Diagnostics;
 using driving_school_management.Models;
+using driving_school_management.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace driving_school_management.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly IHomeService _homeService;
+
+        public HomeController(IHomeService homeService)
         {
-            return View();
+            _homeService = homeService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            var model = await _homeService.GetHomeDashboardAsync(userId);
+            return View(model);
         }
 
         public IActionResult Privacy()

@@ -1,81 +1,691 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+@using Oracle.ManagedDataAccess.Client
+@using System.Data
+
+@{
+    var avatarUrl = Url.Content("~/images/avatar/default.png");
+    var userId = Context.Session.GetInt32("UserId");
+
+    if (userId != null)
+    {
+        try
+        {
+            var connectionString = Context.RequestServices
+                .GetService<IConfiguration>()?
+                .GetConnectionString("OracleDb");
+
+            using var conn = new OracleConnection(connectionString);
+            using var cmd = new OracleCommand(@"
+                SELECT NVL(hv.avatarUrl, '/images/avatar/default.png')
+                FROM HocVien hv
+                WHERE hv.userId = :p_userId", conn);
+
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.Add(":p_userId", OracleDbType.Int32).Value = userId.Value;
+
+            conn.Open();
+            var result = cmd.ExecuteScalar();
+
+            if (result != null && result != DBNull.Value)
+            {
+                avatarUrl = result.ToString()!;
+
+                if (!avatarUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&
+                    !avatarUrl.StartsWith("/"))
+                {
+                    avatarUrl = "/" + avatarUrl.TrimStart('~', '/');
+                }
+            }
+        }
+        catch
+        {
+            avatarUrl = Url.Content("~/images/avatar/default.png");
+        }
+    }
+}
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - driving_school_management</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - GPLX System</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/driving_school_management.styles.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --bg: #f5f6f8;
+            --text: #111827;
+            --sub: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * { font-family: 'Inter', sans-serif; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+        }
+
+        a { text-decoration: none !important; }
+
+        /* ================= NAVBAR ================= */
+        .navbar-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 10px 24px;
+
+            background: rgba(255,255,255,1);
+            backdrop-filter: blur(0px);
+            border-bottom: 1px solid var(--border);
+
+            transition: all 0.25s ease;
+        }
+
+        .navbar-scrolled {
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .navbar-custom:hover {
+            background: rgba(255,255,255,1) !important;
+            backdrop-filter: blur(0px) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 18px;
+            color: #111 !important;
+        }
+
+        /* MENU */
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item {
+            padding: 8px 14px;
+            border-radius: 8px;
+            color: var(--sub);
+            font-size: 14px;
+            transition: all .25s ease;
+        }
+
+        .menu-item:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .menu-item.menu-active:hover {
+            background: #1f2937;
+            color: #ffffff !important;
+        }
+
+        .menu-active {
+            background: #111827;
+            color: #fff !important;
+        }
+
+            .dropdown-btn.menu-active {
+                background: #111827;
+                color: #fff !important;
+            }
+
+        /* DROPDOWN */
+        .dropdown-custom {
+            position: relative;
+        }
+
+        .dropdown-custom::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 100%;
+            height: 12px;
+        }
+
+        .user-dropdown-custom::after {
+            left: auto;
+            right: 0;
+            width: 100%;
+        }
+
+        .dropdown-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--sub);
+            font-size: 14px;
+            transition: all .25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            line-height: 1;
+        }
+
+        .dropdown-btn:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .dropdown-btn.menu-active:hover {
+            background: #1f2937;
+            color: #ffffff !important;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            min-width: 220px;
+            padding: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            pointer-events: none;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+            transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+            z-index: 10000;
+        }
+
+        .dropdown-custom:hover .dropdown-menu-custom,
+        .dropdown-custom:focus-within .dropdown-menu-custom {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .dropdown-item-custom:hover {
+            background: #f3f4f6;
+            color: #111827 !important;
+        }
+
+        .btn-auth {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all .25s ease;
+        }
+
+        .btn-login {
+            color: #374151;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-login:hover {
+            background: #e5e7eb;
+            color: #111;
+        }
+
+        .btn-register {
+            background: #111827;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-register:hover {
+            background: #000;
+        }
+
+        /* CONTENT */
+        .main-container {
+            padding: 24px;
+            margin-top: 70px;
+            min-height: 70vh;
+        }
+
+        /* ================= FOOTER ================= */
+        .footer-premium {
+            background: #fff;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+            gap: 30px;
+        }
+
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--sub);
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .footer-title {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .footer-col a {
+            color: var(--sub);
+        }
+
+        .footer-col a:hover {
+            color: #111827;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        /* ANIMATION */
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* MOBILE */
+        @@media (max-width: 768px) {
+            .navbar-custom {
+                background: #fff !important;
+                backdrop-filter: none !important;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .right-box {
+                gap: 8px;
+            }
+
+            .nav-search-wrap {
+                display: none;
+            }
+        }
+
+        .dropdown-item-active {
+            background: #111827;
+            color: #ffffff !important;
+        }
+
+        .dropdown-item-active:hover {
+            background: #1f2937 !important;
+            color: #ffffff !important;
+        }
+
+        .dropdown-menu-study {
+            min-width: 250px;
+            padding: 10px;
+        }
+
+        .dropdown-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 10px 4px;
+        }
+
+        .right-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 220px;
+            height: 42px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all .25s ease;
+            overflow: hidden;
+        }
+
+        .nav-search-wrap:focus-within {
+            width: 280px;
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06);
+        }
+
+        .nav-search-icon {
+            position: absolute;
+            left: 14px;
+            font-size: 14px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .nav-search-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            padding: 0 14px 0 40px;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .nav-search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .user-dropdown-custom {
+            padding-bottom: 0;
+        }
+
+        .user-menu-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            border: none;
+            padding: 4px 2px 4px 6px;
+            border-radius: 999px;
+            transition: all .2s ease;
+            cursor: pointer;
+        }
+
+        .user-menu-trigger:hover {
+            background: rgba(15, 23, 42, 0.04);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-lg {
+            width: 46px;
+            height: 46px;
+        }
+
+        .user-menu-name {
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .user-menu-chevron {
+            font-size: 11px;
+            color: #6b7280;
+            margin-right: 4px;
+        }
+
+        .dropdown-menu-user {
+            min-width: 270px;
+            right: 0;
+            left: auto;
+            padding: 10px;
+        }
+
+        .dropdown-user-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 6px 4px;
+        }
+
+        .dropdown-user-meta {
+            min-width: 0;
+        }
+
+        .dropdown-user-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .dropdown-user-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .dropdown-item-logout {
+            color: #b91c1c !important;
+            font-weight: 600;
+        }
+
+        .dropdown-item-logout:hover {
+            background: #fef2f2 !important;
+            color: #991b1b !important;
+        }
+    </style>
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">driving_school_management</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+
+<!-- NAVBAR -->
+<nav class="navbar-custom">
+
+    <div class="d-flex align-items-center gap-4">
+
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+            GPLX System
+        </a>
+
+        <div class="nav-center">
+            <a class="menu-item @(currentController == "Home" ? "menu-active" : "")" asp-controller="Home" asp-action="Index">Trang chủ</a>
+            <a class="menu-item" href="#">Hồ sơ</a>
+
+            <div class="dropdown-custom">
+                <button type="button" class="dropdown-btn @(currentController == "KhoaHoc" ? "menu-active" : "")">
+                    Học tập ▾
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (Context.Session.GetInt32("UserId") != null)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">
-                                    Xin chào, @Context.Session.GetString("Username")
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-outline-danger ms-2" asp-controller="Auth" asp-action="Logout">
-                                    Đăng xuất
-                                </a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="btn btn-outline-primary me-2" asp-controller="Auth" asp-action="Login">
-                                    Đăng nhập
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-primary" asp-controller="Auth" asp-action="Register">
-                                    Đăng ký
-                                </a>
-                            </li>
-                        }
-                    </ul>
+
+                <div class="dropdown-menu-custom dropdown-menu-study">
+                    <div class="dropdown-section">
+                        <a class="dropdown-item-custom @(currentController == "Hoc" && currentAction == "Index" ? "dropdown-item-active" : "")"
+                           href="@Url.Action("Index", "Hoc")">
+                            Tài liệu
+                        </a>
+                    </div>
+
+                    <div class="dropdown-divider-custom"></div>
+
+                    <div class="dropdown-section">
+                        <a class="dropdown-item-custom @(currentController == "KhoaHoc" && currentAction == "Index" ? "dropdown-item-active" : "")"
+                           href="@Url.Action("Index", "KhoaHoc")">
+                            Danh sách khóa học
+                        </a>
+                        <a class="dropdown-item-custom" href="#">Khóa học của tôi</a>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <a class="menu-item" href="#">Thi thử</a>
+            <a class="menu-item" href="#">Kết quả</a>
+            <a class="menu-item" href="#">Thanh toán</a>
+        </div>
+
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - driving_school_management - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <div class="right-box">
+        <form class="nav-search-wrap" method="get" action="#">
+            <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
+            <input type="text" class="nav-search-input" name="keyword" placeholder="Tìm chức năng...." />
+        </form>
+
+        @if (Context.Session.GetInt32("UserId") != null)
+        {
+            <div class="dropdown-custom user-dropdown-custom">
+                <button type="button" class="user-menu-trigger" aria-label="Tài khoản người dùng">
+                    <img src="@avatarUrl" alt="Avatar" class="user-avatar" />
+                    <span class="user-menu-name">@Context.Session.GetString("Username")</span>
+                    <span class="user-menu-chevron">▾</span>
+                </button>
+
+                <div class="dropdown-menu-custom dropdown-menu-user">
+                    <div class="dropdown-user-header">
+                        <img src="@avatarUrl" alt="Avatar" class="user-avatar user-avatar-lg" />
+                        <div class="dropdown-user-meta">
+                            <div class="dropdown-user-name">@Context.Session.GetString("Username")</div>
+                            <div class="dropdown-user-subtitle">Tài khoản người dùng</div>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-divider-custom"></div>
+
+                    <div class="dropdown-section">
+                        <a class="dropdown-item-custom" asp-controller="Home" asp-action="Index">Dashboard</a>
+                        <a class="dropdown-item-custom" href="#">Chỉnh sửa thông tin</a>
+                        <a class="dropdown-item-custom" href="#">Cài đặt</a>
+                    </div>
+
+                    <div class="dropdown-divider-custom"></div>
+
+                    <div class="dropdown-section">
+                        <a class="dropdown-item-custom dropdown-item-logout"
+                           asp-controller="Auth"
+                           asp-action="Logout">
+                            Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <a class="btn-auth btn-login" asp-controller="Auth" asp-action="Login">
+                Đăng nhập
+            </a>
+
+            <a class="btn-auth btn-register" asp-controller="Auth" asp-action="Register">
+                Đăng ký
+            </a>
+        }
+
+    </div>
+
+</nav>
+
+<!-- CONTENT -->
+<div class="main-container">
+    @RenderBody()
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-premium">
+    <div class="footer-container">
+
+        <div class="footer-col">
+            <div class="footer-logo">GPLX System</div>
+            <div>Hệ thống đào tạo và quản lý lái xe hiện đại, tối ưu quy trình và trải nghiệm người dùng.</div>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await Html.PartialAsync("_Toast")
-    @await RenderSectionAsync("Scripts", required: false)
+
+        <div class="footer-col">
+            <div class="footer-title">Hệ thống</div>
+            <a href="#">Dashboard</a>
+            <a href="#">Khóa học</a>
+            <a href="#">Thi thử</a>
+            <a href="#">Thanh toán</a>
+        </div>
+
+        <div class="footer-col">
+            <div class="footer-title">Hỗ trợ</div>
+            <a href="#">FAQ</a>
+            <a href="#">Chính sách</a>
+            <a href="#">Điều khoản</a>
+        </div>
+
+        <div class="footer-col">
+            <div class="footer-title">Liên hệ</div>
+            <div>Email: support@gplx.vn</div>
+            <div>Hotline: 0905 123 456</div>
+            <div>Việt Nam</div>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 GPLX System
+    </div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const navbar = document.querySelector(".navbar-custom");
+
+    window.addEventListener("scroll", function () {
+        if (window.scrollY > 10) {
+            navbar.classList.add("navbar-scrolled");
+        } else {
+            navbar.classList.remove("navbar-scrolled");
+        }
+    });
+});
+</script>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await Html.PartialAsync("_Toast")
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

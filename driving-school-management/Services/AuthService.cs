@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.Scripting;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using Org.BouncyCastle.Crypto.Generators;
 using System.Data;
 
@@ -87,6 +88,21 @@ namespace driving_school_management.Services
             await cmd.ExecuteNonQueryAsync();
 
             return Convert.ToInt32(cmd.Parameters["o_result"].Value);
+        }
+
+        public async Task<bool> IsProfileCompleted(int userId)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("BEGIN :result := FUNC_CHECK_USER_PROFILE(:p_userId); END;", conn);
+
+            cmd.Parameters.Add("result", OracleDbType.Int32).Direction = ParameterDirection.ReturnValue;
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+
+            var result = (OracleDecimal)cmd.Parameters["result"].Value;
+            return result.ToInt32() == 1;
         }
     }
 

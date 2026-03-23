@@ -1,8 +1,853 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model driving_school_management.Models.HomeDashboardViewModel
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .home-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        border-radius: 32px;
+        padding: 64px 56px;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.96) 52%, rgba(51, 65, 85, 0.92) 100%);
+        box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18);
+        border: 1px solid rgba(255,255,255,0.06);
+        color: #fff;
+    }
+
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: -120px;
+            right: -100px;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .hero-section::after {
+            content: "";
+            position: absolute;
+            bottom: -120px;
+            right: 180px;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 860px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 18px;
+        letter-spacing: .2px;
+    }
+
+    .hero-title {
+        font-size: 44px;
+        line-height: 1.15;
+        font-weight: 600;
+        letter-spacing: -1px;
+        margin-bottom: 18px;
+    }
+
+    .hero-subtitle {
+        font-size: 16px;
+        line-height: 1.85;
+        color: rgba(255,255,255,0.82);
+        margin-bottom: 28px;
+        max-width: 760px;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .hero-btn-primary,
+    .hero-btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all .25s ease;
+    }
+
+    .hero-btn-primary {
+        background: #fff;
+        color: #111827;
+        box-shadow: 0 12px 28px rgba(255,255,255,0.14);
+    }
+
+        .hero-btn-primary:hover {
+            color: #111827;
+            transform: translateY(-2px);
+        }
+
+    .hero-btn-secondary {
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.14);
+    }
+
+        .hero-btn-secondary:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }
+
+    .hero-points {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .hero-point {
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 14px;
+        color: rgba(255,255,255,0.9);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .stats-card {
+        background: rgba(255,255,255,0.88);
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 26px;
+        box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+        transition: all .25s ease;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.10);
+        }
+
+    .stats-label {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .stats-value {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 10px;
+        letter-spacing: -.5px;
+    }
+
+    .stats-desc {
+        font-size: 13px;
+        color: #9ca3af;
+        line-height: 1.7;
+    }
+
+    .section-card {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid #e5e7eb;
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+        letter-spacing: -.4px;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.8;
+        max-width: 780px;
+    }
+
+    .section-badge {
+        white-space: nowrap;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .course-card {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+        border: 1px solid #edf0f4;
+        border-radius: 22px;
+        padding: 22px;
+        transition: all .25s ease;
+        height: 100%;
+    }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 38px rgba(15, 23, 42, 0.08);
+        }
+
+    .course-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .course-hang {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .course-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #f9fafb;
+        border: 1px solid #eef2f7;
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .course-name {
+        font-size: 17px;
+        line-height: 1.5;
+        font-weight: 600;
+        color: #111827;
+        min-height: 52px;
+        margin-bottom: 14px;
+    }
+
+    .course-meta {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+        .course-meta div {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+    .course-price {
+        padding-top: 14px;
+        border-top: 1px dashed #e5e7eb;
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .trust-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .trust-card {
+        border-radius: 22px;
+        background: #fff;
+        border: 1px solid #edf0f4;
+        padding: 24px;
+        transition: all .25s ease;
+    }
+
+        .trust-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        }
+
+    .trust-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 10px;
+    }
+
+    .trust-desc {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.8;
+    }
+
+    .process-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .process-card {
+        border-radius: 22px;
+        background: #fff;
+        border: 1px solid #edf0f4;
+        padding: 24px;
+    }
+
+    .process-step {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #111827;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 14px;
+    }
+
+    .process-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .process-desc {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.75;
+    }
+
+    .cta-section {
+        border-radius: 28px;
+        padding: 34px 30px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+        text-align: center;
+    }
+
+    .cta-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 12px;
+        letter-spacing: -.5px;
+    }
+
+    .cta-desc {
+        max-width: 760px;
+        margin: 0 auto 20px;
+        font-size: 15px;
+        line-height: 1.85;
+        color: #6b7280;
+    }
+
+    .cta-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .cta-btn-dark,
+    .cta-btn-light {
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all .25s ease;
+    }
+
+    .cta-btn-dark {
+        background: #111827;
+        color: #fff;
+    }
+
+        .cta-btn-dark:hover {
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+    .cta-btn-light {
+        background: #f3f4f6;
+        color: #111827;
+        border: 1px solid #e5e7eb;
+    }
+
+        .cta-btn-light:hover {
+            color: #111827;
+            transform: translateY(-2px);
+        }
+
+    .logged-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .list-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .list-item {
+        background: #fff;
+        border: 1px solid #edf0f4;
+        border-radius: 20px;
+        padding: 18px;
+        transition: all .25s ease;
+    }
+
+        .list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+        }
+
+    .item-title {
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 10px;
+    }
+
+    .item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.7;
+    }
+
+    .result-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .badge-pass,
+    .badge-fail {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-pass {
+        background: #ecfdf3;
+        color: #027a48;
+        border: 1px solid #d1fadf;
+    }
+
+    .badge-fail {
+        background: #fef3f2;
+        color: #b42318;
+        border: 1px solid #fecdca;
+    }
+
+    .empty-box {
+        padding: 28px 20px;
+        border-radius: 20px;
+        border: 1px dashed #d1d5db;
+        background: #fcfcfd;
+        text-align: center;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    @@media (max-width: 1200px) {
+        .stats-grid,
+        .course-grid,
+        .trust-grid,
+        .process-grid,
+        .logged-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .hero-section {
+            padding: 36px 22px;
+            border-radius: 24px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+        }
+
+        .stats-grid,
+        .course-grid,
+        .trust-grid,
+        .process-grid,
+        .logged-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-card,
+        .cta-section {
+            padding: 22px;
+        }
+
+        .section-header {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="home-wrapper">
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-badge">Trung tâm đào tạo lái xe chuyên nghiệp • Hệ thống quản lý hiện đại</div>
+
+            <div class="hero-title">
+                Nơi bắt đầu hành trình học lái xe bài bản,
+                minh bạch và tạo dựng niềm tin ngay từ lần truy cập đầu tiên.
+            </div>
+
+            <div class="hero-subtitle">
+                GPLX System là nền tảng giới thiệu và quản lý đào tạo lái xe theo hướng hiện đại,
+                tập trung vào sự rõ ràng trong thông tin, chuyên nghiệp trong tổ chức và tối ưu trải nghiệm người học.
+                Từ khóa học, hồ sơ đến kết quả thi, mọi dữ liệu quan trọng đều được trình bày trực quan,
+                giúp học viên và khách truy cập dễ dàng cảm nhận chất lượng vận hành của trung tâm.
+            </div>
+
+            <div class="hero-actions">
+                @if (!Model.IsLoggedIn)
+                {
+                    <a asp-controller="Auth" asp-action="Register" class="hero-btn-primary">Đăng ký tài khoản</a>
+                    <a asp-controller="Auth" asp-action="Login" class="hero-btn-secondary">Đăng nhập hệ thống</a>
+                }
+                else
+                {
+                    <a href="#ho-so-cua-toi" class="hero-btn-primary">Xem hồ sơ của tôi</a>
+                    <a href="#ket-qua-thi-cua-toi" class="hero-btn-secondary">Xem kết quả thi</a>
+                }
+            </div>
+
+            <div class="hero-points">
+                <div class="hero-point">Đào tạo bài bản theo từng hạng GPLX</div>
+                <div class="hero-point">Công khai học phí và lịch học</div>
+                <div class="hero-point">Theo dõi hồ sơ và kết quả tập trung</div>
+                <div class="hero-point">Giao diện chuyên nghiệp, dễ sử dụng</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-grid">
+        <div class="stats-card">
+            <div class="stats-label">Khóa học đang quản lý</div>
+            <div class="stats-value">@Model.TotalCourses</div>
+            <div class="stats-desc">
+                Danh mục khóa học được tổ chức theo từng hạng bằng, giúp học viên lựa chọn đúng chương trình đào tạo phù hợp.
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-label">Kỳ thi trong hệ thống</div>
+            <div class="stats-value">@Model.TotalExams</div>
+            <div class="stats-desc">
+                Hệ thống hỗ trợ theo dõi các kỳ thi tốt nghiệp, sát hạch và quá trình đánh giá năng lực học viên.
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-label">GPLX đã cấp</div>
+            <div class="stats-value">@Model.TotalLicenses</div>
+            <div class="stats-desc">
+                Chỉ số thể hiện năng lực đào tạo, mức độ hoàn thành đầu ra và uy tín thực tế của trung tâm.
+            </div>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Chương trình đào tạo nổi bật</div>
+                <div class="section-subtitle">
+                    Toàn bộ khóa học được trình bày theo bố cục rõ ràng: hạng đào tạo, thời gian khai giảng,
+                    địa điểm học, trạng thái và học phí. Đây là các thông tin cốt lõi giúp khách vãng lai nhanh chóng
+                    đánh giá mức độ chuyên nghiệp và sự minh bạch của trung tâm.
+                </div>
+            </div>
+            <div class="section-badge">Khóa học tiêu biểu</div>
+        </div>
+
+        @if (Model.FeaturedCourses.Any())
+        {
+            <div class="course-grid">
+                @foreach (var item in Model.FeaturedCourses)
+                {
+                    <div class="course-card">
+                        <div class="course-top">
+                            <div class="course-hang">@item.TenHang</div>
+                            <div class="course-status">@item.TrangThai</div>
+                        </div>
+
+                        <div class="course-name">@item.TenKhoaHoc</div>
+
+                        <div class="course-meta">
+                            <div><strong>Khai giảng:</strong> @(item.NgayBatDau?.ToString("dd/MM/yyyy") ?? "--")</div>
+                            <div><strong>Kết thúc:</strong> @(item.NgayKetThuc?.ToString("dd/MM/yyyy") ?? "--")</div>
+                            <div><strong>Địa điểm:</strong> @item.DiaDiem</div>
+                        </div>
+
+                        <div class="course-price">@item.HocPhi.ToString("N0") VNĐ</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-box">Chưa có dữ liệu khóa học để hiển thị.</div>
+        }
+    </section>
+
+    <section class="section-card">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Vì sao học viên lựa chọn trung tâm</div>
+                <div class="section-subtitle">
+                    Trang chủ không chỉ là nơi hiển thị dữ liệu, mà còn là bộ mặt thương hiệu. Vì vậy giao diện cần truyền tải
+                    sự tin cậy, rõ ràng và nghiêm túc trong cách tổ chức đào tạo.
+                </div>
+            </div>
+            <div class="section-badge">Giá trị cốt lõi</div>
+        </div>
+
+        <div class="trust-grid">
+            <div class="trust-card">
+                <div class="trust-title">Quy trình minh bạch</div>
+                <div class="trust-desc">
+                    Từ đăng ký hồ sơ, tham gia khóa học đến theo dõi kết quả thi, mọi thông tin đều được tổ chức tập trung,
+                    dễ tra cứu và hạn chế tối đa sai lệch trong quá trình học tập.
+                </div>
+            </div>
+
+            <div class="trust-card">
+                <div class="trust-title">Đào tạo có lộ trình rõ ràng</div>
+                <div class="trust-desc">
+                    Chương trình học được phân theo hạng GPLX, giúp người học tiếp cận đúng nhu cầu và chuẩn bị tốt hơn
+                    cho từng giai đoạn lý thuyết, thực hành và sát hạch.
+                </div>
+            </div>
+
+            <div class="trust-card">
+                <div class="trust-title">Hình ảnh chuyên nghiệp</div>
+                <div class="trust-desc">
+                    Giao diện hiện đại, bố cục sạch, thông tin trọng tâm và trải nghiệm mượt mà góp phần củng cố niềm tin
+                    của học viên ngay từ lần đầu truy cập hệ thống.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Lộ trình học tập và sát hạch</div>
+                <div class="section-subtitle">
+                    Mô tả rõ ràng quy trình từ khi bắt đầu đến khi hoàn thành giúp khách truy cập nắm được cách trung tâm vận hành
+                    và cảm nhận sự chuyên nghiệp trong tổ chức đào tạo.
+                </div>
+            </div>
+            <div class="section-badge">Quy trình đào tạo</div>
+        </div>
+
+        <div class="process-grid">
+            <div class="process-card">
+                <div class="process-step">01</div>
+                <div class="process-title">Tư vấn và đăng ký</div>
+                <div class="process-desc">
+                    Học viên được định hướng hạng bằng phù hợp, chuẩn bị hồ sơ và nắm rõ lộ trình học ngay từ đầu.
+                </div>
+            </div>
+
+            <div class="process-card">
+                <div class="process-step">02</div>
+                <div class="process-title">Tham gia khóa học</div>
+                <div class="process-desc">
+                    Khóa học được tổ chức bài bản với lịch học, thời gian và địa điểm rõ ràng theo từng chương trình đào tạo.
+                </div>
+            </div>
+
+            <div class="process-card">
+                <div class="process-step">03</div>
+                <div class="process-title">Kiểm tra và sát hạch</div>
+                <div class="process-desc">
+                    Học viên được theo dõi kết quả qua từng giai đoạn đánh giá, từ đó chủ động chuẩn bị cho kỳ thi chính thức.
+                </div>
+            </div>
+
+            <div class="process-card">
+                <div class="process-step">04</div>
+                <div class="process-title">Hoàn thiện đầu ra</div>
+                <div class="process-desc">
+                    Sau khi hoàn thành yêu cầu đào tạo và thi đạt, hệ thống ghi nhận kết quả để hỗ trợ quy trình cấp GPLX.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (Model.IsLoggedIn)
+    {
+        <section class="logged-grid">
+            <div class="section-card" id="ho-so-cua-toi">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Hồ sơ của tôi</div>
+                        <div class="section-subtitle">
+                            Thông tin hồ sơ được trình bày rõ ràng để học viên dễ theo dõi trạng thái xử lý và tiến độ đăng ký.
+                        </div>
+                    </div>
+                    <div class="section-badge">Dữ liệu cá nhân</div>
+                </div>
+
+                @if (Model.MyProfiles.Any())
+                {
+                    <div class="list-wrap">
+                        @foreach (var item in Model.MyProfiles)
+                        {
+                            <div class="list-item">
+                                <div class="item-title">@item.TenHoSo</div>
+                                <div class="item-meta">
+                                    <span><strong>Hạng:</strong> @item.TenHang</span>
+                                    <span><strong>Ngày đăng ký:</strong> @(item.NgayDangKy?.ToString("dd/MM/yyyy") ?? "--")</span>
+                                    <span><strong>Trạng thái:</strong> @item.TrangThai</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-box">Tài khoản hiện chưa có hồ sơ nào được ghi nhận.</div>
+                }
+            </div>
+
+            <div class="section-card" id="ket-qua-thi-cua-toi">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Kết quả thi của tôi</div>
+                        <div class="section-subtitle">
+                            Kết quả thi được tổng hợp tập trung để học viên dễ dàng tra cứu và theo dõi quá trình hoàn thành mục tiêu.
+                        </div>
+                    </div>
+                    <div class="section-badge">Kết quả gần nhất</div>
+                </div>
+
+                @if (Model.MyExamResults.Any())
+                {
+                    <div class="list-wrap">
+                        @foreach (var item in Model.MyExamResults)
+                        {
+                            <div class="list-item">
+                                <div class="result-line">
+                                    <div class="item-title" style="margin-bottom:0;">@item.TenBaiThi</div>
+
+                                    @if (item.KetQuaDatDuoc == "Đạt")
+                                    {
+                                        <div class="badge-pass">@item.KetQuaDatDuoc</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="badge-fail">@item.KetQuaDatDuoc</div>
+                                    }
+                                </div>
+
+                                <div class="item-meta">
+                                    <span><strong>Kỳ thi:</strong> @item.TenKyThi</span>
+                                    <span><strong>Tổng điểm:</strong> @(item.TongDiem?.ToString() ?? "--")</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-box">Tài khoản hiện chưa có kết quả thi nào để hiển thị.</div>
+                }
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="cta-section">
+            <div class="cta-title">Sẵn sàng bắt đầu hành trình học lái xe chuyên nghiệp?</div>
+            <div class="cta-desc">
+                Đăng ký tài khoản để theo dõi hồ sơ, xem tiến độ học tập, cập nhật kết quả thi và tiếp cận hệ thống quản lý tập trung
+                được thiết kế dành riêng cho học viên của trung tâm.
+            </div>
+
+            <div class="cta-actions">
+                <a asp-controller="Auth" asp-action="Register" class="cta-btn-dark">Tạo tài khoản mới</a>
+                <a asp-controller="Auth" asp-action="Login" class="cta-btn-light">Đăng nhập hệ thống</a>
+            </div>
+        </section>
+    }
+
 </div>

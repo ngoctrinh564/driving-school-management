@@ -6,43 +6,252 @@
     var errors = TempData["Errors"] as List<string>;
 }
 
+<style>
+    :root {
+        --toast-bg: rgba(255, 255, 255, 0.92);
+        --toast-border: rgba(15, 23, 42, 0.08);
+        --toast-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+        --toast-text: #0f172a;
+        --toast-muted: #64748b;
+        --toast-success: #16a34a;
+        --toast-error: #dc2626;
+        --toast-info: #2563eb;
+        --toast-warning: #d97706;
+        --toast-radius: 18px;
+        --toast-blur: 18px;
+    }
+
+    #toast-container {
+        top: 20px;
+        right: 20px;
+    }
+
+    #toast-container > .toast {
+        position: relative;
+        overflow: hidden;
+        width: 360px;
+        min-height: 72px;
+        margin: 0 0 14px;
+        padding: 16px 18px 16px 18px;
+        border-radius: var(--toast-radius);
+        background: var(--toast-bg);
+        color: var(--toast-text);
+        border: 1px solid var(--toast-border);
+        box-shadow: var(--toast-shadow);
+        backdrop-filter: blur(var(--toast-blur));
+        -webkit-backdrop-filter: blur(var(--toast-blur));
+        opacity: 1;
+        background-image: none !important;
+    }
+
+    #toast-container > .toast::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        border-radius: 18px 0 0 18px;
+        background: #cbd5e1;
+    }
+
+    #toast-container > .toast:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 54px rgba(15, 23, 42, 0.16);
+    }
+
+    #toast-container > .toast-success::before {
+        background: var(--toast-success);
+    }
+
+    #toast-container > .toast-error::before {
+        background: var(--toast-error);
+    }
+
+    #toast-container > .toast-info::before {
+        background: var(--toast-info);
+    }
+
+    #toast-container > .toast-warning::before {
+        background: var(--toast-warning);
+    }
+
+    #toast-container > .toast-success {
+        background-image: none !important;
+    }
+
+    #toast-container > .toast-error {
+        background-image: none !important;
+    }
+
+    #toast-container > .toast-info {
+        background-image: none !important;
+    }
+
+    #toast-container > .toast-warning {
+        background-image: none !important;
+    }
+
+    .toast-title {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+        color: var(--toast-text);
+    }
+
+    .toast-message {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.55;
+        color: var(--toast-muted);
+        margin: 0;
+        padding-right: 18px;
+        word-break: break-word;
+    }
+
+    .toast-close-button {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        font-size: 18px;
+        font-weight: 400;
+        color: #94a3b8 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .toast-close-button:hover {
+        color: #0f172a !important;
+        transform: scale(1.08);
+    }
+
+    .toast-progress {
+        height: 3px !important;
+        opacity: 1 !important;
+        background: rgba(15, 23, 42, 0.08) !important;
+    }
+
+    #toast-container > .toast-success .toast-progress {
+        background: linear-gradient(to right, rgba(22, 163, 74, 0.95), rgba(22, 163, 74, 0.35)) !important;
+    }
+
+    #toast-container > .toast-error .toast-progress {
+        background: linear-gradient(to right, rgba(220, 38, 38, 0.95), rgba(220, 38, 38, 0.35)) !important;
+    }
+
+    #toast-container > .toast-info .toast-progress {
+        background: linear-gradient(to right, rgba(37, 99, 235, 0.95), rgba(37, 99, 235, 0.35)) !important;
+    }
+
+    #toast-container > .toast-warning .toast-progress {
+        background: linear-gradient(to right, rgba(217, 119, 6, 0.95), rgba(217, 119, 6, 0.35)) !important;
+    }
+
+    @@keyframes premiumToastIn {
+        from {
+            opacity: 0;
+            transform: translate3d(0, -10px, 0) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+    }
+
+    @@keyframes premiumToastOut {
+        from {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translate3d(0, -8px, 0) scale(0.98);
+        }
+    }
+
+    #toast-container > .toast.toast-enter {
+        animation: premiumToastIn 0.28s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    #toast-container > .toast.toast-leave {
+        animation: premiumToastOut 0.22s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    @@media (max-width: 576px) {
+        #toast-container {
+            top: 14px;
+            right: 14px;
+            left: 14px;
+        }
+
+        #toast-container > .toast {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+</style>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
         toastr.options = {
             closeButton: true,
             progressBar: true,
+            newestOnTop: true,
+            preventDuplicates: true,
             positionClass: "toast-top-right",
-            timeOut: "4000"
+            timeOut: 4500,
+            extendedTimeOut: 1500,
+            showDuration: 280,
+            hideDuration: 220,
+            showMethod: "fadeIn",
+            hideMethod: "fadeOut",
+            tapToDismiss: true,
+            escapeHtml: true,
+            onShown: function (toast) {
+                if (toast) {
+                    toast.classList.add("toast-enter");
+                }
+            },
+            onHidden: function (toast) {
+                if (toast) {
+                    toast.classList.remove("toast-enter");
+                    toast.classList.add("toast-leave");
+                }
+            }
         };
+
+        function showToast(type, title, message) {
+            toastr[type](message, title);
+        }
 
         @if (!string.IsNullOrEmpty(success))
         {
-                <text>toastr.success("@success");</text>
+            <text>showToast("success", "Thành công", "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(success))");</text>
         }
 
         @if (!string.IsNullOrEmpty(error))
         {
-                <text>toastr.error("@error");</text>
+            <text>showToast("error", "Thất bại", "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(error))");</text>
         }
 
         @if (errors != null)
         {
-                foreach (var err in errors)
-                {
-                        <text>toastr.error("@err");</text>
-                }
+            foreach (var err in errors)
+            {
+                <text>showToast("error", "Lỗi xác thực", "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(err))");</text>
+            }
         }
 
         @if (!string.IsNullOrEmpty(info))
         {
-                <text>toastr.info("@info");</text>
+            <text>showToast("info", "Thông tin", "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(info))");</text>
         }
 
         @if (!string.IsNullOrEmpty(warning))
         {
-                <text>toastr.warning("@warning");</text>
+            <text>showToast("warning", "Cảnh báo", "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(warning))");</text>
         }
-
     });
 </script>
