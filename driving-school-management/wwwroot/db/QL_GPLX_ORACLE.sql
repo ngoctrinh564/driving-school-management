@@ -711,6 +711,42 @@ SET trangThai =
         ELSE N'Đang học'
     END;
 
+-- Update thời gian để có đủ 3 trạng thái khác nhau
+UPDATE KhoaHoc
+SET 
+    ngayBatDau = CASE 
+        WHEN KhoaHocID IN (1,2) THEN TRUNC(SYSDATE) + 10
+        WHEN KhoaHocID IN (3,4,5) THEN TRUNC(SYSDATE) - 10
+        ELSE TRUNC(SYSDATE) - 40
+    END,
+    
+    ngayKetThuc = CASE 
+        WHEN KhoaHocID IN (1,2) THEN TRUNC(SYSDATE) + 40
+        WHEN KhoaHocID IN (3,4,5) THEN TRUNC(SYSDATE) + 10
+        ELSE TRUNC(SYSDATE) - 10
+    END,
+
+    trangThai = CASE
+        WHEN 
+            (CASE 
+                WHEN KhoaHocID IN (1,2) THEN TRUNC(SYSDATE) + 10
+                WHEN KhoaHocID IN (3,4,5) THEN TRUNC(SYSDATE) - 10
+                ELSE TRUNC(SYSDATE) - 40
+             END) > TRUNC(SYSDATE)
+        THEN N'Sắp khai giảng'
+
+        WHEN 
+            (CASE 
+                WHEN KhoaHocID IN (1,2) THEN TRUNC(SYSDATE) + 40
+                WHEN KhoaHocID IN (3,4,5) THEN TRUNC(SYSDATE) + 10
+                ELSE TRUNC(SYSDATE) - 10
+             END) < TRUNC(SYSDATE)
+        THEN N'Đã kết thúc'
+
+        ELSE N'Đang học'
+    END;
+
+
 
 /* =========================================================
    11. KY THI

@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -88,8 +92,24 @@
             color: #fff !important;
         }
 
+            .dropdown-btn.menu-active {
+                background: #111827;
+                color: #fff !important;
+            }
+
         /* DROPDOWN */
-        .dropdown-custom { position: relative; }
+        .dropdown-custom {
+            position: relative;
+        }
+
+        .dropdown-custom::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 100%;
+            height: 12px;
+        }
 
         .dropdown-btn {
             padding: 8px 14px;
@@ -98,6 +118,12 @@
             border: none;
             color: var(--sub);
             font-size: 14px;
+            transition: all .25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            line-height: 1;
         }
 
         .dropdown-btn:hover {
@@ -107,26 +133,36 @@
 
         .dropdown-menu-custom {
             position: absolute;
-            top: 110%;
+            top: calc(100% + 8px);
             left: 0;
             background: #fff;
             border: 1px solid var(--border);
-            border-radius: 10px;
-            min-width: 200px;
-            padding: 8px;
-            display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-            animation: fadeIn .2s ease;
+            border-radius: 14px;
+            min-width: 220px;
+            padding: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            pointer-events: none;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+            transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+            z-index: 10000;
         }
 
-        .dropdown-custom:hover .dropdown-menu-custom {
-            display: block;
+        .dropdown-custom:hover .dropdown-menu-custom,
+        .dropdown-custom:focus-within .dropdown-menu-custom {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         .dropdown-item-custom {
-            display: block;
-            padding: 8px 12px;
-            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 10px 14px;
+            border-radius: 10px;
             color: #374151;
             font-size: 14px;
         }
@@ -248,6 +284,10 @@
             }
         }
 
+        .dropdown-item-active {
+            background: #111827;
+            color: #fff !important;
+        }
     </style>
 </head>
 
@@ -263,13 +303,15 @@
         </a>
 
         <div class="nav-center">
-            <a class="menu-item menu-active" asp-controller="Home" asp-action="Index">Dashboard</a>
+            <a class="menu-item @(currentController == "Home" ? "menu-active" : "")" asp-controller="Home" asp-action="Index">Dashboard</a>
             <a class="menu-item" href="#">Hồ sơ</a>
 
             <div class="dropdown-custom">
-                <button class="dropdown-btn">Khóa học ▾</button>
+                <button type="button" class="dropdown-btn @(currentController == "KhoaHoc" ? "menu-active" : "")">Khóa học ▾</button>
                 <div class="dropdown-menu-custom">
-                    <a class="dropdown-item-custom" href="#">Danh sách khóa học</a>
+                    <a class="dropdown-item-custom @(currentController == "KhoaHoc" && currentAction == "Index" ? "dropdown-item-active" : "")" href="@Url.Action("Index", "KhoaHoc")">
+                        Danh sách khóa học
+                    </a>
                     <a class="dropdown-item-custom" href="#">Khóa học của tôi</a>
                 </div>
             </div>
@@ -365,7 +407,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>

@@ -228,6 +228,7 @@ END;
 -- ============================================================
 -- ====================        USER        ====================
 -- ============================================================
+-- HOME
 CREATE OR REPLACE PROCEDURE SP_HOME_DASHBOARD (
     p_user_id              IN NUMBER,
     p_total_courses        OUT NUMBER,
@@ -331,5 +332,59 @@ BEGIN
 
 END;
 /
+
+-- KHÓA HỌC
+CREATE OR REPLACE PROCEDURE sp_GetKhoaHocDangMo (
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT 
+            kh.khoaHocId,
+            kh.tenKhoaHoc,
+            kh.ngayBatDau,
+            kh.ngayKetThuc,
+            kh.diaDiem,
+            kh.trangThai,
+            hg.tenHang,
+            hg.hocPhi
+        FROM KhoaHoc kh
+        JOIN HangGplx hg ON kh.hangId = hg.hangId
+        WHERE kh.trangThai IN (N'Sắp khai giảng', N'Đang học')
+        ORDER BY kh.ngayBatDau ASC;
+END;
+/
+CREATE OR REPLACE PROCEDURE sp_GetKhoaHocDetail (
+    p_khoaHocId IN NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT 
+            kh.khoaHocId,
+            kh.tenKhoaHoc,
+            kh.ngayBatDau,
+            kh.ngayKetThuc,
+            kh.diaDiem,
+            kh.trangThai,
+            hg.hangId,
+            hg.tenHang,
+            hg.moTa,
+            hg.loaiPhuongTien,
+            hg.soCauHoi,
+            hg.diemDat,
+            hg.thoiGianTn,
+            hg.hocPhi
+        FROM KhoaHoc kh
+        JOIN HangGplx hg ON kh.hangId = hg.hangId
+        WHERE kh.khoaHocId = p_khoaHocId;
+END;
+/
+
+
+
+
 
 COMMIT;
