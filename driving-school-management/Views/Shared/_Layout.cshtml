@@ -539,7 +539,10 @@
 
                 <div class="dropdown-menu-custom dropdown-menu-study">
                     <div class="dropdown-section">
-                        <a class="dropdown-item-custom" href="#">Tài liệu</a>
+                        <a class="dropdown-item-custom @(currentController == "Hoc" && currentAction == "Index" ? "dropdown-item-active" : "")"
+                           href="@Url.Action("Index", "Hoc")">
+                            Tài liệu
+                        </a>
                     </div>
 
                     <div class="dropdown-divider-custom"></div>

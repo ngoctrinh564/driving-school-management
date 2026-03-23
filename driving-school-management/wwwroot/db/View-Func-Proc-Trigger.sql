@@ -382,6 +382,282 @@ BEGIN
         WHERE kh.khoaHocId = p_khoaHocId;
 END;
 /
+-- HỌC DASHBOASRD
+CREATE OR REPLACE PROCEDURE PR_HOC_INDEX (
+    P_MAHANG   IN VARCHAR2,
+    P_USERID   IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+    V_MAHANG   VARCHAR2(10);
+BEGIN
+    V_MAHANG := UPPER(TRIM(P_MAHANG));
+
+    OPEN P_CURSOR FOR
+        WITH HANG_INFO AS (
+            SELECT
+                HG.HANGID,
+                TRIM(UPPER(HG.MAHANG)) AS MAHANG,
+                HG.THOIGIANTN,
+                HG.SOCAUHOI
+            FROM HANGGPLX HG
+            WHERE TRIM(UPPER(HG.MAHANG)) = V_MAHANG
+        ),
+        FLAG_INFO AS (
+            SELECT
+                CASE
+                    WHEN V_MAHANG IN ('A', 'A1') THEN 1
+                    ELSE 0
+                END AS IS_XEMAY
+            FROM DUAL
+        )
+        SELECT
+            H.HANGID,
+            H.MAHANG,
+            H.THOIGIANTN,
+            (H.THOIGIANTN / 60) AS THOIGIANTHI,
+            H.SOCAUHOI AS SOCAUTHINGAUNHIEN,
+
+            (
+                SELECT COUNT(*)
+                FROM BODETHITHU B
+                WHERE B.HANGID = H.HANGID
+                  AND B.HOATDONG = 1
+            ) AS TOTAL_BODE,
+
+            CASE
+                WHEN P_USERID IS NULL THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM BAILAM BL
+                    JOIN BODETHITHU B ON B.BODEID = BL.BODEID
+                    WHERE BL.USERID = P_USERID
+                      AND B.HANGID = H.HANGID
+                )
+            END AS DONE_BODE,
+
+            (
+                SELECT COUNT(*)
+                FROM CAUHOILYTHUYET CH, FLAG_INFO F
+                WHERE (F.IS_XEMAY = 0 OR CH.XEMAY = 1)
+            ) AS TOTAL_CAUHOI,
+
+            (
+                SELECT COUNT(*)
+                FROM CAUHOILYTHUYET CH, FLAG_INFO F
+                WHERE CH.CAULIET = 1
+                  AND (F.IS_XEMAY = 0 OR CH.XEMAY = 1)
+            ) AS TOTAL_CAULIET,
+
+            (
+                SELECT COUNT(*)
+                FROM CAUHOILYTHUYET CH, FLAG_INFO F
+                WHERE CH.CHUY = 1
+                  AND (F.IS_XEMAY = 0 OR CH.XEMAY = 1)
+            ) AS TOTAL_CAUCHUY,
+
+            (
+                SELECT COUNT(*)
+                FROM BIENBAO
+            ) AS TOTAL_BIENBAO,
+
+            CASE
+                WHEN V_MAHANG IN ('A', 'A1') THEN 0
+                ELSE 1
+            END AS HAS_MOPHONG,
+
+            CASE
+                WHEN V_MAHANG IN ('A', 'A1') THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM BODEMOPHONG BMP
+                    WHERE BMP.ISACTIVE = 1
+                )
+            END AS MP_BODE,
+
+            CASE
+                WHEN V_MAHANG IN ('A', 'A1') THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM TINHHUONGMOPHONG
+                )
+            END AS MP_TINHHUONG,
+
+            CASE
+                WHEN V_MAHANG IN ('A', 'A1') OR P_USERID IS NULL THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM BAILAMMOPHONG BLM
+                    JOIN BODEMOPHONG BMP ON BMP.BODEMOPHONGID = BLM.BODEMOPHONGID
+                    WHERE BLM.USERID = P_USERID
+                      AND BMP.ISACTIVE = 1
+                )
+            END AS MP_BODE_DONE
+        FROM HANG_INFO H;
+END;
+/
+CREATE OR REPLACE PROCEDURE PR_HOC_CAU_LIET (
+    P_MAHANG   IN VARCHAR2,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+    V_MAHANG VARCHAR2(10);
+BEGIN
+    V_MAHANG := UPPER(TRIM(P_MAHANG));
+
+    OPEN P_CURSOR FOR
+        WITH QUESTION_BASE AS (
+            SELECT
+                CH.CAUHOIID,
+                CH.CHUONGID,
+                CH.NOIDUNG,
+                CH.HINHANH,
+                CH.CAULIET,
+                CH.CHUY,
+                CH.XEMAY,
+                CH.URLANHMEO,
+                C.TENCHUONG,
+                NVL(C.THUTU, 0) AS CHUONG_THUTU,
+                ROW_NUMBER() OVER (
+                    ORDER BY NVL(C.THUTU, 0), CH.CAUHOIID
+                ) AS GLOBAL_INDEX
+            FROM CAUHOILYTHUYET CH
+            JOIN CHUONG C ON C.CHUONGID = CH.CHUONGID
+        )
+        SELECT
+            Q.GLOBAL_INDEX,
+            Q.CAUHOIID,
+            Q.NOIDUNG,
+            Q.HINHANH,
+            Q.URLANHMEO,
+            Q.CAULIET,
+            Q.CHUY,
+            Q.XEMAY,
+            Q.CHUONGID,
+            Q.TENCHUONG,
+            Q.CHUONG_THUTU,
+            D.DAPANID,
+            D.THUTU AS DAPAN_THUTU,
+            D.DAPANDUNG
+        FROM QUESTION_BASE Q
+        JOIN DAPAN D ON D.CAUHOIID = Q.CAUHOIID
+        WHERE Q.CAULIET = 1
+          AND (
+                V_MAHANG NOT IN ('A', 'A1')
+                OR Q.XEMAY = 1
+              )
+        ORDER BY Q.CHUONG_THUTU, Q.CAUHOIID, D.THUTU;
+END;
+/
+CREATE OR REPLACE PROCEDURE PR_HOC_CHU_Y (
+    P_MAHANG   IN VARCHAR2,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+    V_MAHANG VARCHAR2(10);
+BEGIN
+    V_MAHANG := UPPER(TRIM(P_MAHANG));
+
+    OPEN P_CURSOR FOR
+        WITH QUESTION_BASE AS (
+            SELECT
+                CH.CAUHOIID,
+                CH.CHUONGID,
+                CH.NOIDUNG,
+                CH.HINHANH,
+                CH.CAULIET,
+                CH.CHUY,
+                CH.XEMAY,
+                CH.URLANHMEO,
+                C.TENCHUONG,
+                NVL(C.THUTU, 0) AS CHUONG_THUTU,
+                ROW_NUMBER() OVER (
+                    ORDER BY NVL(C.THUTU, 0), CH.CAUHOIID
+                ) AS GLOBAL_INDEX
+            FROM CAUHOILYTHUYET CH
+            JOIN CHUONG C ON C.CHUONGID = CH.CHUONGID
+        )
+        SELECT
+            Q.GLOBAL_INDEX,
+            Q.CAUHOIID,
+            Q.NOIDUNG,
+            Q.HINHANH,
+            Q.URLANHMEO,
+            Q.CAULIET,
+            Q.CHUY,
+            Q.XEMAY,
+            Q.CHUONGID,
+            Q.TENCHUONG,
+            Q.CHUONG_THUTU,
+            D.DAPANID,
+            D.THUTU AS DAPAN_THUTU,
+            D.DAPANDUNG
+        FROM QUESTION_BASE Q
+        JOIN DAPAN D ON D.CAUHOIID = Q.CAUHOIID
+        WHERE Q.CHUY = 1
+          AND (
+                V_MAHANG NOT IN ('A', 'A1')
+                OR Q.XEMAY = 1
+              )
+        ORDER BY Q.CHUONG_THUTU, Q.CAUHOIID, D.THUTU;
+END;
+/
+CREATE OR REPLACE PROCEDURE PR_FLASHCARD_BIENBAO (
+    P_USERID   IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            B.IDBIENBAO,
+            B.TENBIENBAO,
+            B.YNGHIA,
+            B.HINHANH,
+            F.IDFLASHCARD,
+            F.DANHGIA
+        FROM BIENBAO B
+        LEFT JOIN FLASHCARD F
+               ON F.IDBIENBAO = B.IDBIENBAO
+              AND F.USERID = P_USERID
+        ORDER BY B.IDBIENBAO;
+END;
+/
+CREATE OR REPLACE PROCEDURE PR_FLASHCARD_SAVE (
+    P_USERID      IN NUMBER,
+    P_IDBIENBAO   IN NUMBER,
+    P_DANHGIA     IN NVARCHAR2
+)
+AS
+    V_COUNT NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO V_COUNT
+    FROM FLASHCARD
+    WHERE USERID = P_USERID
+      AND IDBIENBAO = P_IDBIENBAO;
+
+    IF V_COUNT = 0 THEN
+        INSERT INTO FLASHCARD (DANHGIA, USERID, IDBIENBAO)
+        VALUES (P_DANHGIA, P_USERID, P_IDBIENBAO);
+    ELSE
+        UPDATE FLASHCARD
+        SET DANHGIA = P_DANHGIA
+        WHERE USERID = P_USERID
+          AND IDBIENBAO = P_IDBIENBAO;
+    END IF;
+END;
+/
+CREATE OR REPLACE PROCEDURE PR_GET_HANG
+(
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+    SELECT MAHANG FROM HANGGPLX ORDER BY MAHANG;
+END;
+/
 
 
 
