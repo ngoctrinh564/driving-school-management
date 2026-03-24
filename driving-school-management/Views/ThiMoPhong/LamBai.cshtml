@@ -1,0 +1,551 @@
+﻿@model driving_school_management.ViewModels.ThiTrialViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Thi mô phỏng lái xe";
+
+    var tinhHuongsJson = JsonSerializer.Serialize(
+        Model.TinhHuongs,
+        new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+    );
+}
+
+<style>
+    .mp-wrap {
+        max-width: 1240px;
+        margin: 18px auto;
+        padding: 0 12px;
+    }
+
+    .mp-grid {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 18px;
+        align-items: start;
+    }
+
+    @@media (max-width: 992px) {
+        .mp-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .mp-videoCard {
+        background: #0b0b0b;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 12px 34px rgba(0,0,0,.18);
+    }
+
+    .mp-videoTopBar {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: linear-gradient(180deg, #111, #0b0b0b);
+        color: #fff;
+    }
+
+    .mp-title {
+        font-weight: 800;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
+    .mp-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .mp-badge {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.12);
+        color: #fff;
+        cursor: pointer;
+        pointer-events: auto;
+    }
+
+        .mp-badge:hover {
+            background: rgba(255,255,255,.22);
+        }
+
+    video#video {
+        width: 100%;
+        display: block;
+        background: #000;
+    }
+
+    .mp-progressWrap {
+        background: #fff;
+        padding: 10px 12px 12px;
+        border: 1px solid #eee;
+        border-top: none;
+        border-radius: 0 0 14px 14px;
+    }
+
+    .mp-progressBar {
+        position: relative;
+        height: 10px;
+        background: #e9ecef;
+        border-radius: 999px;
+        overflow: visible;
+        border: 1px solid #e6e6e6;
+    }
+
+    .mp-progress {
+        position: absolute;
+        inset: 0;
+        width: 0%;
+        background: #0d6efd;
+        z-index: 1;
+    }
+
+    .mp-flagLayer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 4;
+    }
+
+    .mp-flagPin {
+        position: absolute;
+        top: -18px;
+        transform: translateX(calc(-50% + 6px));
+        font-size: 18px;
+        line-height: 1;
+        color: #dc3545;
+        filter: drop-shadow(0 2px 3px rgba(0,0,0,.4));
+        pointer-events: none;
+    }
+
+    .mp-side {
+        position: sticky;
+        top: 16px;
+    }
+
+    @@media (max-width: 992px) {
+        .mp-side {
+            position: static;
+        }
+    }
+
+    .mp-card {
+        border: 1px solid #e9e9e9;
+        border-radius: 14px;
+        box-shadow: 0 10px 26px rgba(0,0,0,.06);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .mp-cardHeader {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f0f0f0;
+        background: linear-gradient(180deg,#fff,#fafafa);
+    }
+
+        .mp-cardHeader h5 {
+            margin: 0;
+            font-weight: 900;
+            font-size: 15px;
+        }
+
+    .mp-sub {
+        margin-top: 6px;
+        color: #666;
+        font-size: 13px;
+    }
+
+    .mp-kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+        border: 1px solid #ddd;
+        background: #f7f7f7;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .mp-cardBody {
+        padding: 12px 14px;
+    }
+
+    .mp-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee;
+        font-size: 14px;
+    }
+
+        .mp-row:last-child {
+            border-bottom: none;
+        }
+
+        .mp-row strong {
+            font-weight: 900;
+        }
+
+    .mp-warn {
+        display: none;
+        margin-top: 10px;
+        color: #b02a37;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+    .mp-tableWrap {
+        margin-top: 12px;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .mp-tableTitle {
+        padding: 10px 12px;
+        background: #fafafa;
+        border-bottom: 1px solid #eee;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+    .mp-table {
+        width: 100%;
+        margin: 0;
+        font-size: 13px;
+    }
+
+        .mp-table th, .mp-table td {
+            padding: 10px 10px;
+            border-bottom: 1px solid #f1f1f1;
+            vertical-align: middle;
+        }
+
+        .mp-table thead th {
+            background: #fcfcfc;
+            font-weight: 900;
+        }
+
+        .mp-table tr:last-child td {
+            border-bottom: none;
+        }
+
+    .mp-btns {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+        .mp-btns .btn {
+            border-radius: 12px;
+            font-weight: 800;
+            padding: 10px 12px;
+        }
+
+        .mp-btns .btn-primary {
+            background: #0d6efd;
+            border: none;
+        }
+
+        .mp-btns .btn-danger {
+            background: #dc3545;
+            border: none;
+        }
+
+    .mp-result {
+        display: none;
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        background: #fcfcff;
+    }
+
+        .mp-result .mp-score {
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+    .mp-scoreZoneLayer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .mp-scoreZone {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        border-radius: 0;
+        opacity: 0.9;
+    }
+
+    .score-5 {
+        background: #22c55e;
+    }
+
+    .score-4 {
+        background: #84cc16;
+    }
+
+    .score-3 {
+        background: #facc15;
+    }
+
+    .score-2 {
+        background: #fb923c;
+    }
+
+    .score-1 {
+        background: #ef4444;
+    }
+
+    .mp-bottomBar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        gap: 12px;
+    }
+</style>
+
+<div class="mp-wrap">
+    <div class="mp-grid">
+        <div>
+            <div class="mp-videoCard">
+                <div class="mp-videoTopBar">
+                    <div class="mp-title" id="txtTinhHuongTop">Click "▶ Phát" để bắt đầu thi</div>
+                    <div class="mp-badges">
+                        <button id="btnHint"
+                                class="mp-badge"
+                                style="cursor:pointer; display:none;">
+                            💡 Mẹo
+                        </button>
+                        <div class="mp-badge">⏱ <strong id="txtTimeTop">00:00</strong></div>
+                        <div class="mp-badge">🚩 <strong><span id="txtFlagsTop">0</span>/10</strong></div>
+                    </div>
+                </div>
+
+                <video id="video" playsinline preload="auto"></video>
+            </div>
+
+            <div class="mp-progressWrap">
+                <div class="mp-progressBar">
+                    <div class="mp-scoreZoneLayer" id="scoreZoneLayer"></div>
+                    <div class="mp-progress" id="timelineProgress"></div>
+                    <div class="mp-flagLayer" id="flagLayer"></div>
+                </div>
+                <div class="mp-bottomBar">
+                    <div class="text-muted small">
+                        Nhấn <span class="mp-kbd">SPACE</span> để đặt cờ.
+                        Mỗi tình huống chỉ được 1 cờ.
+                    </div>
+
+                    <button id="btnNextBottom"
+                            class="btn btn-sm btn-outline-secondary"
+                            style="display:none;">
+                        ⏭ Tình huống tiếp theo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mp-side">
+            <div class="mp-card">
+                <div class="mp-cardHeader">
+                    <div class="mp-title">
+                        Bài thi mô phỏng –
+                        @(Model.IdBoDe > 0 ? $"Mã đề #{Model.IdBoDe}" : "Đề ngẫu nhiên")
+                    </div>
+                </div>
+
+                <div class="mp-cardBody">
+                    <div id="txtWarn" class="mp-warn"></div>
+
+                    <div class="mp-tableWrap">
+                        <div class="mp-tableTitle">Bảng ghi nhận (STT – thời điểm – điểm)</div>
+                        <table class="mp-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:56px">#</th>
+                                    <th>Thời điểm</th>
+                                    <th style="width:90px">Điểm</th>
+                                </tr>
+                            </thead>
+                            <tbody id="flagTable">
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Chưa có cờ nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mp-btns">
+                        <button id="btnMain" class="btn btn-primary w-100" type="button">
+                            ▶ Phát
+                        </button>
+                        <button id="btnNext"
+                                class="btn btn-outline-secondary w-100 mt-2"
+                                type="button"
+                                style="display:none;">
+                            ⏭ Qua tình huống tiếp theo
+                        </button>
+                    </div>
+
+                    <div id="resultBox" class="mp-result">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small">Tổng điểm</div>
+                                <div class="mp-score"><span id="txtTongDiem">0</span> / 50</div>
+                            </div>
+                            <div id="txtKetQua" class="fw-bold"></div>
+                        </div>
+
+                        <hr class="my-2" />
+                        <div class="small text-muted">
+                            (Đạt khi tổng điểm ≥ <strong>35</strong>)
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="hintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white">💡 Mẹo tình huống</h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="hintImage"
+                     src=""
+                     class="img-fluid"
+                     style="max-height:80vh; object-fit:contain;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận nộp bài</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn chắc chắn muốn <strong>nộp bài thi mô phỏng</strong>? <br />
+                Sau khi nộp, hệ thống sẽ chấm điểm và hiển thị kết quả ngay tại đây.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-danger" id="btnConfirmSubmit" type="button">Nộp bài</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="stopModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận dừng bài thi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn <strong>dừng bài thi mô phỏng</strong>?<br />
+                Kết quả hiện tại sẽ <strong>không được lưu</strong>.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Tiếp tục thi
+                </button>
+                <a asp-controller="ThiMoPhong" asp-action="DanhSachBoDe" class="btn btn-danger">
+                    Dừng thi
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Kết quả bài thi mô phỏng</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Đóng">
+                </button>
+            </div>
+
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <div class="text-muted">Tổng điểm đạt được</div>
+                    <div class="display-5 fw-bold">
+                        <span id="modalTongDiem">0</span> / 50
+                    </div>
+                </div>
+
+                <div id="modalKetQua"
+                     class="fs-4 fw-bold mb-2">
+                </div>
+
+                <div class="text-muted small">
+                    (Đạt khi tổng điểm ≥ <strong>35</strong>)
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-center gap-2">
+                @if (Model.IdBoDe > 0)
+                {
+                    <a asp-controller="ThiMoPhong"
+                           asp-action="LamBai"
+                           asp-route-idBoDe="@Model.IdBoDe"
+                           class="btn btn-outline-primary px-4">
+                        🔁 Thi lại
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="ThiMoPhong"
+                           asp-action="LamBaiNgauNhien"
+                           class="btn btn-outline-primary px-4">
+                        🔁 Thi lại
+                    </a>
+                }
+
+                <a asp-controller="ThiMoPhong"
+                       asp-action="DanhSachBoDe"
+                       class="btn btn-primary px-4">
+                    Về danh sách đề
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tinhHuongs = @Html.Raw(tinhHuongsJson);
+    const idBoDe = @Model.IdBoDe;
+    console.log("tinhHuongs:", tinhHuongs);
+    if (tinhHuongs && tinhHuongs.length > 0) {
+        console.log("videoUrl đầu tiên:", tinhHuongs[0].videoUrl);
+    }
+</script>
+
+<script src="~/js/thi-mophong.js"></script>

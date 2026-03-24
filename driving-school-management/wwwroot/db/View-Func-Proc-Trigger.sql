@@ -1004,8 +1004,806 @@ BEGIN
     ORDER BY I.CAUHOIID, D.THUTU;
 END;
 /
+/* =========================================================
+   THI MÔ PHỎNG - OBJECT ORACLE
+   Dùng cho:
+   - DanhSachBoDe
+   - LichSuBaiLam
+   - LamBai
+   - LuuKetQua
+   - KetQua
+   - LamBaiNgauNhien
+   - LuuKetQuaNgauNhien
+========================================================= */
 
+------------------------------------------------------------
+-- 1. TYPE PHỤ TRỢ CHO ĐỀ NGẪU NHIÊN
+------------------------------------------------------------
+CREATE OR REPLACE TYPE OBJ_MP_RANDOM_ROW AS OBJECT
+(
+    IDTHMP          NUMBER,
+    TIEUDE          NVARCHAR2(255),
+    VIDEOURL        NVARCHAR2(1000),
+    SCORESTARTSEC   NUMBER,
+    SCOREENDSEC     NUMBER,
+    HINTIMAGEURL    NVARCHAR2(500),
+    KHO             NUMBER
+);
+/
+CREATE OR REPLACE TYPE TAB_MP_RANDOM_ROW AS TABLE OF OBJ_MP_RANDOM_ROW;
+/
 
+------------------------------------------------------------
+-- 2. VIEW
+------------------------------------------------------------
+CREATE OR REPLACE VIEW VW_MP_BODE_TINHHUONG AS
+SELECT
+    CAST(B.BODEMOPHONGID AS NUMBER(10)) AS BODEMOPHONGID,
+    CAST(NVL(B.TENBODE, '') AS NVARCHAR2(255)) AS TENBODE,
+    CAST(NVL(B.SOTINHHUONG, 10) AS NUMBER(10)) AS SOTINHHUONG,
+    CAST(NVL(B.ISACTIVE, 0) AS NUMBER(1)) AS ISACTIVE,
+    CAST(NVL(CT.THUTU, 0) AS NUMBER(10)) AS THUTU,
+    CAST(TH.TINHHUONGMOPHONGID AS NUMBER(10)) AS IDTHMP,
+    CAST(NVL(TH.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+    CAST(NVL(TH.VIDEOURL, '') AS NVARCHAR2(1000)) AS VIDEOURL,
+    CAST(NVL(TH.URLANHMEO, '') AS NVARCHAR2(500)) AS URLANHMEO,
+    CAST(NVL(TH.KHO, 0) AS NUMBER(1)) AS KHO,
+    CAST(NVL(TH.TGBATDAU, 0) AS NUMBER(12,4)) AS TGBATDAU,
+    CAST(NVL(TH.TGKETTHUC, 0) AS NUMBER(12,4)) AS TGKETTHUC,
+    CAST(TH.CHUONGMOPHONGID AS NUMBER(10)) AS CHUONGMOPHONGID
+FROM BODEMOPHONG B
+JOIN CHITIETBODEMOPHONG CT
+    ON CT.BODEMOPHONGID = B.BODEMOPHONGID
+JOIN TINHHUONGMOPHONG TH
+    ON TH.TINHHUONGMOPHONGID = CT.TINHHUONGMOPHONGID;
+/
+
+CREATE OR REPLACE VIEW VW_MP_BAILAM_CHITIET AS
+SELECT
+    BL.BAILAMMOPHONGID,
+    BL.USERID,
+    BL.BODEMOPHONGID,
+    BL.TONGDIEM,
+    BL.KETQUA,
+    D.TINHHUONGMOPHONGID AS IDTHMP,
+    D.THOIDIEMNGUOIDUNGNHAN,
+    TH.TIEUDE,
+    TH.VIDEOURL,
+    TH.URLANHMEO,
+    TH.KHO,
+    TH.TGBATDAU,
+    TH.TGKETTHUC
+FROM BAILAMMOPHONG BL
+LEFT JOIN DIEMTUNGTINHHUONG D
+    ON D.BAILAMMOPHONGID = BL.BAILAMMOPHONGID
+LEFT JOIN TINHHUONGMOPHONG TH
+    ON TH.TINHHUONGMOPHONGID = D.TINHHUONGMOPHONGID;
+/
+
+------------------------------------------------------------
+-- 3. FUNCTION
+------------------------------------------------------------
+CREATE OR REPLACE FUNCTION FUNC_MP_FRAME_TO_SEC
+(
+    P_FRAME IN NUMBER
+)
+RETURN NUMBER
+AS
+BEGIN
+    RETURN NVL(P_FRAME, 0) / 60;
+END;
+/
+
+CREATE OR REPLACE FUNCTION FUNC_MP_TINH_DIEM
+(
+    P_TIMEPRESSSEC IN NUMBER,
+    P_STARTFRAME   IN NUMBER,
+    P_ENDFRAME     IN NUMBER
+)
+RETURN NUMBER
+AS
+    V_STARTSEC NUMBER;
+    V_ENDSEC   NUMBER;
+    V_DURATION NUMBER;
+    V_STEP     NUMBER;
+    V_INDEX    NUMBER;
+BEGIN
+    V_STARTSEC := FUNC_MP_FRAME_TO_SEC(P_STARTFRAME);
+    V_ENDSEC   := FUNC_MP_FRAME_TO_SEC(P_ENDFRAME);
+
+    IF V_ENDSEC <= V_STARTSEC THEN
+        RETURN 0;
+    END IF;
+
+    IF NVL(P_TIMEPRESSSEC, 0) < V_STARTSEC OR NVL(P_TIMEPRESSSEC, 0) > V_ENDSEC THEN
+        RETURN 0;
+    END IF;
+
+    V_DURATION := V_ENDSEC - V_STARTSEC;
+    V_STEP     := V_DURATION / 5;
+
+    V_INDEX := FLOOR((P_TIMEPRESSSEC - V_STARTSEC) / V_STEP);
+
+    IF V_INDEX < 0 THEN
+        V_INDEX := 0;
+    ELSIF V_INDEX > 4 THEN
+        V_INDEX := 4;
+    END IF;
+
+    RETURN 5 - V_INDEX;
+END;
+/
+
+CREATE OR REPLACE FUNCTION FUNC_MP_GET_FLAG_TIME
+(
+    P_FLAGS_TEXT IN CLOB,
+    P_IDTHMP     IN NUMBER
+)
+RETURN NUMBER
+AS
+    V_TOKEN   VARCHAR2(4000);
+    V_ID      NUMBER;
+    V_TIME    NUMBER;
+    V_IDX     NUMBER := 1;
+    V_MIN     NUMBER := NULL;
+BEGIN
+    LOOP
+        V_TOKEN := REGEXP_SUBSTR(P_FLAGS_TEXT, '[^;]+', 1, V_IDX);
+        EXIT WHEN V_TOKEN IS NULL;
+
+        V_ID := TO_NUMBER(REGEXP_SUBSTR(V_TOKEN, '^[^|]+'));
+
+        IF V_ID = P_IDTHMP THEN
+            V_TIME := TO_NUMBER(
+                REGEXP_SUBSTR(V_TOKEN, '[^|]+', 1, 2),
+                '9999999990D999999',
+                'NLS_NUMERIC_CHARACTERS = ''.,'''
+            );
+
+            IF V_MIN IS NULL OR V_TIME < V_MIN THEN
+                V_MIN := V_TIME;
+            END IF;
+        END IF;
+
+        V_IDX := V_IDX + 1;
+    END LOOP;
+
+    RETURN V_MIN;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN NULL;
+END;
+/
+
+------------------------------------------------------------
+-- 4. PROCEDURE - DANH SÁCH BỘ ĐỀ
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_DANH_SACH_BODE
+(
+    P_USERID IN NUMBER,
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        WITH LATEST_BAILAM AS
+        (
+            SELECT *
+            FROM
+            (
+                SELECT
+                    BL.*,
+                    ROW_NUMBER() OVER
+                    (
+                        PARTITION BY BL.BODEMOPHONGID
+                        ORDER BY BL.BAILAMMOPHONGID DESC
+                    ) AS RN
+                FROM BAILAMMOPHONG BL
+                WHERE BL.USERID = P_USERID
+            )
+            WHERE RN = 1
+        )
+        SELECT
+            B.BODEMOPHONGID AS IDBODE,
+            B.TENBODE,
+            NVL(B.SOTINHHUONG, 10) AS SOTINHHUONG,
+            CASE
+                WHEN LB.BAILAMMOPHONGID IS NULL THEN 0
+                ELSE 1
+            END AS HASRESULT,
+            NVL(LB.TONGDIEM, 0) AS TONGDIEM,
+            NVL(LB.KETQUA, 0) AS KETQUA,
+            CASE
+                WHEN LB.BAILAMMOPHONGID IS NULL THEN 0
+                ELSE
+                    (
+                        SELECT COUNT(*)
+                        FROM DIEMTUNGTINHHUONG D
+                        JOIN TINHHUONGMOPHONG TH
+                            ON TH.TINHHUONGMOPHONGID = D.TINHHUONGMOPHONGID
+                        WHERE D.BAILAMMOPHONGID = LB.BAILAMMOPHONGID
+                          AND
+                          (
+                              D.THOIDIEMNGUOIDUNGNHAN < FUNC_MP_FRAME_TO_SEC(TH.TGBATDAU)
+                              OR D.THOIDIEMNGUOIDUNGNHAN > FUNC_MP_FRAME_TO_SEC(TH.TGKETTHUC)
+                          )
+                    )
+            END AS SOTINHHUONGSAI,
+            LB.BAILAMMOPHONGID AS IDBAILAMMOINHAT
+        FROM BODEMOPHONG B
+        LEFT JOIN LATEST_BAILAM LB
+            ON LB.BODEMOPHONGID = B.BODEMOPHONGID
+        WHERE B.ISACTIVE = 1
+        ORDER BY B.BODEMOPHONGID;
+END;
+/
+
+------------------------------------------------------------
+-- 5. PROCEDURE - LÀM BÀI / CHI TIẾT BỘ ĐỀ
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_LAY_BODE_CHI_TIET
+(
+    P_IDBODE IN NUMBER,
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            CAST(V.BODEMOPHONGID AS NUMBER(10)) AS IDBODE,
+            CAST(V.IDTHMP AS NUMBER(10)) AS IDTHMP,
+            CAST(NVL(V.THUTU, 0) AS NUMBER(10)) AS THUTU,
+            CAST(NVL(V.SOTINHHUONG, 10) AS NUMBER(10)) AS SOTINHHUONG,
+
+            CAST(V.TENBODE AS NVARCHAR2(255)) AS TENBODE,
+            CAST(NVL(V.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+            CAST(NVL(V.VIDEOURL, '') AS NVARCHAR2(1000)) AS VIDEOURL,
+            CAST(NVL(V.URLANHMEO, '') AS NVARCHAR2(500)) AS HINTIMAGEURL,
+
+            CAST(NVL(V.KHO, 0) AS NUMBER(1)) AS KHO,
+
+            CAST(NVL(V.TGBATDAU, 0) / 60 AS NUMBER(12,4)) AS SCORESTARTSEC,
+            CAST(NVL(V.TGKETTHUC, 0) / 60 AS NUMBER(12,4)) AS SCOREENDSEC
+        FROM VW_MP_BODE_TINHHUONG V
+        WHERE V.BODEMOPHONGID = P_IDBODE
+        ORDER BY V.THUTU;
+END;
+/
+
+------------------------------------------------------------
+-- 6. PROCEDURE - LỊCH SỬ BÀI LÀM
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_LICH_SU_HEADER
+(
+    P_IDBAILAM IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            BL.BAILAMMOPHONGID AS IDBAILAM,
+            BL.BODEMOPHONGID AS IDBODE,
+            BL.TONGDIEM,
+            NVL(BL.KETQUA, 0) AS KETQUA
+        FROM BAILAMMOPHONG BL
+        WHERE BL.BAILAMMOPHONGID = P_IDBAILAM;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE PROC_MP_LICH_SU_CHI_TIET
+(
+    P_IDBAILAM IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            CAST(V.BODEMOPHONGID AS NUMBER(10)) AS IDBODE,
+            CAST(NVL(V.THUTU, 0) AS NUMBER(10)) AS THUTU,
+            CAST(V.IDTHMP AS NUMBER(10)) AS IDTHMP,
+
+            CAST(NVL(V.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+            CAST(NVL(V.VIDEOURL, '') AS NVARCHAR2(1000)) AS VIDEOURL,
+            CAST(NVL(V.URLANHMEO, '') AS NVARCHAR2(500)) AS HINTIMAGEURL,
+
+            CAST(NVL(V.TGBATDAU, 0) / 60 AS NUMBER(12,4)) AS SCORESTARTSEC,
+            CAST(NVL(V.TGKETTHUC, 0) / 60 AS NUMBER(12,4)) AS SCOREENDSEC,
+            CAST(NVL(D.THOIDIEMNGUOIDUNGNHAN, 0) AS NUMBER(12,4)) AS TIMESEC
+        FROM BAILAMMOPHONG BL
+        JOIN VW_MP_BODE_TINHHUONG V
+            ON V.BODEMOPHONGID = BL.BODEMOPHONGID
+        LEFT JOIN DIEMTUNGTINHHUONG D
+            ON D.BAILAMMOPHONGID = BL.BAILAMMOPHONGID
+           AND D.TINHHUONGMOPHONGID = V.IDTHMP
+        WHERE BL.BAILAMMOPHONGID = P_IDBAILAM
+        ORDER BY V.THUTU;
+END;
+/
+
+------------------------------------------------------------
+-- 7. PROCEDURE - KẾT QUẢ
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_KET_QUA_HEADER
+(
+    P_IDBAILAM IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            BL.BAILAMMOPHONGID AS IDBAILAM,
+            BL.TONGDIEM,
+            NVL(BL.KETQUA, 0) AS KETQUA
+        FROM BAILAMMOPHONG BL
+        WHERE BL.BAILAMMOPHONGID = P_IDBAILAM;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE PROC_MP_KET_QUA_CHI_TIET
+(
+    P_IDBAILAM IN NUMBER,
+    P_CURSOR   OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            CAST(D.TINHHUONGMOPHONGID AS NUMBER(10)) AS IDTHMP,
+            CAST(NVL(TH.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+            CAST(NVL(D.THOIDIEMNGUOIDUNGNHAN, 0) AS NUMBER(12,4)) AS THOIDIEMNHAN,
+            CAST(
+                FUNC_MP_TINH_DIEM(
+                    D.THOIDIEMNGUOIDUNGNHAN,
+                    TH.TGBATDAU,
+                    TH.TGKETTHUC
+                ) AS NUMBER(2)
+            ) AS DIEM
+        FROM DIEMTUNGTINHHUONG D
+        JOIN TINHHUONGMOPHONG TH
+            ON TH.TINHHUONGMOPHONGID = D.TINHHUONGMOPHONGID
+        WHERE D.BAILAMMOPHONGID = P_IDBAILAM
+        ORDER BY D.TINHHUONGMOPHONGID;
+END;
+/
+
+------------------------------------------------------------
+-- 8. PROCEDURE - CHẤM ĐIỂM BỘ ĐỀ CỐ ĐỊNH (KHÔNG LƯU)
+-- P_FLAGS_TEXT format: IDTHMP|TIMESEC;IDTHMP|TIMESEC;...
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_CHAM_BODE
+(
+    P_IDBODE     IN NUMBER,
+    P_FLAGS_TEXT IN CLOB,
+    O_TONGDIEM   OUT NUMBER,
+    O_DAT        OUT NUMBER
+)
+AS
+    V_TONG NUMBER := 0;
+    V_TIME NUMBER;
+BEGIN
+    FOR R IN
+    (
+        SELECT
+            V.IDTHMP,
+            V.TGBATDAU,
+            V.TGKETTHUC
+        FROM VW_MP_BODE_TINHHUONG V
+        WHERE V.BODEMOPHONGID = P_IDBODE
+        ORDER BY V.THUTU
+        FETCH FIRST 10 ROWS ONLY
+    )
+    LOOP
+        V_TIME := FUNC_MP_GET_FLAG_TIME(P_FLAGS_TEXT, R.IDTHMP);
+        V_TONG := V_TONG + FUNC_MP_TINH_DIEM(NVL(V_TIME, 0), R.TGBATDAU, R.TGKETTHUC);
+    END LOOP;
+
+    O_TONGDIEM := V_TONG;
+    O_DAT := CASE WHEN V_TONG >= 35 THEN 1 ELSE 0 END;
+END;
+/
+
+------------------------------------------------------------
+-- 9. PROCEDURE - LƯU KẾT QUẢ BỘ ĐỀ CỐ ĐỊNH
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_LUU_KET_QUA
+(
+    P_USERID      IN NUMBER,
+    P_IDBODE      IN NUMBER,
+    P_FLAGS_TEXT  IN CLOB,
+    O_TONGDIEM    OUT NUMBER,
+    O_DAT         OUT NUMBER,
+    O_IDBAILAM    OUT NUMBER
+)
+AS
+    V_TIME NUMBER;
+BEGIN
+    PROC_MP_CHAM_BODE
+    (
+        P_IDBODE     => P_IDBODE,
+        P_FLAGS_TEXT => P_FLAGS_TEXT,
+        O_TONGDIEM   => O_TONGDIEM,
+        O_DAT        => O_DAT
+    );
+
+    INSERT INTO BAILAMMOPHONG
+    (
+        TONGDIEM,
+        KETQUA,
+        USERID,
+        BODEMOPHONGID
+    )
+    VALUES
+    (
+        O_TONGDIEM,
+        O_DAT,
+        P_USERID,
+        P_IDBODE
+    )
+    RETURNING BAILAMMOPHONGID INTO O_IDBAILAM;
+
+    FOR R IN
+    (
+        SELECT
+            V.IDTHMP
+        FROM VW_MP_BODE_TINHHUONG V
+        WHERE V.BODEMOPHONGID = P_IDBODE
+        ORDER BY V.THUTU
+        FETCH FIRST 10 ROWS ONLY
+    )
+    LOOP
+        V_TIME := FUNC_MP_GET_FLAG_TIME(P_FLAGS_TEXT, R.IDTHMP);
+
+        INSERT INTO DIEMTUNGTINHHUONG
+        (
+            BAILAMMOPHONGID,
+            TINHHUONGMOPHONGID,
+            THOIDIEMNGUOIDUNGNHAN
+        )
+        VALUES
+        (
+            O_IDBAILAM,
+            R.IDTHMP,
+            NVL(V_TIME, 0)
+        );
+    END LOOP;
+END;
+/
+
+------------------------------------------------------------
+-- 10. PROCEDURE - LẤY 10 TÌNH HUỐNG NGẪU NHIÊN
+-- Tỷ lệ chương: 2-1-2-1-2-2 theo THUTU của CHUONGMOPHONG
+-- Có 1 hoặc 2 câu khó
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_DE_NGAU_NHIEN
+(
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+    TYPE T_NUM_BY_IDX IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+
+    V_Q1 NUMBER := 2;
+    V_Q2 NUMBER := 1;
+    V_Q3 NUMBER := 2;
+    V_Q4 NUMBER := 1;
+    V_Q5 NUMBER := 2;
+    V_Q6 NUMBER := 2;
+
+    V_HARD_COUNT NUMBER;
+    V_HARD_NOW   NUMBER := 0;
+
+    V_ROWS TAB_MP_RANDOM_ROW := TAB_MP_RANDOM_ROW();
+
+    FUNCTION FN_HAS_ID(P_ID NUMBER) RETURN BOOLEAN
+    AS
+    BEGIN
+        FOR I IN 1 .. V_ROWS.COUNT LOOP
+            IF V_ROWS(I).IDTHMP = P_ID THEN
+                RETURN TRUE;
+            END IF;
+        END LOOP;
+        RETURN FALSE;
+    END;
+
+    PROCEDURE ADD_ROW
+    (
+        P_IDTHMP        IN NUMBER,
+        P_TIEUDE        IN NVARCHAR2,
+        P_VIDEOURL      IN NVARCHAR2,
+        P_SCORESTARTSEC IN NUMBER,
+        P_SCOREENDSEC   IN NUMBER,
+        P_HINTIMAGEURL  IN NVARCHAR2,
+        P_KHO           IN NUMBER
+    )
+    AS
+    BEGIN
+        IF FN_HAS_ID(P_IDTHMP) THEN
+            RETURN;
+        END IF;
+
+        V_ROWS.EXTEND;
+        V_ROWS(V_ROWS.COUNT) := OBJ_MP_RANDOM_ROW
+        (
+            P_IDTHMP,
+            P_TIEUDE,
+            P_VIDEOURL,
+            P_SCORESTARTSEC,
+            P_SCOREENDSEC,
+            P_HINTIMAGEURL,
+            P_KHO
+        );
+    END;
+
+    FUNCTION GET_QUOTA(P_THUTU NUMBER) RETURN NUMBER
+    AS
+    BEGIN
+        CASE P_THUTU
+            WHEN 1 THEN RETURN V_Q1;
+            WHEN 2 THEN RETURN V_Q2;
+            WHEN 3 THEN RETURN V_Q3;
+            WHEN 4 THEN RETURN V_Q4;
+            WHEN 5 THEN RETURN V_Q5;
+            WHEN 6 THEN RETURN V_Q6;
+            ELSE RETURN 0;
+        END CASE;
+    END;
+
+    PROCEDURE SET_QUOTA(P_THUTU NUMBER, P_VAL NUMBER)
+    AS
+    BEGIN
+        CASE P_THUTU
+            WHEN 1 THEN V_Q1 := P_VAL;
+            WHEN 2 THEN V_Q2 := P_VAL;
+            WHEN 3 THEN V_Q3 := P_VAL;
+            WHEN 4 THEN V_Q4 := P_VAL;
+            WHEN 5 THEN V_Q5 := P_VAL;
+            WHEN 6 THEN V_Q6 := P_VAL;
+        END CASE;
+    END;
+BEGIN
+    V_HARD_COUNT := CASE WHEN DBMS_RANDOM.VALUE(1, 3) < 2 THEN 1 ELSE 2 END;
+
+    -- B1. Pick hard trước theo quota chương
+    FOR R IN
+    (
+        SELECT
+            C.THUTU AS CHUONGTHUTU,
+            TH.TINHHUONGMOPHONGID,
+            TH.TIEUDE,
+            TH.VIDEOURL,
+            TH.URLANHMEO,
+            TH.KHO,
+            FUNC_MP_FRAME_TO_SEC(TH.TGBATDAU) AS SCORESTARTSEC,
+            FUNC_MP_FRAME_TO_SEC(TH.TGKETTHUC) AS SCOREENDSEC
+        FROM CHUONGMOPHONG C
+        JOIN TINHHUONGMOPHONG TH
+            ON TH.CHUONGMOPHONGID = C.CHUONGMOPHONGID
+        WHERE NVL(TH.KHO, 0) = 1
+        ORDER BY DBMS_RANDOM.VALUE
+    )
+    LOOP
+        EXIT WHEN V_HARD_NOW >= V_HARD_COUNT;
+
+        IF GET_QUOTA(R.CHUONGTHUTU) > 0 THEN
+            ADD_ROW
+            (
+                R.TINHHUONGMOPHONGID,
+                R.TIEUDE,
+                R.VIDEOURL,
+                R.SCORESTARTSEC,
+                R.SCOREENDSEC,
+                R.URLANHMEO,
+                NVL(R.KHO, 0)
+            );
+
+            SET_QUOTA(R.CHUONGTHUTU, GET_QUOTA(R.CHUONGTHUTU) - 1);
+            V_HARD_NOW := V_HARD_NOW + 1;
+        END IF;
+    END LOOP;
+
+    -- B2. Fill theo quota từng chương, ưu tiên câu thường
+    FOR CH IN
+    (
+        SELECT CHUONGMOPHONGID, THUTU
+        FROM CHUONGMOPHONG
+        ORDER BY THUTU
+    )
+    LOOP
+        IF GET_QUOTA(CH.THUTU) <= 0 THEN
+            CONTINUE;
+        END IF;
+
+        FOR R IN
+        (
+            SELECT
+                TH.TINHHUONGMOPHONGID,
+                TH.TIEUDE,
+                TH.VIDEOURL,
+                TH.URLANHMEO,
+                TH.KHO,
+                FUNC_MP_FRAME_TO_SEC(TH.TGBATDAU) AS SCORESTARTSEC,
+                FUNC_MP_FRAME_TO_SEC(TH.TGKETTHUC) AS SCOREENDSEC
+            FROM TINHHUONGMOPHONG TH
+            WHERE TH.CHUONGMOPHONGID = CH.CHUONGMOPHONGID
+              AND NVL(TH.KHO, 0) = 0
+            ORDER BY DBMS_RANDOM.VALUE
+        )
+        LOOP
+            EXIT WHEN GET_QUOTA(CH.THUTU) <= 0;
+
+            ADD_ROW
+            (
+                R.TINHHUONGMOPHONGID,
+                R.TIEUDE,
+                R.VIDEOURL,
+                R.SCORESTARTSEC,
+                R.SCOREENDSEC,
+                R.URLANHMEO,
+                NVL(R.KHO, 0)
+            );
+
+            IF FN_HAS_ID(R.TINHHUONGMOPHONGID) THEN
+                SET_QUOTA(CH.THUTU, GET_QUOTA(CH.THUTU) - 1);
+            END IF;
+        END LOOP;
+
+        IF GET_QUOTA(CH.THUTU) > 0 THEN
+            FOR R IN
+            (
+                SELECT
+                    TH.TINHHUONGMOPHONGID,
+                    TH.TIEUDE,
+                    TH.VIDEOURL,
+                    TH.URLANHMEO,
+                    TH.KHO,
+                    FUNC_MP_FRAME_TO_SEC(TH.TGBATDAU) AS SCORESTARTSEC,
+                    FUNC_MP_FRAME_TO_SEC(TH.TGKETTHUC) AS SCOREENDSEC
+                FROM TINHHUONGMOPHONG TH
+                WHERE TH.CHUONGMOPHONGID = CH.CHUONGMOPHONGID
+                ORDER BY DBMS_RANDOM.VALUE
+            )
+            LOOP
+                EXIT WHEN GET_QUOTA(CH.THUTU) <= 0;
+
+                IF NOT FN_HAS_ID(R.TINHHUONGMOPHONGID) THEN
+                    ADD_ROW
+                    (
+                        R.TINHHUONGMOPHONGID,
+                        R.TIEUDE,
+                        R.VIDEOURL,
+                        R.SCORESTARTSEC,
+                        R.SCOREENDSEC,
+                        R.URLANHMEO,
+                        NVL(R.KHO, 0)
+                    );
+                    SET_QUOTA(CH.THUTU, GET_QUOTA(CH.THUTU) - 1);
+                END IF;
+            END LOOP;
+        END IF;
+    END LOOP;
+
+    -- B3. Nếu thiếu thì fill toàn bộ hệ thống
+    IF V_ROWS.COUNT < 10 THEN
+        FOR R IN
+        (
+            SELECT
+                TH.TINHHUONGMOPHONGID,
+                TH.TIEUDE,
+                TH.VIDEOURL,
+                TH.URLANHMEO,
+                TH.KHO,
+                FUNC_MP_FRAME_TO_SEC(TH.TGBATDAU) AS SCORESTARTSEC,
+                FUNC_MP_FRAME_TO_SEC(TH.TGKETTHUC) AS SCOREENDSEC
+            FROM TINHHUONGMOPHONG TH
+            ORDER BY DBMS_RANDOM.VALUE
+        )
+        LOOP
+            EXIT WHEN V_ROWS.COUNT >= 10;
+
+            IF NOT FN_HAS_ID(R.TINHHUONGMOPHONGID) THEN
+                ADD_ROW
+                (
+                    R.TINHHUONGMOPHONGID,
+                    R.TIEUDE,
+                    R.VIDEOURL,
+                    R.SCORESTARTSEC,
+                    R.SCOREENDSEC,
+                    R.URLANHMEO,
+                    NVL(R.KHO, 0)
+                );
+            END IF;
+        END LOOP;
+    END IF;
+
+    OPEN P_CURSOR FOR
+    SELECT
+        CAST(T.IDTHMP AS NUMBER(10)) AS IDTHMP,
+        CAST(NVL(T.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+        CAST(NVL(T.VIDEOURL, '') AS NVARCHAR2(1000)) AS VIDEOURL,
+        CAST(NVL(T.SCORESTARTSEC, 0) AS NUMBER(12,4)) AS SCORESTARTSEC,
+        CAST(NVL(T.SCOREENDSEC, 0) AS NUMBER(12,4)) AS SCOREENDSEC,
+        CAST(NVL(T.HINTIMAGEURL, '') AS NVARCHAR2(500)) AS HINTIMAGEURL,
+        CAST(NVL(T.KHO, 0) AS NUMBER(1)) AS KHO
+    FROM
+    (
+        SELECT T.*
+        FROM TABLE(V_ROWS) T
+        ORDER BY DBMS_RANDOM.VALUE
+    ) T
+    FETCH FIRST 10 ROWS ONLY;
+END;
+/
+
+------------------------------------------------------------
+-- 11. PROCEDURE - CHẤM ĐỀ NGẪU NHIÊN (KHÔNG LƯU)
+-- P_SELECTED_IDS format: 1,5,9,12...
+------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE PROC_MP_CHAM_NGAU_NHIEN
+(
+    P_SELECTED_IDS IN CLOB,
+    P_FLAGS_TEXT   IN CLOB,
+    O_TONGDIEM     OUT NUMBER,
+    O_DAT          OUT NUMBER
+)
+AS
+    V_ID_STR VARCHAR2(100);
+    V_ID     NUMBER;
+    V_TIME   NUMBER;
+    V_TONG   NUMBER := 0;
+    V_IDX    NUMBER := 1;
+    V_START  NUMBER;
+    V_END    NUMBER;
+BEGIN
+    LOOP
+        V_ID_STR := REGEXP_SUBSTR(P_SELECTED_IDS, '[^,]+', 1, V_IDX);
+        EXIT WHEN V_ID_STR IS NULL;
+
+        V_ID := TO_NUMBER(TRIM(V_ID_STR));
+        V_TIME := FUNC_MP_GET_FLAG_TIME(P_FLAGS_TEXT, V_ID);
+
+        SELECT TGBATDAU, TGKETTHUC
+        INTO V_START, V_END
+        FROM TINHHUONGMOPHONG
+        WHERE TINHHUONGMOPHONGID = V_ID;
+
+        V_TONG := V_TONG + FUNC_MP_TINH_DIEM(NVL(V_TIME, 0), V_START, V_END);
+
+        V_IDX := V_IDX + 1;
+    END LOOP;
+
+    O_TONGDIEM := V_TONG;
+    O_DAT := CASE WHEN V_TONG >= 35 THEN 1 ELSE 0 END;
+END;
+/
+CREATE OR REPLACE PROCEDURE PROC_MP_ONTAP_INDEX
+(
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            CAST(C.CHUONGMOPHONGID AS NUMBER(10)) AS IDCHUONGMP,
+            CAST(NVL(C.TENCHUONG, '') AS NVARCHAR2(255)) AS TENCHUONG,
+            CAST(NVL(C.THUTU, 0) AS NUMBER(10)) AS CHUONG_THUTU,
+
+            CAST(TH.TINHHUONGMOPHONGID AS NUMBER(10)) AS IDTHMP,
+            CAST(NVL(TH.TIEUDE, '') AS NVARCHAR2(255)) AS TIEUDE,
+            CAST(NVL(TH.VIDEOURL, '') AS NVARCHAR2(1000)) AS VIDEOURL,
+            CAST(NVL(TH.URLANHMEO, '') AS NVARCHAR2(500)) AS HINTIMAGEURL,
+            CAST(NVL(TH.THUTU, 0) AS NUMBER(10)) AS TINHHUONG_THUTU,
+            CAST(NVL(TH.KHO, 0) AS NUMBER(1)) AS KHO,
+
+            CAST(NVL(TH.TGBATDAU, 0) / 60 AS NUMBER(12,4)) AS SCORESTARTSEC,
+            CAST(NVL(TH.TGKETTHUC, 0) / 60 AS NUMBER(12,4)) AS SCOREENDSEC
+        FROM CHUONGMOPHONG C
+        LEFT JOIN TINHHUONGMOPHONG TH
+            ON TH.CHUONGMOPHONGID = C.CHUONGMOPHONGID
+        ORDER BY C.THUTU, TH.THUTU, TH.TINHHUONGMOPHONGID;
+END;
+/
 
 
 

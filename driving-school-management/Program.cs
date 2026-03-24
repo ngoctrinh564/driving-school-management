@@ -17,6 +17,8 @@ builder.Services.AddScoped<KhoaHocService>();
 builder.Services.AddScoped<HocService>();
 builder.Services.AddScoped<LyThuyetService>();
 builder.Services.AddScoped<AdminUserService>();
+builder.Services.AddScoped<IThiMoPhongService, ThiMoPhongService>();
+builder.Services.AddScoped<IMoPhongService, MoPhongService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 //
 builder.Services.AddSession();
@@ -33,8 +35,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

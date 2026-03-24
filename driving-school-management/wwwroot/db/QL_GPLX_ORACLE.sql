@@ -3389,16 +3389,16 @@ WITH v (tenBoDe, Thu_tu_situation, Thu_tu) AS (
     SELECT 'Bộ đề số 2', 94, 10 FROM dual UNION ALL
 
     -- Đề 3
-    SELECT 'Bộ đề số 30',  5,  1 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30',  6,  2 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 32,  3 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 48,  4 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 49,  5 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 66,  6 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 78,  7 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 79,  8 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 95,  9 FROM dual UNION ALL
-    SELECT 'Bộ đề số 30', 96, 10 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3',  5,  1 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3',  6,  2 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 32,  3 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 48,  4 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 49,  5 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 66,  6 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 78,  7 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 79,  8 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 95,  9 FROM dual UNION ALL
+    SELECT 'Bộ đề số 3', 96, 10 FROM dual UNION ALL
 
     -- Đề 4
     SELECT 'Bộ đề số 4',  7,  1 FROM dual UNION ALL
