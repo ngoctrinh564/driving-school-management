@@ -5,167 +5,618 @@
 }
 
 <style>
-    .chapter-box {
-        border-bottom: 1px solid #ddd;
-        background: #f7f9fc;
+    :root {
+        --bg: #f5f7fa;
+        --surface: rgba(255,255,255,.88);
+        --surface-strong: #ffffff;
+        --surface-soft: #f8fafc;
+        --border: rgba(15, 23, 42, 0.08);
+        --border-strong: rgba(15, 23, 42, 0.14);
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #1e293b;
+        --accent: #2563eb;
+        --accent-soft: rgba(37, 99, 235, 0.08);
+        --danger: #dc2626;
+        --success: #15803d;
+        --success-soft: rgba(21, 128, 61, 0.10);
+        --warning: #d97706;
+        --shadow-sm: 0 4px 20px rgba(15, 23, 42, 0.04);
+        --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+        --shadow-lg: 0 18px 50px rgba(15, 23, 42, 0.12);
+        --radius-sm: 12px;
+        --radius-md: 18px;
+        --radius-lg: 24px;
+        --transition: all .25s ease;
     }
 
+    body {
+        background: radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(245,247,250,.96) 45%, rgba(241,245,249,.96) 100%);
+        color: var(--text);
+        font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    .page-shell {
+        animation: pageFade .4s ease;
+    }
+
+    @@keyframes pageFade {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-block {
+        position: sticky;
+        top: 12px;
+        z-index: 20;
+        margin-bottom: 22px;
+        padding: 20px 24px;
+        border-radius: var(--radius-lg);
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(255,255,255,.66);
+        box-shadow: var(--shadow-sm);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .hero-title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: -.03em;
+        color: var(--primary);
+    }
+
+    .hero-subtitle {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .left-panel {
+        position: sticky;
+        top: 112px;
+        z-index: 5;
+        background: var(--surface);
+        border: 1px solid rgba(255,255,255,.72);
+        border-radius: var(--radius-lg);
+        padding: 18px;
+        box-shadow: var(--shadow-md);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .panel-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .panel-heading h5 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+    .chapter-box {
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,.8);
+        transition: var(--transition);
+        box-shadow: 0 6px 18px rgba(15,23,42,.03);
+    }
+
+        .chapter-box:hover {
+            border-color: var(--border-strong);
+            box-shadow: 0 12px 28px rgba(15,23,42,.06);
+        }
+
     .chapter-header {
-        padding: 12px 14px;
+        padding: 14px 16px;
         cursor: pointer;
-        background: #e8f0fe;
-        font-weight: 600;
+        background: rgba(248,250,252,.92);
+        font-weight: 700;
+        font-size: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        color: var(--primary);
+        transition: var(--transition);
+        user-select: none;
     }
 
         .chapter-header:hover {
-            background: #dbe7fd;
+            background: #ffffff;
+        }
+
+        .chapter-header span:last-child {
+            font-size: 12px;
+            color: var(--muted);
+            transition: transform .25s ease;
+        }
+
+        .chapter-header[aria-expanded="true"] span:last-child {
+            transform: rotate(180deg);
         }
 
     .question-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
-        padding: 10px 10px 16px 10px;
-        background: white;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+        padding: 14px;
+        background: linear-gradient(180deg, rgba(248,250,252,.88), rgba(255,255,255,.96));
     }
 
     .q-btn {
-        padding: 6px 0;
-        background: #f1f3f5;
-        border: 1px solid #dcdcdc;
-        border-radius: 4px;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: rgba(255,255,255,.98);
+        border: 1px solid var(--border);
+        border-radius: 14px;
         text-align: center;
         cursor: pointer;
         font-size: 14px;
-        transition: .15s;
+        font-weight: 700;
+        color: var(--primary);
+        transition: var(--transition);
+        user-select: none;
+        box-shadow: 0 4px 14px rgba(15,23,42,.03);
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        pointer-events: auto;
     }
 
         .q-btn:hover {
-            background: #e1e5ea;
+            background: #ffffff;
+            border-color: rgba(37,99,235,.22);
+            box-shadow: 0 10px 22px rgba(37,99,235,.10);
+            transform: translateY(-2px);
+        }
+
+        .q-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37,99,235,.12), 0 10px 22px rgba(37,99,235,.10);
         }
 
         .q-btn.active {
-            background: #1976d2;
-            color: white;
-            border-color: #125a9c;
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(15,23,42,.18);
         }
+
+        .q-btn.is-liet {
+            border-color: rgba(220,38,38,.28);
+            color: var(--danger);
+            background: linear-gradient(180deg, #fff, #fff8f8);
+        }
+
+            .q-btn.is-liet::after {
+                content: "";
+                position: absolute;
+                top: 7px;
+                right: 7px;
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--danger);
+                box-shadow: 0 0 0 4px rgba(220,38,38,.08);
+                pointer-events: none;
+            }
+
+        .q-btn.active.is-liet {
+            color: #fff;
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            border-color: #0f172a;
+        }
+
+    .question-panel {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid rgba(255,255,255,.72);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow-lg);
+        min-height: 560px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        overflow: hidden;
+    }
+
+        .question-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(15,23,42,.08), transparent);
+        }
+
+    #defaultText {
+        display: flex;
+        min-height: 500px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--muted);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -.01em;
+        padding: 20px;
+    }
+
+    .question-topbar {
+        display: grid;
+        grid-template-columns: 120px 1fr 120px;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .nav-btn {
+        height: 46px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,.88);
+        color: var(--primary);
+        font-weight: 700;
+        transition: var(--transition);
+        box-shadow: 0 4px 16px rgba(15,23,42,.03);
+    }
+
+        .nav-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37,99,235,.24);
+            background: #ffffff;
+            box-shadow: 0 12px 24px rgba(15,23,42,.06);
+        }
+
+    #qTitle {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 750;
+        line-height: 1.45;
+        letter-spacing: -.02em;
+        color: var(--text);
+        text-align: center;
+    }
 
     .hocall-question-image {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 12px;
+        margin: 22px 0 10px;
     }
 
         .hocall-question-image img {
-            max-width: 100%;
+            width: 100%;
+            max-width: 760px;
             max-height: 420px;
             object-fit: contain;
-            border-radius: 6px;
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            background: #fff;
+            box-shadow: 0 20px 40px rgba(15,23,42,.08);
+            padding: 8px;
+            transition: var(--transition);
         }
 
+    .section-label {
+        margin-top: 22px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
     .answer-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 16px;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-top: 8px;
     }
 
     .answer-item {
-        flex: 1;
+        position: relative;
         min-width: 120px;
-        padding: 14px 0;
+        padding: 18px 14px;
         text-align: center;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        background: #f8f9fa;
-        cursor: default;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: rgba(248,250,252,.92);
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 800;
+        color: var(--primary);
+        transition: var(--transition);
+        box-shadow: 0 6px 16px rgba(15,23,42,.03);
+        cursor: default;
     }
 
         .answer-item.correct {
-            background: #d4edda;
-            border-color: #7abf8a;
-            color: #155724;
+            background: var(--success-soft);
+            border-color: rgba(21,128,61,.18);
+            color: var(--success);
+            box-shadow: 0 12px 24px rgba(21,128,61,.08);
+        }
+
+            .answer-item.correct::before {
+                content: "✓";
+                position: absolute;
+                top: 10px;
+                right: 12px;
+                font-size: 13px;
+                font-weight: 900;
+                opacity: .9;
+            }
+
+    .hint-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 24px;
+        min-height: 48px;
+        padding: 0 20px;
+        border: 1px solid rgba(217,119,6,.18);
+        border-radius: 14px;
+        background: rgba(255,255,255,.88);
+        color: #7c2d12;
+        font-weight: 700;
+        transition: var(--transition);
+        box-shadow: 0 8px 20px rgba(217,119,6,.08);
+    }
+
+        .hint-btn:hover {
+            transform: translateY(-1px);
+            background: #fffaf2;
+            box-shadow: 0 12px 24px rgba(217,119,6,.12);
         }
 
     #imgModal {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, .7);
+        inset: 0;
+        background: rgba(15,23,42,.34);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 9999;
+        padding: 24px;
     }
 
         #imgModal img {
-            max-width: 92%;
-            max-height: 92%;
-            border-radius: 10px;
+            max-width: min(1080px, 94vw);
+            max-height: 90vh;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,.35);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 24px 60px rgba(0,0,0,.24);
         }
+
+    @@media (max-width: 1399.98px) {
+        .question-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 1199.98px) {
+        .hero-block,
+        .left-panel {
+            position: static;
+        }
+
+        .question-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        #qTitle {
+            font-size: 24px;
+        }
+    }
+
+    @@media (max-width: 991.98px) {
+        .question-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .question-panel {
+            min-height: auto;
+            padding: 20px;
+        }
+
+        .question-topbar {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        #qTitle {
+            grid-column: 1 / -1;
+            order: -1;
+            text-align: left;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .container.page-shell {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .hero-block {
+            padding: 18px;
+            border-radius: 20px;
+        }
+
+        .hero-title {
+            font-size: 22px;
+        }
+
+        .left-panel,
+        .question-panel {
+            border-radius: 22px;
+        }
+
+        .question-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        #qTitle {
+            font-size: 21px;
+        }
+
+        .answer-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .hocall-question-image img {
+            border-radius: 18px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .question-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .q-btn {
+            min-height: 40px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+        .question-panel {
+            padding: 16px;
+        }
+
+        .question-topbar {
+            grid-template-columns: 1fr;
+        }
+
+        .nav-btn {
+            height: 42px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        #qTitle {
+            font-size: 19px;
+        }
+
+        .answer-row {
+            grid-template-columns: 1fr;
+        }
+
+        .answer-item {
+            font-size: 16px;
+            border-radius: 16px;
+        }
+
+        .hint-btn {
+            width: 100%;
+        }
+
+        #defaultText {
+            min-height: 360px;
+            font-size: 17px;
+        }
+    }
 </style>
 
-<div class="container py-4">
-    <h2 class="fw-bold mb-4">Ôn tập toàn bộ câu hỏi – Hạng @Model.SelectedHang</h2>
+<div class="container py-4 page-shell">
+    <div class="hero-block">
+        <h2 class="hero-title">Ôn tập toàn bộ câu hỏi – Hạng @Model.SelectedHang</h2>
+        <p class="hero-subtitle">Danh sách đầy đủ câu hỏi theo từng chương, hiển thị đáp án và mẹo ghi nhớ.</p>
+    </div>
 
-    <div class="row">
-        <div class="col-3">
-            <h5 class="fw-bold mb-2">Danh sách chương</h5>
+    <div class="row g-4">
+        <div class="col-xl-3 col-lg-4">
+            <div class="left-panel">
+                <div class="panel-heading">
+                    <h5>Danh sách chương</h5>
+                </div>
 
-            @foreach (var chap in Model.Chapters)
-            {
-                var panelId = "c" + chap.ChuongId;
+                @foreach (var chap in Model.Chapters)
+                {
+                    var panelId = "c" + chap.ChuongId;
 
-                <div class="chapter-box">
-                    <div class="chapter-header" data-bs-toggle="collapse" data-bs-target="#@panelId">
-                        <span>@chap.ThuTu. @chap.TenChuong</span>
-                        <span>▼</span>
-                    </div>
+                    <div class="chapter-box">
+                        <div class="chapter-header" data-bs-toggle="collapse" data-bs-target="#@panelId">
+                            <span>@chap.ThuTu. @chap.TenChuong</span>
+                            <span>▼</span>
+                        </div>
 
-                    <div id="@panelId" class="collapse @(chap == Model.Chapters.FirstOrDefault() ? "show" : "")">
-                        <div class="question-grid">
-                            @foreach (var q in chap.Questions)
-                            {
-                                <div class="q-btn"
-                                     data-q-index="@q.GlobalIndex"
-                                     style="@(q.IsCauLiet ? "border:2px solid red;" : "")">
-                                    @q.GlobalIndex
-                                </div>
-                            }
+                        <div id="@panelId" class="collapse @(chap == Model.Chapters.FirstOrDefault() ? "show" : "")">
+                            <div class="question-grid">
+                                @foreach (var q in chap.Questions)
+                                {
+                                    <button type="button"
+                                            class="q-btn @(q.IsCauLiet ? "is-liet" : "")"
+                                            data-q-index="@q.GlobalIndex">
+                                        @(Model.Chapters.SelectMany(c => c.Questions).ToList().IndexOf(q) + 1)
+                                    </button>
+                                }
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
 
-        <div class="col-9">
-            <div id="defaultText" class="p-4 text-muted" style="font-size:20px;">
-                Chọn một câu hỏi để bắt đầu học.
-            </div>
-
-            <div id="questionContent" style="display:none;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button id="btnPrev" type="button" class="btn btn-outline-primary">← Trước</button>
-                    <h4 id="qTitle" class="fw-bold"></h4>
-                    <button id="btnNext" type="button" class="btn btn-outline-primary">Sau →</button>
+        <div class="col-xl-9 col-lg-8">
+            <div class="question-panel">
+                <div id="defaultText">
+                    Chọn một câu hỏi để bắt đầu học.
                 </div>
 
-                <div id="imgHolder" class="hocall-question-image" style="display:none;">
-                    <img id="qImg" src="" alt="Hình câu hỏi" />
+                <div id="questionContent" style="display:none;">
+                    <div class="question-topbar">
+                        <button id="btnPrev" type="button" class="nav-btn">← Trước</button>
+                        <h4 id="qTitle" class="fw-bold"></h4>
+                        <button id="btnNext" type="button" class="nav-btn">Sau →</button>
+                    </div>
+
+                    <div id="imgHolder" class="hocall-question-image" style="display:none;">
+                        <img id="qImg" src="" alt="Hình câu hỏi" />
+                    </div>
+
+                    <div class="section-label">Đáp án</div>
+                    <div id="answerList"></div>
+
+                    <button id="btnHint" type="button" class="hint-btn">Xem mẹo</button>
                 </div>
-
-                <h5 class="fw-bold mt-3">Đáp án:</h5>
-                <div id="answerList"></div>
-
-                <button id="btnHint" type="button" class="btn btn-warning mt-3">Xem mẹo</button>
             </div>
         </div>
     </div>
@@ -178,8 +629,8 @@
 @section Scripts {
     <script>
         const allQuestions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                    Model.Chapters.SelectMany(c => c.Questions)
-            ));
+                                    Model.Chapters.SelectMany(c => c.Questions)
+                    ));
 
         let currentIndex = 0;
 
