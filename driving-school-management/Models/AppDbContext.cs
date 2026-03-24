@@ -1021,6 +1021,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Tongtien)
                 .HasColumnType("NUMBER(18,2)")
                 .HasColumnName("TONGTIEN");
+            entity.Property(e => e.Phuongthuc)
+                .HasMaxLength(100)
+                .HasColumnName("PHUONGTHUC");
         });
 
         modelBuilder.Entity<Role>(entity =>

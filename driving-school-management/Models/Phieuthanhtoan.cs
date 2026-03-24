@@ -15,5 +15,7 @@ public partial class Phieuthanhtoan
 
     public DateTime? Ngaynop { get; set; }
 
+    public string? Phuongthuc { get; set; }
+
     public virtual ICollection<Chitietphieuthanhtoan> Chitietphieuthanhtoans { get; set; } = new List<Chitietphieuthanhtoan>();
 }
