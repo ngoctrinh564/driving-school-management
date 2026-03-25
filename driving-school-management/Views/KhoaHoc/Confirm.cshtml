@@ -1,0 +1,210 @@
+﻿@using driving_school_management.Models.DTOs
+@model KhoaHocDangKyCheckDto
+
+@{
+    ViewData["Title"] = "Xác nhận đăng ký khóa học";
+}
+
+<style>
+    body {
+        background: #f5f6f8;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .confirm-wrap {
+        max-width: 900px;
+        margin: 32px auto;
+        padding: 24px;
+    }
+
+    .confirm-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.06);
+    }
+
+    .confirm-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #111827;
+    }
+
+    .confirm-sub {
+        color: #6b7280;
+        margin-bottom: 24px;
+    }
+
+    .confirm-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .item {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 16px;
+        background: #fafafa;
+        transition: 0.2s;
+    }
+
+        .item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+
+    .label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+
+    .value {
+        font-size: 17px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .value-important {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .value-price {
+        font-size: 22px;
+        font-weight: 800;
+        color: #dc2626;
+    }
+
+    .value-date {
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #eef2ff;
+        color: #3730a3;
+        margin-left: 6px;
+    }
+
+    .warning-box {
+        margin-top: 16px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        padding: 16px;
+        border-radius: 16px;
+        font-weight: 600;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-back, .btn-confirm {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .btn-confirm {
+        background: #111827;
+        color: #fff;
+    }
+
+    @@media (max-width: 768px) {
+        .confirm-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="confirm-wrap">
+    <div class="confirm-card">
+        <div class="confirm-title">Xác nhận đăng ký khóa học</div>
+        <div class="confirm-sub">Kiểm tra lại thông tin trước khi chuyển sang thanh toán</div>
+
+        <div class="confirm-grid">
+            <div class="item">
+                <div class="label">Tên khóa học</div>
+                <div class="value value-important">@Model.TenKhoaHoc</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Hạng</div>
+                <div class="value value-important">
+                    @Model.TenHang
+                    <span class="badge">Bằng lái</span>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Phương tiện</div>
+                <div class="value">@Model.LoaiPhuongTien</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Địa điểm</div>
+                <div class="value">@Model.DiaDiem</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Ngày bắt đầu</div>
+                <div class="value value-date">@Model.NgayBatDau.ToString("dd/MM/yyyy")</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Ngày kết thúc</div>
+                <div class="value value-date">@Model.NgayKetThuc.ToString("dd/MM/yyyy")</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Học phí</div>
+                <div class="value value-price">@Model.HocPhi.ToString("N0") VNĐ</div>
+            </div>
+
+            <div class="item">
+                <div class="label">Hồ sơ phù hợp</div>
+                <div class="value">@Model.TenHoSoPhuHop</div>
+            </div>
+        </div>
+
+        @if (Model.DaTungHocHang == 1)
+        {
+            <div class="warning-box">
+                Bạn đã từng học khóa học của hạng @Model.TenHang (@Model.SoLanDaHocHang lần). Cần kiểm tra lại trước khi tiếp tục đăng ký.
+            </div>
+        }
+
+        <div class="action-row">
+            <button type="button" class="btn-back" onclick="window.history.back()">Quay lại</button>
+
+            <form asp-action="XacNhanDangKy" asp-controller="KhoaHoc" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="khoaHocId" value="@Model.KhoaHocId" />
+                <button type="submit" class="btn-confirm">Xác nhận đăng ký</button>
+            </form>
+        </div>
+    </div>
+</div>

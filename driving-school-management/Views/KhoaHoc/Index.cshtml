@@ -547,7 +547,22 @@
             btnRegister.innerText = 'Đăng ký ngay';
             btnRegister.disabled = false;
             btnRegister.classList.remove('btn-disabled');
-            btnRegister.onclick = () => window.location.href = '/DangKy/Confirm?khoaHocId=' + id;
+            btnRegister.onclick = async () => {
+                const res = await fetch('/KhoaHoc/CheckDangKyKhoaHoc?khoaHocId=' + id);
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message);
+                    return;
+                }
+
+                if (data.needConfirmAgain) {
+                    const ok = confirm(data.message);
+                    if (!ok) return;
+                }
+
+                window.location.href = data.redirectUrl;
+            };
         }
 
         document.getElementById('modal').style.display = 'flex';

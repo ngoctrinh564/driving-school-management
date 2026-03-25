@@ -1804,6 +1804,145 @@ BEGIN
         ORDER BY C.THUTU, TH.THUTU, TH.TINHHUONGMOPHONGID;
 END;
 /
+-- KHÓA HỌC V2
+CREATE OR REPLACE PROCEDURE SP_KHOAHOC_CHECK_DANGKY
+(
+    p_userId    IN NUMBER,
+    p_khoaHocId IN NUMBER,
+    p_cursor    OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        WITH KHOA_HOC_TARGET AS
+        (
+            SELECT
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.diaDiem,
+                kh.trangThai,
+                hg.hangId,
+                hg.tenHang,
+                hg.moTa,
+                hg.loaiPhuongTien,
+                hg.soCauHoi,
+                hg.diemDat,
+                hg.thoiGianTn,
+                hg.hocPhi
+            FROM KhoaHoc kh
+            JOIN HangGplx hg ON hg.hangId = kh.hangId
+            WHERE kh.khoaHocId = p_khoaHocId
+        ),
+        HOC_VIEN_USER AS
+        (
+            SELECT hv.hocVienId
+            FROM HocVien hv
+            WHERE hv.userId = p_userId
+        ),
+        HO_SO_CUNG_HANG AS
+        (
+            SELECT
+                hs.hoSoId,
+                hs.tenHoSo,
+                hs.ngayDangKy,
+                hs.trangThai AS trangThaiHoSo,
+                hs.hangId,
+                ROW_NUMBER() OVER
+                (
+                    ORDER BY NVL(hs.ngayDangKy, DATE '1900-01-01') DESC, hs.hoSoId DESC
+                ) AS rn
+            FROM HoSoThiSinh hs
+            JOIN HOC_VIEN_USER hvu ON hvu.hocVienId = hs.hocVienId
+            JOIN KHOA_HOC_TARGET kht ON kht.hangId = hs.hangId
+        ),
+        HO_SO_PHU_HOP_DA_DUYET AS
+        (
+            SELECT *
+            FROM
+            (
+                SELECT
+                    hs.hoSoId,
+                    hs.tenHoSo,
+                    hs.ngayDangKy,
+                    hs.trangThaiHoSo,
+                    hs.hangId,
+                    ROW_NUMBER() OVER
+                    (
+                        ORDER BY NVL(hs.ngayDangKy, DATE '1900-01-01') DESC, hs.hoSoId DESC
+                    ) AS rn2
+                FROM HO_SO_CUNG_HANG hs
+                WHERE hs.trangThaiHoSo = N'Đã duyệt'
+            )
+            WHERE rn2 = 1
+        ),
+        HO_SO_CHUA_DUYET AS
+        (
+            SELECT COUNT(*) AS soHoSoChuaDuyet
+            FROM HO_SO_CUNG_HANG
+            WHERE trangThaiHoSo <> N'Đã duyệt' OR trangThaiHoSo IS NULL
+        ),
+        DA_HOC_HANG AS
+        (
+            SELECT COUNT(*) AS soLanDaHoc
+            FROM KetQuaHocTap kq
+            JOIN HoSoThiSinh hs ON hs.hoSoId = kq.hoSoId
+            JOIN HOC_VIEN_USER hvu ON hvu.hocVienId = hs.hocVienId
+            JOIN ChiTietKetQuaHocTap ct ON ct.ketQuaHocTapId = kq.ketQuaHocTapId
+            JOIN KhoaHoc kh ON kh.khoaHocId = ct.khoaHocId
+            JOIN KHOA_HOC_TARGET kht ON kht.hangId = kh.hangId
+        )
+        SELECT
+            kht.khoaHocId,
+            kht.tenKhoaHoc,
+            kht.ngayBatDau,
+            kht.ngayKetThuc,
+            kht.diaDiem,
+            kht.trangThai,
+            kht.hangId,
+            kht.tenHang,
+            kht.moTa,
+            kht.loaiPhuongTien,
+            kht.soCauHoi,
+            kht.diemDat,
+            kht.thoiGianTn,
+            kht.hocPhi,
+
+            CASE
+                WHEN kht.trangThai = N'Sắp khai giảng' THEN 1
+                ELSE 0
+            END AS isMoDangKy,
+
+            CASE
+                WHEN hsp.hoSoId IS NOT NULL THEN 1
+                ELSE 0
+            END AS hasHoSoPhuHop,
+
+            CASE
+                WHEN NVL(hscd.soHoSoChuaDuyet, 0) > 0 AND hsp.hoSoId IS NULL THEN 1
+                ELSE 0
+            END AS hasHoSoChuaDuyet,
+
+            NVL(hsp.hoSoId, 0) AS hoSoIdPhuHop,
+            NVL(hsp.tenHoSo, N'') AS tenHoSoPhuHop,
+            hsp.ngayDangKy AS ngayDangKyHoSo,
+            NVL(hsp.trangThaiHoSo, N'') AS trangThaiHoSo,
+
+            CASE
+                WHEN NVL(dhh.soLanDaHoc, 0) > 0 THEN 1
+                ELSE 0
+            END AS daTungHocHang,
+
+            NVL(dhh.soLanDaHoc, 0) AS soLanDaHocHang
+        FROM KHOA_HOC_TARGET kht
+        LEFT JOIN HO_SO_PHU_HOP_DA_DUYET hsp ON 1 = 1
+        LEFT JOIN HO_SO_CHUA_DUYET hscd ON 1 = 1
+        LEFT JOIN DA_HOC_HANG dhh ON 1 = 1;
+END;
+/
+
+
 
 
 
