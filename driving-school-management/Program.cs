@@ -10,7 +10,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseOracle(builder.Configuration.GetConnectionString("OracleDb")));
 
 //thêm services
-builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AdminDashboardService>();
 builder.Services.AddScoped<AdminExamService>();
 builder.Services.AddScoped<KhoaHocService>();
@@ -21,6 +20,8 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<IThiMoPhongService, ThiMoPhongService>();
 builder.Services.AddScoped<IMoPhongService, MoPhongService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPayPalService, PayPalService>();
 builder.Services.AddScoped<IMomoService, MomoService>();
 //

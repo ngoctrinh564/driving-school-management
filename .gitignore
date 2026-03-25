@@ -370,3 +370,5 @@ driving-school-management/wwwroot/images/cau_hoi/
 driving-school-management/wwwroot/images/meo_tn/
 driving-school-management/wwwroot/images/sign/
 driving-school-management/wwwroot/images/situations-tips/
+driving-school-management/wwwroot/images/avatar/*
+!driving-school-management/wwwroot/images/avatar/default.png

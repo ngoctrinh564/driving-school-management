@@ -1,0 +1,129 @@
+﻿@model driving_school_management.ViewModels.EditUserVM
+
+@{
+    ViewData["Title"] = "Cập nhật thông tin";
+    Layout = "_Layout";
+}
+
+<style>
+    .required-star {
+        color: red;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+</style>
+
+<div class="container mt-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning">@TempData["Warning"]</div>
+    }
+
+    <div class="alert alert-warning">
+        Các trường còn thiếu được đánh dấu <span class="required-star">*</span>. Có thể lưu tạm khi chưa bổ sung đủ.
+    </div>
+
+    <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+            <h3 class="mb-4">Cập nhật thông tin user</h3>
+
+            <form asp-action="Edit" asp-controller="User" method="post" enctype="multipart/form-data">
+                <input asp-for="UserId" type="hidden" />
+                <input asp-for="HocVienId" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Tên đăng nhập</label>
+                    <input asp-for="Username" class="form-control" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Họ tên
+                        @if (string.IsNullOrWhiteSpace(Model.HoTen))
+                        {
+                            <span class="required-star">*</span>
+                        }
+                    </label>
+                    <input asp-for="HoTen" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Số CMND/CCCD
+                        @if (string.IsNullOrWhiteSpace(Model.SoCmndCccd))
+                        {
+                            <span class="required-star">*</span>
+                        }
+                    </label>
+                    <input asp-for="SoCmndCccd" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Năm sinh
+                        @if (!Model.NamSinh.HasValue)
+                        {
+                            <span class="required-star">*</span>
+                        }
+                    </label>
+                    <input asp-for="NamSinh" type="date" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Giới tính
+                        @if (string.IsNullOrWhiteSpace(Model.GioiTinh))
+                        {
+                            <span class="required-star">*</span>
+                        }
+                    </label>
+                    <input asp-for="GioiTinh" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        SĐT
+                        @if (string.IsNullOrWhiteSpace(Model.Sdt))
+                        {
+                            <span class="required-star">*</span>
+                        }
+                    </label>
+                    <input asp-for="Sdt" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="AvatarUrl" class="form-label">Avatar URL</label>
+                    <input type="file" name="avatarFile" class="form-control" accept="image/*" />
+                </div>
+
+                <button type="submit" class="btn btn-success">Lưu</button>
+                <a asp-action="Index" asp-controller="User" class="btn btn-secondary">Quay lại</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

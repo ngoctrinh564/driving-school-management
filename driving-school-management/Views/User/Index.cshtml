@@ -1,0 +1,131 @@
+﻿@model driving_school_management.ViewModels.UserProfileVM
+
+@{
+    ViewData["Title"] = "Trang cá nhân";
+    Layout = "_Layout";
+
+    var avatarPath = string.IsNullOrWhiteSpace(Model.AvatarUrl)
+        ? Url.Content("~/images/avatar/default.png")
+        : Url.Content(Model.AvatarUrl);
+}
+
+<style>
+    .missing-star {
+        color: red;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .profile-avatar-wrap {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .profile-info-item {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .profile-label {
+        font-weight: 600;
+        min-width: 140px;
+        display: inline-block;
+    }
+</style>
+
+<div class="container mt-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning">@TempData["Warning"]</div>
+    }
+
+    @if (Model.IsProfileIncomplete)
+    {
+        <div class="alert alert-warning">
+            Hồ sơ của bạn còn thiếu thông tin. Các trường cần bổ sung được đánh dấu <span class="missing-star">*</span>
+        </div>
+    }
+
+    <div class="card shadow-sm rounded-4">
+        <div class="card-body">
+            <h3 class="mb-4">Trang cá nhân user</h3>
+
+            <div class="profile-avatar-wrap">
+                <img src="@avatarPath" alt="Avatar" class="profile-avatar" />
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Tên đăng nhập:</span> @Model.Username
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Email:</span> @Model.Email
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Họ tên:</span> @Model.HoTen
+                @if (Model.IsMissingHoTen)
+                {
+                    <span class="missing-star">*</span>
+                }
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Số CMND/CCCD:</span> @Model.SoCmndCccd
+                @if (Model.IsMissingSoCmndCccd)
+                {
+                    <span class="missing-star">*</span>
+                }
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Năm sinh:</span> @(Model.NamSinh?.ToString("dd/MM/yyyy"))
+                @if (Model.IsMissingNamSinh)
+                {
+                    <span class="missing-star">*</span>
+                }
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Giới tính:</span> @Model.GioiTinh
+                @if (Model.IsMissingGioiTinh)
+                {
+                    <span class="missing-star">*</span>
+                }
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">SĐT:</span> @Model.Sdt
+                @if (Model.IsMissingSdt)
+                {
+                    <span class="missing-star">*</span>
+                }
+            </div>
+
+            <div class="profile-info-item">
+                <span class="profile-label">Đường dẫn ảnh:</span> @Model.AvatarUrl
+            </div>
+
+            <a asp-action="Edit" asp-controller="User" class="btn btn-primary mt-3">Chỉnh sửa thông tin</a>
+        </div>
+    </div>
+</div>
