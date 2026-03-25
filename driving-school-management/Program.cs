@@ -24,6 +24,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPayPalService, PayPalService>();
 builder.Services.AddScoped<IMomoService, MomoService>();
+builder.Services.AddScoped<PaymentHistoryService>();
+builder.Services.AddScoped<PaymentInvoiceService>();
 //
 builder.Services.AddHttpClient();
 //
