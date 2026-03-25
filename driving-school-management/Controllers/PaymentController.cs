@@ -12,11 +12,13 @@ namespace driving_school_management.Controllers
     {
         private readonly PaymentService _paymentService;
         private readonly IConfiguration _config;
+        private readonly IPayPalService _payPalService;
 
-        public PaymentController(PaymentService paymentService, IConfiguration config)
+        public PaymentController(PaymentService paymentService, IConfiguration config, IPayPalService payPalService)
         {
             _paymentService = paymentService;
             _config = config;
+            _payPalService = payPalService;
         }
 
         // ============================================================
@@ -78,9 +80,9 @@ namespace driving_school_management.Controllers
             return RedirectToAction("Index", "KhoaHoc");
         }
 
-
-
-
+        // ============================================================
+        // TẠO URL THANH TOÁN VNPAY
+        // ============================================================
         [HttpGet("VnPay")]
         public IActionResult VnPay(int phieuId)
         {
@@ -203,6 +205,88 @@ namespace driving_school_management.Controllers
                 .Normalize(NormalizationForm.FormC)
                 .Replace("đ", "d")
                 .Replace("Đ", "D");
+        }
+        // ============================================================
+        // TẠO URL THANH TOÁN PAYPAL
+        // ============================================================
+        [HttpGet("PayPal")]
+        public async Task<IActionResult> PayPal(int phieuId)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            var hd = _paymentService.GetPayPalInfo(userId.Value, phieuId);
+
+            if (hd == null)
+            {
+                TempData["Error"] = "Không tìm thấy phiếu thanh toán.";
+                return RedirectToAction("Index", "KhoaHoc");
+            }
+
+            decimal vndAmount = hd.TongTien;
+            if (vndAmount <= 0)
+            {
+                TempData["Error"] = "Số tiền không hợp lệ.";
+                return RedirectToAction("StartPayment", new { khoaHocId = hd.KhoaHocId, hoSoId = hd.HoSoId });
+            }
+
+            decimal usd = Math.Round(vndAmount / 24000m, 2);
+            if (usd < 0.01m)
+                usd = 0.01m;
+
+            string returnUrl = Url.Action("PayPalReturn", "Payment", new { phieuId }, Request.Scheme)!;
+            string cancelUrl = Url.Action("PayPalCancel", "Payment", new { phieuId }, Request.Scheme)!;
+
+            string? approval = await _payPalService.CreateOrderAsync(usd, "USD", returnUrl, cancelUrl);
+
+            if (approval == null)
+            {
+                TempData["Error"] = "Không tạo được đơn PayPal.";
+                return RedirectToAction("StartPayment", new { khoaHocId = hd.KhoaHocId, hoSoId = hd.HoSoId });
+            }
+
+            return Redirect(approval);
+        }
+
+        [HttpGet("PayPalReturn")]
+        public async Task<IActionResult> PayPalReturn(int phieuId, string token)
+        {
+            bool success = await _payPalService.CaptureOrderAsync(token);
+
+            var hd = _paymentService.GetPayPalInfoFromPhieuIdForReturn(phieuId);
+
+            if (hd == null)
+            {
+                ViewBag.Message = "Không tìm thấy phiếu thanh toán.";
+                return View("PaymentFail");
+            }
+
+            if (success)
+            {
+                var result = _paymentService.MarkPayPalSuccess(phieuId);
+
+                if (result == -1)
+                {
+                    ViewBag.Message = "Không tìm thấy phiếu thanh toán.";
+                    return View("PaymentFail");
+                }
+
+                TempData["Success"] = "Thanh toán PayPal thành công!";
+                return View("PaymentSuccess");
+            }
+
+            _paymentService.MarkPayPalFail(phieuId);
+            ViewBag.Message = "Thanh toán PayPal thất bại hoặc bị hủy.";
+            return View("PaymentFail");
+        }
+
+        [HttpGet("PayPalCancel")]
+        public IActionResult PayPalCancel(int phieuId)
+        {
+            _paymentService.MarkPayPalFail(phieuId);
+            ViewBag.Message = "Bạn đã hủy thanh toán PayPal.";
+            return View("PaymentFail");
         }
     }
 }

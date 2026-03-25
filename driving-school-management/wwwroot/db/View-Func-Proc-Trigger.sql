@@ -2167,46 +2167,6 @@ BEGIN
         ORDER BY kh.khoaHocId DESC;
 END;
 /
-CREATE OR REPLACE PROCEDURE SP_PAYMENT_GET_VNPAY_INFO
-(
-    p_userId    IN NUMBER,
-    p_phieuId   IN NUMBER,
-    p_cursor    OUT SYS_REFCURSOR
-)
-AS
-BEGIN
-    OPEN p_cursor FOR
-        SELECT
-            pt.phieuId,
-            pt.tenPhieu,
-            pt.ngayLap,
-            pt.tongTien,
-            pt.ngayNop,
-            NVL(pt.phuongThuc, N'') AS phuongThuc,
-            ct.hoSoId,
-            NVL(ct.ghiChu, N'') AS ghiChu,
-            hs.tenHoSo,
-            hv.hoTen AS hoTenHocVien,
-            kh.khoaHocId,
-            kh.tenKhoaHoc,
-            hg.tenHang
-        FROM PhieuThanhToan pt
-        JOIN ChiTietPhieuThanhToan ct
-            ON ct.phieuId = pt.phieuId
-        JOIN HoSoThiSinh hs
-            ON hs.hoSoId = ct.hoSoId
-        JOIN HocVien hv
-            ON hv.hocVienId = hs.hocVienId
-        JOIN KhoaHoc kh
-            ON kh.hangId = hs.hangId
-        JOIN HangGplx hg
-            ON hg.hangId = kh.hangId
-        WHERE pt.phieuId = p_phieuId
-          AND hv.userId = p_userId
-          AND ct.loaiPhi = N'Khóa học'
-        ORDER BY kh.khoaHocId DESC;
-END;
-/
 CREATE OR REPLACE PROCEDURE SP_PAYMENT_VNPAY_FAIL
 (
     p_phieuId IN NUMBER,
@@ -2258,8 +2218,136 @@ BEGIN
     o_result := 1;
 END;
 /
+--thanh toán PAYPAL
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_GET_PAYPAL_INFO
+(
+    p_userId    IN NUMBER,
+    p_phieuId   IN NUMBER,
+    p_cursor    OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT
+            pt.phieuId,
+            pt.tenPhieu,
+            pt.ngayLap,
+            pt.tongTien,
+            pt.ngayNop,
+            NVL(pt.phuongThuc, N'') AS phuongThuc,
+            ct.hoSoId,
+            NVL(ct.ghiChu, N'') AS ghiChu,
+            hs.tenHoSo,
+            hv.hoTen AS hoTenHocVien,
+            kh.khoaHocId,
+            kh.tenKhoaHoc,
+            hg.tenHang
+        FROM PhieuThanhToan pt
+        JOIN ChiTietPhieuThanhToan ct
+            ON ct.phieuId = pt.phieuId
+        JOIN HoSoThiSinh hs
+            ON hs.hoSoId = ct.hoSoId
+        JOIN HocVien hv
+            ON hv.hocVienId = hs.hocVienId
+        JOIN KhoaHoc kh
+            ON kh.hangId = hs.hangId
+        JOIN HangGplx hg
+            ON hg.hangId = kh.hangId
+        WHERE pt.phieuId = p_phieuId
+          AND hv.userId = p_userId
+          AND ct.loaiPhi = N'Khóa học'
+        ORDER BY kh.khoaHocId DESC;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_PAYPAL_SUCCESS
+(
+    p_phieuId IN NUMBER,
+    o_result  OUT NUMBER
+)
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM PhieuThanhToan
+    WHERE phieuId = p_phieuId;
 
+    IF v_count = 0 THEN
+        o_result := -1;
+        RETURN;
+    END IF;
 
+    UPDATE PhieuThanhToan
+    SET ngayNop = SYSTIMESTAMP,
+        phuongThuc = N'PAYPAL'
+    WHERE phieuId = p_phieuId;
+
+    o_result := 1;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_PAYPAL_FAIL
+(
+    p_phieuId IN NUMBER,
+    o_result  OUT NUMBER
+)
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM PhieuThanhToan
+    WHERE phieuId = p_phieuId;
+
+    IF v_count = 0 THEN
+        o_result := -1;
+        RETURN;
+    END IF;
+
+    UPDATE PhieuThanhToan
+    SET ngayNop = NULL
+    WHERE phieuId = p_phieuId;
+
+    o_result := 1;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_GET_PAYPAL_INFO_BY_PHIEU
+(
+    p_phieuId   IN NUMBER,
+    p_cursor    OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT
+            pt.phieuId,
+            pt.tenPhieu,
+            pt.ngayLap,
+            pt.tongTien,
+            pt.ngayNop,
+            NVL(pt.phuongThuc, N'') AS phuongThuc,
+            ct.hoSoId,
+            NVL(ct.ghiChu, N'') AS ghiChu,
+            hs.tenHoSo,
+            hv.hoTen AS hoTenHocVien,
+            kh.khoaHocId,
+            kh.tenKhoaHoc,
+            hg.tenHang
+        FROM PhieuThanhToan pt
+        JOIN ChiTietPhieuThanhToan ct
+            ON ct.phieuId = pt.phieuId
+        JOIN HoSoThiSinh hs
+            ON hs.hoSoId = ct.hoSoId
+        JOIN HocVien hv
+            ON hv.hocVienId = hs.hocVienId
+        JOIN KhoaHoc kh
+            ON kh.hangId = hs.hangId
+        JOIN HangGplx hg
+            ON hg.hangId = kh.hangId
+        WHERE pt.phieuId = p_phieuId
+          AND ct.loaiPhi = N'Khóa học'
+        ORDER BY kh.khoaHocId DESC;
+END;
+/
 
 
 

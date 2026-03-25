@@ -106,7 +106,9 @@ namespace driving_school_management.Services
 
             return decimal.Parse(dbValue.ToString()!);
         }
-
+        // ============================================================
+        // THANH TOÁN VNPAY
+        // ============================================================
         public PaymentVnPayDto? GetVnPayInfo(int userId, int phieuId)
         {
             PaymentVnPayDto? result = null;
@@ -184,6 +186,122 @@ namespace driving_school_management.Services
 
                 return GetInt32Value(output.Value);
             }
+        }
+        // ============================================================
+        // THANH TOÁN PAYPAL
+        // ============================================================
+        public PaymentGatewayDto? GetPayPalInfo(int userId, int phieuId)
+        {
+            PaymentGatewayDto? result = null;
+
+            using (var conn = new OracleConnection(_connectionString))
+            using (var cmd = new OracleCommand("SP_PAYMENT_GET_PAYPAL_INFO", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+                cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+                cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+                conn.Open();
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        result = new PaymentGatewayDto
+                        {
+                            PhieuId = GetInt32Value(reader["phieuId"]),
+                            TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
+                            NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
+                            TongTien = GetDecimalValue(reader["tongTien"]),
+                            NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
+                            PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
+                            HoSoId = GetInt32Value(reader["hoSoId"]),
+                            GhiChu = reader["ghiChu"] == DBNull.Value ? string.Empty : reader["ghiChu"].ToString()!,
+                            TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
+                            HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
+                            KhoaHocId = GetInt32Value(reader["khoaHocId"]),
+                            TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
+                            TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!
+                        };
+                    }
+                }
+            }
+
+            return result;
+        }
+        public int MarkPayPalSuccess(int phieuId)
+        {
+            using (var conn = new OracleConnection(_connectionString))
+            using (var cmd = new OracleCommand("SP_PAYMENT_PAYPAL_SUCCESS", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+
+                var output = cmd.Parameters.Add("o_result", OracleDbType.Int32);
+                output.Direction = ParameterDirection.Output;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+
+                return GetInt32Value(output.Value);
+            }
+        }
+        public int MarkPayPalFail(int phieuId)
+        {
+            using (var conn = new OracleConnection(_connectionString))
+            using (var cmd = new OracleCommand("SP_PAYMENT_PAYPAL_FAIL", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+
+                var output = cmd.Parameters.Add("o_result", OracleDbType.Int32);
+                output.Direction = ParameterDirection.Output;
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+
+                return GetInt32Value(output.Value);
+            }
+        }
+        public PaymentGatewayDto? GetPayPalInfoFromPhieuIdForReturn(int phieuId)
+        {
+            PaymentGatewayDto? result = null;
+
+            using (var conn = new OracleConnection(_connectionString))
+            using (var cmd = new OracleCommand("SP_PAYMENT_GET_PAYPAL_INFO_BY_PHIEU", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+                cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+                conn.Open();
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        result = new PaymentGatewayDto
+                        {
+                            PhieuId = GetInt32Value(reader["phieuId"]),
+                            TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
+                            NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
+                            TongTien = GetDecimalValue(reader["tongTien"]),
+                            NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
+                            PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
+                            HoSoId = GetInt32Value(reader["hoSoId"]),
+                            GhiChu = reader["ghiChu"] == DBNull.Value ? string.Empty : reader["ghiChu"].ToString()!,
+                            TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
+                            HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
+                            KhoaHocId = GetInt32Value(reader["khoaHocId"]),
+                            TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
+                            TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!
+                        };
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }
