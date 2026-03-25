@@ -559,7 +559,10 @@
 
             <a class="menu-item" href="#">Thi thử</a>
             <a class="menu-item" href="#">Kết quả</a>
-            <a class="menu-item" href="#">Thanh toán</a>
+            <a class="menu-item @(currentController == "PaymentHistory" ? "menu-active" : "")"
+               href="@Url.Action("Index", "PaymentHistory")">
+                Thanh toán
+            </a>
         </div>
 
     </div>

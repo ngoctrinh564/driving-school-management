@@ -1,0 +1,1036 @@
+﻿@{
+    ViewData["Title"] = "Lịch sử thanh toán";
+}
+
+<style>
+    body {
+        background: #f3f4f6;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .page-wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 28px;
+    }
+
+    .page-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(243, 244, 246, 0.88);
+        backdrop-filter: blur(14px);
+        padding-bottom: 18px;
+        margin-bottom: 18px;
+    }
+
+    .page-title {
+        font-size: 30px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+        letter-spacing: -0.03em;
+    }
+
+    .page-desc {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .table-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 16px 44px rgba(15, 23, 42, 0.06);
+        animation: fadeUp .45s ease;
+    }
+
+    .table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #eef2f7;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+    }
+
+    .toolbar-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .toolbar-sub {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1220px;
+    }
+
+    thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        padding: 16px 18px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+    }
+
+    tbody tr {
+        transition: all .22s ease;
+        cursor: pointer;
+    }
+
+    tbody tr:hover {
+        background: #fafcff;
+    }
+
+    tbody td {
+        padding: 18px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #0f172a;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .payment-id {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .course-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .course-name {
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.45;
+    }
+
+    .course-sub {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .amount {
+        font-weight: 800;
+        color: #0f172a;
+        white-space: nowrap;
+    }
+
+    .date-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .date-main {
+        font-weight: 600;
+        color: #111827;
+        white-space: nowrap;
+    }
+
+    .date-sub {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .badge-success {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .badge-pending {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .payment-method-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+        white-space: nowrap;
+    }
+
+    .payment-method-chip img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .payment-method-chip span {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .payment-method-chip.empty {
+        background: #f8fafc;
+    }
+
+    .payment-method-chip.empty span {
+        color: #64748b;
+    }
+
+    .row-hint {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .empty-box {
+        background: #fff;
+        border-radius: 24px;
+        border: 1px dashed #d1d5db;
+        padding: 56px 24px;
+        text-align: center;
+        color: #6b7280;
+        animation: fadeUp .4s ease;
+    }
+
+    .loading-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .skeleton-row {
+        height: 58px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, #edf2f7, #f8fafc, #edf2f7);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+    }
+
+    .dialog-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.34);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        z-index: 999;
+        padding: 92px 22px 22px;
+        overflow-y: auto;
+        animation: fadeIn .22s ease;
+        box-sizing: border-box;
+    }
+
+    .dialog-box {
+        width: min(1160px, calc(100vw - 30px));
+        max-height: calc(100vh - 114px);
+        overflow: auto;
+        background: #ffffff;
+        border-radius: 28px;
+        border: 1px solid rgba(229, 231, 235, 0.96);
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
+        transform: translateY(8px) scale(.985);
+        animation: popIn .24s ease forwards;
+        margin: 0 auto;
+    }
+
+    .dialog-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 24px 24px 18px;
+        border-bottom: 1px solid #eef2f7;
+        position: sticky;
+        top: 0;
+        background: rgba(255,255,255,0.97);
+        backdrop-filter: blur(10px);
+        z-index: 5;
+    }
+
+    .dialog-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+    }
+
+    .dialog-sub {
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .dialog-close {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        color: #0f172a;
+        font-size: 22px;
+        cursor: pointer;
+        transition: all .2s ease;
+        flex-shrink: 0;
+    }
+
+    .dialog-close:hover {
+        background: #eef2f7;
+    }
+
+    .dialog-content {
+        padding: 24px;
+    }
+
+    .dialog-top-summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 360px);
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .summary-main {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 12px 32px rgba(15,23,42,.04);
+    }
+
+    .summary-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #64748b;
+        margin-bottom: 10px;
+    }
+
+    .summary-course {
+        font-size: 26px;
+        line-height: 1.3;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+        letter-spacing: -0.03em;
+    }
+
+    .summary-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        color: #111827;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .summary-side {
+        background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+        color: #ffffff;
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .summary-side .payment-method-chip {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.12);
+        margin-bottom: 16px;
+    }
+
+    .summary-side .payment-method-chip span {
+        color: #ffffff;
+    }
+
+    .summary-side .payment-method-chip.empty {
+        background: rgba(255,255,255,0.08);
+    }
+
+    .side-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: rgba(255,255,255,.65);
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .side-amount {
+        font-size: 30px;
+        line-height: 1.15;
+        font-weight: 800;
+        margin-bottom: 14px;
+        letter-spacing: -0.03em;
+    }
+
+    .side-status-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .side-note {
+        color: rgba(255,255,255,.76);
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .section-block {
+        margin-top: 18px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .detail-item {
+        background: #fcfcfd;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 16px;
+        transition: all .2s ease;
+    }
+
+    .detail-item:hover {
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        border-color: #d1d5db;
+    }
+
+    .detail-item.wide {
+        grid-column: 1 / -1;
+    }
+
+    .detail-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #6b7280;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .detail-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    .detail-value.soft {
+        font-weight: 600;
+    }
+
+    .dialog-loading-shell {
+        display: none;
+    }
+
+    .toast-box {
+        position: fixed;
+        right: 24px;
+        top: 24px;
+        z-index: 1200;
+        background: #111827;
+        color: #fff;
+        padding: 14px 16px;
+        border-radius: 14px;
+        box-shadow: 0 14px 34px rgba(15,23,42,.22);
+        display: none;
+        animation: toastIn .22s ease;
+    }
+
+    .invoice-download-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        border-radius: 12px;
+        background: #111827;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 700;
+        transition: all .2s ease;
+        white-space: nowrap;
+    }
+
+    .invoice-download-btn:hover {
+        background: #020617;
+        transform: translateY(-1px);
+    }
+
+    .invoice-download-disabled {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        border-radius: 12px;
+        background: #e5e7eb;
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    @@keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @@keyframes popIn {
+        from {
+            opacity: 0;
+            transform: translateY(18px) scale(.97);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@media (max-width: 1100px) {
+        .dialog-top-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .page-wrap {
+            padding: 18px 14px;
+        }
+
+        .dialog-backdrop {
+            padding: 78px 10px 10px;
+        }
+
+        .dialog-box {
+            width: min(100%, calc(100vw - 16px));
+            max-height: calc(100vh - 92px);
+            border-radius: 20px;
+        }
+
+        .dialog-header {
+            padding: 18px 18px 14px;
+        }
+
+        .dialog-content {
+            padding: 18px;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-course {
+            font-size: 22px;
+        }
+
+        .page-title {
+            font-size: 24px;
+        }
+
+        .table-toolbar {
+            padding: 14px 16px;
+        }
+    }
+</style>
+
+<div class="page-wrap">
+    <div class="page-header">
+        <div class="page-title">Lịch sử thanh toán</div>
+        <div class="page-desc">Danh sách các giao dịch thanh toán của bạn. Chọn từng dòng để xem chi tiết đầy đủ.</div>
+    </div>
+
+    <div id="loadingBox" class="loading-grid">
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+    </div>
+
+    <div id="emptyBox" class="empty-box" style="display:none;">
+        Chưa có lịch sử thanh toán.
+    </div>
+
+    <div id="tableCard" class="table-card" style="display:none;">
+        <div class="table-toolbar">
+            <div>
+                <div class="toolbar-title">Danh sách giao dịch</div>
+                <div class="toolbar-sub">Hiển thị các giao dịch thanh toán khóa học theo tài khoản hiện tại</div>
+            </div>
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã phiếu</th>
+                        <th>Khóa học</th>
+                        <th>Hạng</th>
+                        <th>Số tiền</th>
+                        <th>Phương thức</th>
+                        <th>Ngày lập</th>
+                        <th>Ngày thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Tải hóa đơn</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="detailDialog" class="dialog-backdrop">
+    <div class="dialog-box">
+        <div class="dialog-header">
+            <div>
+                <h3 class="dialog-title">Chi tiết thanh toán</h3>
+                <div class="dialog-sub">Thông tin đầy đủ của giao dịch thanh toán</div>
+            </div>
+            <button type="button" class="dialog-close" id="btnCloseDialog">×</button>
+        </div>
+
+        <div class="dialog-content">
+            <div id="dialogLoading" class="loading-grid dialog-loading-shell">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+            </div>
+
+            <div id="dialogContent"></div>
+        </div>
+    </div>
+</div>
+
+<div id="toastBox" class="toast-box"></div>
+
+<script>
+    function formatDateTime(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+    }
+
+    function formatMoney(value) {
+        return Number(value || 0).toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('toastBox');
+        toast.innerText = message;
+        toast.style.display = 'block';
+
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2500);
+    }
+
+    function getStatusBadge(status) {
+        if (status === 'Đã thanh toán') {
+            return `<span class="badge badge-success">${escapeHtml(status)}</span>`;
+        }
+
+        return `<span class="badge badge-pending">${escapeHtml(status || 'Chưa thanh toán')}</span>`;
+    }
+
+    function getPaymentMethodLogo(method) {
+        const m = (method || '').trim().toUpperCase();
+
+        if (m === 'VNPAY') return '/images/logo/vnpay-logo.png';
+        if (m === 'PAYPAL') return '/images/logo/paypal-logo.png';
+        if (m === 'MOMO') return '/images/logo/momo-logo.png';
+
+        return '';
+    }
+
+    function getMethodBadge(method) {
+        const m = (method || '').trim();
+        const logo = getPaymentMethodLogo(m);
+
+        if (!m) {
+            return `
+                <span class="payment-method-chip empty">
+                    <span>Chưa chọn</span>
+                </span>
+            `;
+        }
+
+        return `
+            <span class="payment-method-chip">
+                ${logo ? `<img src="${logo}" alt="${escapeHtml(m)}" />` : ''}
+                <span>${escapeHtml(m)}</span>
+            </span>
+        `;
+    }
+
+    async function loadPaymentHistory() {
+        const loadingBox = document.getElementById('loadingBox');
+        const emptyBox = document.getElementById('emptyBox');
+        const tableCard = document.getElementById('tableCard');
+        const tbody = document.getElementById('historyTableBody');
+
+        loadingBox.style.display = 'grid';
+        emptyBox.style.display = 'none';
+        tableCard.style.display = 'none';
+        tbody.innerHTML = '';
+
+        try {
+            const response = await fetch('/PaymentHistory/GetPaymentHistory');
+            if (!response.ok) {
+                throw new Error('Không thể tải dữ liệu lịch sử thanh toán.');
+            }
+
+            const data = await response.json();
+
+            loadingBox.style.display = 'none';
+
+            if (!data || data.length === 0) {
+                emptyBox.style.display = 'block';
+                return;
+            }
+
+            tableCard.style.display = 'block';
+
+            data.forEach(item => {
+                const downloadButton = item.coTheTaiHoaDon === 1
+                ? `
+                    <a href="/PaymentInvoice/Download?phieuId=${item.phieuId}"
+                        class="invoice-download-btn"
+                        onclick="event.stopPropagation()">
+                        Tải PDF
+                    </a>
+                    `
+                : `
+                    <span class="invoice-download-disabled">Chưa khả dụng</span>
+                    `;
+
+            const row = `
+                <tr onclick="openPaymentDetail(${item.phieuId})">
+                    <td class="payment-id">#${item.phieuId}</td>
+                    <td>
+                        <div class="course-cell">
+                            <div class="course-name">${escapeHtml(item.tenKhoaHoc || '')}</div>
+                            <div class="course-sub">${escapeHtml(item.tenPhieu || '')}</div>
+                        </div>
+                    </td>
+                    <td>${escapeHtml(item.tenHang || '')}</td>
+                    <td class="amount">${formatMoney(item.tongTien)}</td>
+                    <td>${getMethodBadge(item.phuongThuc)}</td>
+                    <td>
+                        <div class="date-stack">
+                            <div class="date-main">${formatDateTime(item.ngayLap)}</div>
+                            <div class="date-sub">Ngày lập phiếu</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-stack">
+                            <div class="date-main">${formatDateTime(item.ngayNop) || '—'}</div>
+                            <div class="date-sub">Ngày thanh toán</div>
+                        </div>
+                    </td>
+                    <td>${getStatusBadge(item.trangThaiThanhToan)}</td>
+                    <td>${downloadButton}</td>
+                </tr>
+            `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        } catch (error) {
+            loadingBox.style.display = 'none';
+            showToast(error.message || 'Đã xảy ra lỗi.');
+        }
+    }
+
+    function buildDialogContent(d) {
+        return `
+            <div class="dialog-top-summary">
+                <div class="summary-main">
+                    <div class="summary-eyebrow">Thông tin quan trọng</div>
+                    <div class="summary-course">${escapeHtml(d.tenKhoaHoc || '')}</div>
+                    <div class="summary-meta-row">
+                        <span class="summary-pill">Mã phiếu #${escapeHtml(d.phieuId)}</span>
+                        <span class="summary-pill">${escapeHtml(d.tenHang || '')}</span>
+                        <span class="summary-pill">${escapeHtml(d.loaiPhuongTien || '')}</span>
+                        <span class="summary-pill">${escapeHtml(d.trangThaiKhoaHoc || '')}</span>
+                    </div>
+                </div>
+
+                <div class="summary-side">
+                    ${getMethodBadge(d.phuongThuc)}
+                    <div class="side-label">Tổng thanh toán</div>
+                    <div class="side-amount">${formatMoney(d.tongTien)}</div>
+
+                    <div class="side-status-row">
+                        ${getStatusBadge(d.trangThaiThanhToan)}
+                    </div>
+
+                    <div class="side-note">
+                        Học viên: <strong>${escapeHtml(d.hoTenHocVien || '')}</strong><br />
+                        Hồ sơ: <strong>${escapeHtml(d.tenHoSo || '')}</strong><br />
+                        Ngày thanh toán: <strong>${formatDateTime(d.ngayNop) || 'Chưa thanh toán'}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">Thông tin thanh toán</div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Mã phiếu</div>
+                        <div class="detail-value">#${escapeHtml(d.phieuId)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Tên phiếu</div>
+                        <div class="detail-value soft">${escapeHtml(d.tenPhieu || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Phương thức thanh toán</div>
+                        <div class="detail-value">${getMethodBadge(d.phuongThuc)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Loại phí</div>
+                        <div class="detail-value soft">${escapeHtml(d.loaiPhi || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày lập phiếu</div>
+                        <div class="detail-value soft">${formatDateTime(d.ngayLap)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày nộp</div>
+                        <div class="detail-value soft">${formatDateTime(d.ngayNop) || ''}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Trạng thái thanh toán</div>
+                        <div class="detail-value">${getStatusBadge(d.trangThaiThanhToan)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Tổng tiền</div>
+                        <div class="detail-value">${formatMoney(d.tongTien)}</div>
+                    </div>
+
+                    <div class="detail-item wide">
+                        <div class="detail-label">Ghi chú / Nội dung chuyển khoản</div>
+                        <div class="detail-value soft">${escapeHtml(d.ghiChu || '')}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">Thông tin học viên và hồ sơ</div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Học viên</div>
+                        <div class="detail-value soft">${escapeHtml(d.hoTenHocVien || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Hồ sơ</div>
+                        <div class="detail-value soft">${escapeHtml(d.tenHoSo || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Trạng thái hồ sơ</div>
+                        <div class="detail-value soft">${escapeHtml(d.trangThaiHoSo || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Số điện thoại</div>
+                        <div class="detail-value soft">${escapeHtml(d.sdt || '')}</div>
+                    </div>
+
+                    <div class="detail-item wide">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value soft">${escapeHtml(d.email || '')}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">Thông tin khóa học</div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Khóa học</div>
+                        <div class="detail-value soft">${escapeHtml(d.tenKhoaHoc || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Hạng</div>
+                        <div class="detail-value soft">${escapeHtml(d.tenHang || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Loại phương tiện</div>
+                        <div class="detail-value soft">${escapeHtml(d.loaiPhuongTien || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Địa điểm</div>
+                        <div class="detail-value soft">${escapeHtml(d.diaDiem || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày bắt đầu</div>
+                        <div class="detail-value soft">${formatDateTime(d.ngayBatDau)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày kết thúc</div>
+                        <div class="detail-value soft">${formatDateTime(d.ngayKetThuc)}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Trạng thái khóa học</div>
+                        <div class="detail-value soft">${escapeHtml(d.trangThaiKhoaHoc || '')}</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-label">Học phí gốc</div>
+                        <div class="detail-value soft">${formatMoney(d.hocPhi)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function openPaymentDetail(phieuId) {
+        const dialog = document.getElementById('detailDialog');
+        const content = document.getElementById('dialogContent');
+        const loading = document.getElementById('dialogLoading');
+
+        dialog.style.display = 'flex';
+        content.innerHTML = '';
+        loading.style.display = 'grid';
+
+        try {
+            const response = await fetch('/PaymentHistory/GetPaymentHistoryDetail?phieuId=' + phieuId);
+            if (!response.ok) {
+                throw new Error('Không thể tải chi tiết thanh toán.');
+            }
+
+            const d = await response.json();
+            loading.style.display = 'none';
+            content.innerHTML = buildDialogContent(d);
+        } catch (error) {
+            loading.style.display = 'none';
+            content.innerHTML = '';
+            showToast(error.message || 'Đã xảy ra lỗi.');
+        }
+    }
+
+    document.getElementById('btnCloseDialog').onclick = () => {
+        document.getElementById('detailDialog').style.display = 'none';
+    };
+
+    document.getElementById('detailDialog').onclick = (e) => {
+        if (e.target.id === 'detailDialog') {
+            document.getElementById('detailDialog').style.display = 'none';
+        }
+    };
+
+    loadPaymentHistory();
+</script>

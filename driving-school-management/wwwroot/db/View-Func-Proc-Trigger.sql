@@ -2491,7 +2491,192 @@ BEGIN
     o_result := 1;
 END;
 /
-
+-- Lịch sử thanh toán
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_HISTORY_BY_USER
+(
+    p_userId IN NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT
+                pt.phieuId,
+                pt.tenPhieu,
+                pt.ngayLap,
+                pt.ngayNop,
+                pt.tongTien,
+                NVL(pt.phuongThuc, N'') AS phuongThuc,
+                ct.loaiPhi,
+                NVL(ct.ghiChu, N'') AS ghiChu,
+                hs.hoSoId,
+                hs.tenHoSo,
+                hv.hoTen AS hoTenHocVien,
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                hg.tenHang,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS trangThaiThanhToan,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN 1
+                    ELSE 0
+                END AS coTheTaiHoaDon,
+                ROW_NUMBER() OVER
+                (
+                    PARTITION BY pt.phieuId
+                    ORDER BY kh.khoaHocId DESC
+                ) AS rn
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            LEFT JOIN KhoaHoc kh
+                ON kh.hangId = hs.hangId
+            LEFT JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE hv.userId = p_userId
+        )
+        WHERE rn = 1
+        ORDER BY phieuId DESC;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_HISTORY_DETAIL
+(
+    p_userId  IN NUMBER,
+    p_phieuId IN NUMBER,
+    p_cursor  OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT
+                pt.phieuId,
+                pt.tenPhieu,
+                pt.ngayLap,
+                pt.ngayNop,
+                pt.tongTien,
+                NVL(pt.phuongThuc, N'') AS phuongThuc,
+                ct.loaiPhi,
+                NVL(ct.ghiChu, N'') AS ghiChu,
+                hs.hoSoId,
+                hs.tenHoSo,
+                hs.trangThai AS trangThaiHoSo,
+                hv.hocVienId,
+                hv.hoTen AS hoTenHocVien,
+                hv.sdt,
+                hv.email,
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.diaDiem,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.trangThai AS trangThaiKhoaHoc,
+                hg.hangId,
+                hg.tenHang,
+                hg.loaiPhuongTien,
+                hg.hocPhi,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS trangThaiThanhToan,
+                ROW_NUMBER() OVER
+                (
+                    PARTITION BY pt.phieuId
+                    ORDER BY kh.khoaHocId DESC
+                ) AS rn
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            LEFT JOIN KhoaHoc kh
+                ON kh.hangId = hs.hangId
+            LEFT JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE hv.userId = p_userId
+              AND pt.phieuId = p_phieuId
+        )
+        WHERE rn = 1;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_PAYMENT_INVOICE_DETAIL
+(
+    p_userId  IN NUMBER,
+    p_phieuId IN NUMBER,
+    p_cursor  OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT
+                pt.phieuId,
+                pt.tenPhieu,
+                pt.ngayLap,
+                pt.ngayNop,
+                pt.tongTien,
+                NVL(pt.phuongThuc, N'') AS phuongThuc,
+                ct.loaiPhi,
+                NVL(ct.ghiChu, N'') AS ghiChu,
+                hs.hoSoId,
+                hs.tenHoSo,
+                hs.trangThai AS trangThaiHoSo,
+                hv.hocVienId,
+                hv.hoTen AS hoTenHocVien,
+                hv.sdt,
+                hv.email,
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.diaDiem,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.trangThai AS trangThaiKhoaHoc,
+                hg.hangId,
+                hg.tenHang,
+                hg.loaiPhuongTien,
+                hg.hocPhi,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS trangThaiThanhToan,
+                ROW_NUMBER() OVER
+                (
+                    PARTITION BY pt.phieuId
+                    ORDER BY kh.khoaHocId DESC
+                ) AS rn
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            LEFT JOIN KhoaHoc kh
+                ON kh.hangId = hs.hangId
+            LEFT JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE hv.userId = p_userId
+              AND pt.phieuId = p_phieuId
+              AND pt.ngayNop IS NOT NULL
+        )
+        WHERE rn = 1;
+END;
+/
 
 
 
