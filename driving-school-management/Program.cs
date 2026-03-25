@@ -20,6 +20,8 @@ builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<IThiMoPhongService, ThiMoPhongService>();
 builder.Services.AddScoped<IMoPhongService, MoPhongService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 //
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();

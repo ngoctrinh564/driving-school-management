@@ -1,12 +1,11 @@
-﻿using Microsoft.CodeAnalysis.Scripting;
-using Oracle.ManagedDataAccess.Client;
+﻿using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
-using Org.BouncyCastle.Crypto.Generators;
 using System.Data;
+using driving_school_management.ViewModels;
 
 namespace driving_school_management.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly string _connectionString;
 
@@ -47,10 +46,10 @@ namespace driving_school_management.Services
 
             return new LoginResult
             {
-                UserId = ((Oracle.ManagedDataAccess.Types.OracleDecimal)cmd.Parameters["o_userId"].Value).ToInt32(),
-                RoleId = ((Oracle.ManagedDataAccess.Types.OracleDecimal)cmd.Parameters["o_roleId"].Value).ToInt32(),
-                Username = cmd.Parameters["o_username"].Value.ToString(),
-                IsActive = ((Oracle.ManagedDataAccess.Types.OracleDecimal)cmd.Parameters["o_isActive"].Value).ToInt32() == 1
+                UserId = ((OracleDecimal)cmd.Parameters["o_userId"].Value).ToInt32(),
+                RoleId = ((OracleDecimal)cmd.Parameters["o_roleId"].Value).ToInt32(),
+                Username = cmd.Parameters["o_username"].Value?.ToString() ?? "",
+                IsActive = ((OracleDecimal)cmd.Parameters["o_isActive"].Value).ToInt32() == 1
             };
         }
 
@@ -59,25 +58,82 @@ namespace driving_school_management.Services
         {
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
-            using (var conn = new OracleConnection(_connectionString))
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PROC_REGISTER", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_username", OracleDbType.NVarchar2).Value = username;
+            cmd.Parameters.Add("p_password", OracleDbType.NVarchar2).Value = hashedPassword;
+            cmd.Parameters.Add("p_email", OracleDbType.NVarchar2).Value = email;
+            cmd.Parameters.Add("p_roleId", OracleDbType.Int32).Value = roleId;
+            cmd.Parameters.Add("o_result", OracleDbType.Int32).Direction = ParameterDirection.Output;
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+
+            return Convert.ToInt32(cmd.Parameters["o_result"].Value.ToString());
+        }
+
+        // ================= GET USER PROFILE =================
+        public UserProfileVM? GetUserProfile(int userId)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PROC_GET_USER_PROFILE", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("o_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            if (!reader.Read())
+                return null;
+
+            return new UserProfileVM
             {
-                using (var cmd = new OracleCommand("PROC_REGISTER", conn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
+                UserId = Convert.ToInt32(reader["USERID"]),
+                HocVienId = Convert.ToInt32(reader["HOCVIENID"]),
+                Username = reader["USERNAME"]?.ToString() ?? "",
+                Email = reader["EMAIL"]?.ToString() ?? "",
+                HoTen = reader["HOTEN"]?.ToString() ?? "",
+                SoCmndCccd = reader["SOCMNDCCCD"]?.ToString() ?? "",
+                NamSinh = reader["NAMSINH"] == DBNull.Value ? null : Convert.ToDateTime(reader["NAMSINH"]),
+                GioiTinh = reader["GIOITINH"]?.ToString() ?? "",
+                Sdt = reader["SDT"]?.ToString() ?? "",
+                AvatarUrl = reader["AVATARURL"]?.ToString() ?? ""
+            };
+        }
 
-                    cmd.Parameters.Add("p_username", OracleDbType.NVarchar2).Value = username;
-                    cmd.Parameters.Add("p_password", OracleDbType.NVarchar2).Value = hashedPassword;
-                    cmd.Parameters.Add("p_email", OracleDbType.NVarchar2).Value = email;
-                    cmd.Parameters.Add("p_roleId", OracleDbType.Int32).Value = roleId;
+        // ================= UPDATE USER PROFILE =================
+        public int UpdateUserProfile(EditUserVM model)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PROC_UPDATE_USER_PROFILE", conn);
 
-                    cmd.Parameters.Add("o_result", OracleDbType.Int32).Direction = ParameterDirection.Output;
+            cmd.CommandType = CommandType.StoredProcedure;
 
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = model.UserId;
+            cmd.Parameters.Add("p_username", OracleDbType.NVarchar2).Value = model.Username;
+            cmd.Parameters.Add("p_email", OracleDbType.NVarchar2).Value = model.Email;
+            cmd.Parameters.Add("p_hoTen", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.HoTen) ? DBNull.Value : model.HoTen;
+            cmd.Parameters.Add("p_soCmndCccd", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.SoCmndCccd) ? DBNull.Value : model.SoCmndCccd;
+            cmd.Parameters.Add("p_namSinh", OracleDbType.Date).Value = model.NamSinh.HasValue ? model.NamSinh.Value : DBNull.Value;
+            cmd.Parameters.Add("p_gioiTinh", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.GioiTinh) ? DBNull.Value : model.GioiTinh;
+            cmd.Parameters.Add("p_sdt", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.Sdt) ? DBNull.Value : model.Sdt;
+            cmd.Parameters.Add("p_avatarUrl", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.AvatarUrl) ? DBNull.Value : model.AvatarUrl;
 
-                    return Convert.ToInt32(cmd.Parameters["o_result"].Value.ToString());
-                }
-            }
+            cmd.Parameters.Add("o_result", OracleDbType.Int32).Direction = ParameterDirection.Output;
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+
+            return Convert.ToInt32(cmd.Parameters["o_result"].Value.ToString());
         }
 
         // ================= RESET PASSWORD =================
@@ -119,7 +175,7 @@ namespace driving_school_management.Services
     {
         public int UserId { get; set; }
         public int RoleId { get; set; }
-        public string Username { get; set; }
+        public string Username { get; set; } = "";
         public bool IsActive { get; set; }
     }
 }

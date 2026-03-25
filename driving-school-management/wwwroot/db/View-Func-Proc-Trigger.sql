@@ -49,25 +49,34 @@ CREATE OR REPLACE PROCEDURE PROC_REGISTER
     o_result   OUT NUMBER
 )
 AS
-    v_count NUMBER;
-    v_userId NUMBER;
+    v_count_user  NUMBER;
+    v_count_email NUMBER;
+    v_userId      NUMBER;
 BEGIN
-    -- Kiểm tra username tồn tại
-    SELECT COUNT(*) INTO v_count
+    SELECT COUNT(*)
+    INTO v_count_user
     FROM "User"
     WHERE userName = p_username;
 
-    IF v_count > 0 THEN
+    IF v_count_user > 0 THEN
         o_result := -1;
         RETURN;
     END IF;
 
-    -- Insert User
+    SELECT COUNT(*)
+    INTO v_count_email
+    FROM HocVien
+    WHERE email = p_email;
+
+    IF v_count_email > 0 THEN
+        o_result := -2;
+        RETURN;
+    END IF;
+
     INSERT INTO "User"(roleId, userName, "password", isActive)
     VALUES (p_roleId, p_username, p_password, 1)
     RETURNING userId INTO v_userId;
 
-    -- Tạo hồ sơ học viên tự động
     INSERT INTO HocVien
     (
         hoTen,
@@ -81,8 +90,8 @@ BEGIN
     )
     VALUES
     (
-        p_username,          -- tạm dùng username
-        'UNKNOWN',           -- chưa có dữ liệu
+        p_username,
+        'UNKNOWN',
         NULL,
         NULL,
         NULL,
@@ -92,8 +101,96 @@ BEGIN
     );
 
     o_result := 1;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        o_result := 0;
+        RAISE;
 END;
 /
+
+CREATE OR REPLACE PROCEDURE PROC_VERIFY_REGISTER_OTP
+(
+    p_email    IN NVARCHAR2,
+    p_otpCode  IN NVARCHAR2,
+    o_result   OUT NUMBER
+)
+AS
+    v_pendingId PendingRegister.pendingId%TYPE;
+    v_username  PendingRegister.userName%TYPE;
+    v_password  PendingRegister."password"%TYPE;
+    v_roleId    PendingRegister.roleId%TYPE;
+    v_userId    NUMBER;
+    v_count     NUMBER;
+BEGIN
+    BEGIN
+        SELECT pendingId, userName, "password", roleId
+        INTO v_pendingId, v_username, v_password, v_roleId
+        FROM PendingRegister
+        WHERE email = p_email
+          AND otpCode = p_otpCode
+          AND isUsed = 0
+          AND expiredAt >= SYSDATE
+        FETCH FIRST 1 ROWS ONLY;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            o_result := -1;
+            RETURN;
+    END;
+
+    SELECT COUNT(*) INTO v_count
+    FROM "User"
+    WHERE userName = v_username;
+
+    IF v_count > 0 THEN
+        o_result := -2;
+        RETURN;
+    END IF;
+
+    SELECT COUNT(*) INTO v_count
+    FROM HocVien
+    WHERE email = p_email;
+
+    IF v_count > 0 THEN
+        o_result := -3;
+        RETURN;
+    END IF;
+
+    INSERT INTO "User"(roleId, userName, "password", isActive)
+    VALUES (v_roleId, v_username, v_password, 1)
+    RETURNING userId INTO v_userId;
+
+    INSERT INTO HocVien
+    (
+        hoTen,
+        soCmndCccd,
+        namSinh,
+        gioiTinh,
+        sdt,
+        email,
+        avatarUrl,
+        userId
+    )
+    VALUES
+    (
+        v_username,
+        'UNKNOWN',
+        NULL,
+        NULL,
+        NULL,
+        p_email,
+        NULL,
+        v_userId
+    );
+
+    UPDATE PendingRegister
+    SET isUsed = 1
+    WHERE pendingId = v_pendingId;
+
+    o_result := 1;
+END;
+/
+
 
 CREATE OR REPLACE PROCEDURE PROC_RESET_PASSWORD
 (
