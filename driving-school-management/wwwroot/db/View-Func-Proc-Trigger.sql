@@ -2570,44 +2570,6 @@ BEGIN
         ORDER BY kh.khoaHocId DESC;
 END;
 /
-CREATE OR REPLACE PROCEDURE SP_PAYMENT_GET_MOMO_INFO_BY_PHIEU
-(
-    p_phieuId   IN NUMBER,
-    p_cursor    OUT SYS_REFCURSOR
-)
-AS
-BEGIN
-    OPEN p_cursor FOR
-        SELECT
-            pt.phieuId,
-            pt.tenPhieu,
-            pt.ngayLap,
-            pt.tongTien,
-            pt.ngayNop,
-            NVL(pt.phuongThuc, N'') AS phuongThuc,
-            ct.hoSoId,
-            NVL(ct.ghiChu, N'') AS ghiChu,
-            hs.tenHoSo,
-            hv.hoTen AS hoTenHocVien,
-            kh.khoaHocId,
-            kh.tenKhoaHoc,
-            hg.tenHang
-        FROM PhieuThanhToan pt
-        JOIN ChiTietPhieuThanhToan ct
-            ON ct.phieuId = pt.phieuId
-        JOIN HoSoThiSinh hs
-            ON hs.hoSoId = ct.hoSoId
-        JOIN HocVien hv
-            ON hv.hocVienId = hs.hocVienId
-        JOIN KhoaHoc kh
-            ON kh.hangId = hs.hangId
-        JOIN HangGplx hg
-            ON hg.hangId = kh.hangId
-        WHERE pt.phieuId = p_phieuId
-          AND ct.loaiPhi = N'Khóa học'
-        ORDER BY kh.khoaHocId DESC;
-END;
-/
 CREATE OR REPLACE PROCEDURE SP_PAYMENT_MOMO_SUCCESS
 (
     p_phieuId IN NUMBER,
@@ -2820,7 +2782,65 @@ BEGIN
         WHERE rn = 1;
 END;
 /
+CREATE OR REPLACE PROCEDURE PROC_GET_USER_DASHBOARD
+(
+    p_userId IN NUMBER,
+    o_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN o_cursor FOR
+        SELECT
+            u.userId,
+            u.userName,
+            u.isActive,
 
+            hv.hocVienId,
+            hv.hoTen,
+            hv.email,
+            hv.soCmndCccd,
+            hv.namSinh,
+            hv.gioiTinh,
+            hv.sdt,
+            hv.avatarUrl,
+
+            hs.hoSoId,
+            hs.trangThai AS hoSoTrangThai,
+            hs.ngayDangKy,
+
+            hg.tenHang,
+
+            /* tổng buổi học */
+            NVL(kq.soBuoiHoc, 0) AS soBuoiHoc,
+
+            /* số kỳ thi đã đăng ký */
+            (
+                SELECT COUNT(*)
+                FROM ChiTietDangKyThi ct
+                WHERE ct.hoSoId = hs.hoSoId
+            ) AS soKyThi,
+
+            /* tổng thanh toán */
+            (
+                SELECT NVL(SUM(p.tongTien),0)
+                FROM ChiTietPhieuThanhToan ctpt
+                JOIN PhieuThanhToan p ON p.phieuId = ctpt.phieuId
+                WHERE ctpt.hoSoId = hs.hoSoId
+            ) AS tongThanhToan,
+
+            /* GPLX */
+            gplx.trangThai AS gplxTrangThai
+
+        FROM "User" u
+        LEFT JOIN HocVien hv ON hv.userId = u.userId
+        LEFT JOIN HoSoThiSinh hs ON hs.hocVienId = hv.hocVienId
+        LEFT JOIN HangGplx hg ON hg.hangId = hs.hangId
+        LEFT JOIN KetQuaHocTap kq ON kq.hoSoId = hs.hoSoId
+        LEFT JOIN GiayPhepLaiXe gplx ON gplx.hoSoId = hs.hoSoId
+
+        WHERE u.userId = p_userId;
+END;
+/
 
 
 

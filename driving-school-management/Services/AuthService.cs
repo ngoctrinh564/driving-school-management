@@ -117,16 +117,24 @@ namespace driving_school_management.Services
             using var cmd = new OracleCommand("PROC_UPDATE_USER_PROFILE", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
 
             cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = model.UserId;
             cmd.Parameters.Add("p_username", OracleDbType.NVarchar2).Value = model.Username;
-            cmd.Parameters.Add("p_email", OracleDbType.NVarchar2).Value = model.Email;
-            cmd.Parameters.Add("p_hoTen", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.HoTen) ? DBNull.Value : model.HoTen;
-            cmd.Parameters.Add("p_soCmndCccd", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.SoCmndCccd) ? DBNull.Value : model.SoCmndCccd;
-            cmd.Parameters.Add("p_namSinh", OracleDbType.Date).Value = model.NamSinh.HasValue ? model.NamSinh.Value : DBNull.Value;
-            cmd.Parameters.Add("p_gioiTinh", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.GioiTinh) ? DBNull.Value : model.GioiTinh;
-            cmd.Parameters.Add("p_sdt", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.Sdt) ? DBNull.Value : model.Sdt;
-            cmd.Parameters.Add("p_avatarUrl", OracleDbType.NVarchar2).Value = string.IsNullOrWhiteSpace(model.AvatarUrl) ? DBNull.Value : model.AvatarUrl;
+            cmd.Parameters.Add("p_email", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.Email) ? DBNull.Value : model.Email;
+            cmd.Parameters.Add("p_hoTen", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.HoTen) ? DBNull.Value : model.HoTen;
+            cmd.Parameters.Add("p_soCmndCccd", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.SoCmndCccd) ? DBNull.Value : model.SoCmndCccd;
+            cmd.Parameters.Add("p_namSinh", OracleDbType.Date).Value =
+                model.NamSinh.HasValue ? model.NamSinh.Value : DBNull.Value;
+            cmd.Parameters.Add("p_gioiTinh", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.GioiTinh) ? DBNull.Value : model.GioiTinh;
+            cmd.Parameters.Add("p_sdt", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.Sdt) ? DBNull.Value : model.Sdt;
+            cmd.Parameters.Add("p_avatarUrl", OracleDbType.NVarchar2).Value =
+                string.IsNullOrWhiteSpace(model.AvatarUrl) ? DBNull.Value : model.AvatarUrl;
 
             cmd.Parameters.Add("o_result", OracleDbType.Int32).Direction = ParameterDirection.Output;
 
@@ -169,8 +177,53 @@ namespace driving_school_management.Services
             var result = (OracleDecimal)cmd.Parameters["result"].Value;
             return result.ToInt32() == 1;
         }
-    }
+        
+        public UserDashboardVM? GetUserDashboard(int userId)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PROC_GET_USER_DASHBOARD", conn);
 
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("o_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+
+            if (!reader.Read())
+                return null;
+
+            return new UserDashboardVM
+            {
+                UserId = Convert.ToInt32(reader["USERID"]),
+                HocVienId = reader["HOCVIENID"] == DBNull.Value ? 0 : Convert.ToInt32(reader["HOCVIENID"]),
+
+                Username = reader["USERNAME"]?.ToString() ?? "",
+                HoTen = reader["HOTEN"]?.ToString() ?? "",
+                Email = reader["EMAIL"]?.ToString() ?? "",
+                Sdt = reader["SDT"]?.ToString() ?? "",
+                GioiTinh = reader["GIOITINH"]?.ToString() ?? "",
+                AvatarUrl = reader["AVATARURL"]?.ToString() ?? "",
+
+                SoCmndCccd = reader["SOCMNDCCCD"]?.ToString() ?? "",
+                NamSinh = reader["NAMSINH"] == DBNull.Value ? null : Convert.ToDateTime(reader["NAMSINH"]),
+
+                TenHang = reader["TENHANG"]?.ToString() ?? "",
+                HoSoTrangThai = reader["HOSOTRANGTHAI"]?.ToString() ?? "",
+                NgayDangKy = reader["NGAYDANGKY"] == DBNull.Value ? null : Convert.ToDateTime(reader["NGAYDANGKY"]),
+
+                SoBuoiHoc = Convert.ToInt32(reader["SOBUOIHOC"]),
+                SoKyThi = Convert.ToInt32(reader["SOKYTHI"]),
+                TongThanhToan = Convert.ToDecimal(reader["TONGTHANHTOAN"]),
+
+                GplxTrangThai = reader["GPLXTRANGTHAI"]?.ToString() ?? ""
+            };
+        }
+    }
+    
     public class LoginResult
     {
         public int UserId { get; set; }

@@ -20,6 +20,6 @@ namespace driving_school_management.ViewModels
         public DateTime? NamSinh { get; set; }
         public string GioiTinh { get; set; } = "";
         public string Sdt { get; set; } = "";
-        public string AvatarUrl { get; set; } = "";
+        public string? AvatarUrl { get; set; } = "";
     }
 }

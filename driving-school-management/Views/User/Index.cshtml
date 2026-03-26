@@ -1,131 +1,872 @@
-﻿@model driving_school_management.ViewModels.UserProfileVM
+﻿@model driving_school_management.ViewModels.UserDashboardVM
 
 @{
-    ViewData["Title"] = "Trang cá nhân";
+    ViewData["Title"] = "Dashboard học viên";
     Layout = "_Layout";
 
     var avatarPath = string.IsNullOrWhiteSpace(Model.AvatarUrl)
         ? Url.Content("~/images/avatar/default.png")
         : Url.Content(Model.AvatarUrl);
+
+    var displayName = !string.IsNullOrWhiteSpace(Model.HoTen) ? Model.HoTen : Model.Username;
+    var profileSub = !string.IsNullOrWhiteSpace(Model.Sdt) ? Model.Sdt : Model.Email;
+    var profileStatus = !string.IsNullOrWhiteSpace(Model.HoSoTrangThai) ? Model.HoSoTrangThai : "Chưa cập nhật";
+    var licenseRank = !string.IsNullOrWhiteSpace(Model.TenHang) ? Model.TenHang : "Chưa cập nhật";
+    var licenseStatus = !string.IsNullOrWhiteSpace(Model.GplxTrangThai) ? Model.GplxTrangThai : "Chưa cập nhật";
 }
 
 <style>
-    .missing-star {
-        color: red;
-        font-weight: 700;
-        margin-left: 4px;
+    :root {
+        --ds-bg: #f3f6fb;
+        --ds-surface: rgba(255, 255, 255, 0.88);
+        --ds-card: #ffffff;
+        --ds-border: rgba(15, 23, 42, 0.08);
+        --ds-border-strong: rgba(15, 23, 42, 0.12);
+        --ds-text: #0f172a;
+        --ds-text-soft: #475569;
+        --ds-text-muted: #64748b;
+        --ds-accent: #0f172a;
+        --ds-accent-soft: #eef2f7;
+        --ds-success-bg: #ecfdf3;
+        --ds-success-text: #166534;
+        --ds-warning-bg: #fff7ed;
+        --ds-warning-text: #9a3412;
+        --ds-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+        --ds-shadow-hover: 0 22px 60px rgba(15, 23, 42, 0.12);
+        --ds-radius-xl: 28px;
+        --ds-radius-lg: 22px;
+        --ds-radius-md: 18px;
+        --ds-radius-sm: 14px;
     }
 
-    .profile-avatar {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
+    body {
+        background: var(--ds-bg);
+    }
+
+    .student-dashboard {
+        padding: 28px 0 48px;
+        animation: dashboardFade .45s ease;
+    }
+
+    @@keyframes dashboardFade {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dashboard-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr);
+        gap: 24px;
+        align-items: stretch;
+    }
+
+    .hero-card,
+    .panel-card,
+    .metric-card {
+        background: var(--ds-surface);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid var(--ds-border);
+        box-shadow: var(--ds-shadow);
+        transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .hero-card:hover,
+    .panel-card:hover,
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--ds-shadow-hover);
+        border-color: var(--ds-border-strong);
+    }
+
+    .hero-card {
+        border-radius: var(--ds-radius-xl);
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        min-height: 100%;
+    }
+
+    .hero-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(15, 23, 42, 0.06) 0%, rgba(15, 23, 42, 0) 72%);
+        pointer-events: none;
+    }
+
+    .hero-layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 28px;
+        position: relative;
+        z-index: 1;
+        align-items: stretch;
+    }
+
+    .hero-profile {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-right: 1px solid rgba(15, 23, 42, 0.08);
+        padding-right: 28px;
+    }
+
+    .avatar-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 132px;
+        height: 132px;
+        border-radius: 32px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .avatar {
+        width: 112px;
+        height: 112px;
+        border-radius: 28px;
         object-fit: cover;
-        border: 3px solid #e9ecef;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        display: block;
     }
 
-    .profile-avatar-wrap {
-        text-align: center;
-        margin-bottom: 24px;
-    }
-
-    .profile-info-item {
-        margin-bottom: 10px;
-        font-size: 16px;
-    }
-
-    .profile-label {
+    .identity-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.06);
+        color: var(--ds-text-soft);
+        font-size: 12px;
         font-weight: 600;
-        min-width: 140px;
-        display: inline-block;
+        letter-spacing: .02em;
+        width: fit-content;
+        margin-bottom: 14px;
+    }
+
+    .identity-name {
+        font-size: 32px;
+        line-height: 1.18;
+        font-weight: 700;
+        color: var(--ds-text);
+        margin: 0 0 10px;
+        letter-spacing: -0.03em;
+    }
+
+    .identity-sub {
+        font-size: 15px;
+        color: var(--ds-text-muted);
+        margin-bottom: 18px;
+    }
+
+    .identity-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .soft-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        color: var(--ds-text-soft);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .contact-stack {
+        display: grid;
+        gap: 12px;
+        margin-top: auto;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(248, 250, 252, 0.9);
+        border: 1px solid rgba(15, 23, 42, 0.05);
+    }
+
+    .contact-icon {
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ds-text);
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .contact-meta {
+        min-width: 0;
+    }
+
+    .contact-label {
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        margin-bottom: 3px;
+    }
+
+    .contact-value {
+        font-size: 14px;
+        color: var(--ds-text);
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .hero-content {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+
+    .section-title-wrap h2,
+    .side-title,
+    .metric-title {
+        margin: 0;
+        color: var(--ds-text);
+    }
+
+    .section-title-wrap h2 {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+    }
+
+    .section-desc {
+        color: var(--ds-text-muted);
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 540px;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .status-pill.approved {
+        background: var(--ds-success-bg);
+        color: var(--ds-success-text);
+        border-color: rgba(22, 101, 52, 0.08);
+    }
+
+    .status-pill.pending {
+        background: var(--ds-warning-bg);
+        color: var(--ds-warning-text);
+        border-color: rgba(154, 52, 18, 0.08);
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: .9;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .detail-card {
+        padding: 18px 18px 16px;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f8fafc 100%);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        min-height: 96px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: var(--ds-text-muted);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-weight: 700;
+    }
+
+    .detail-value {
+        font-size: 22px;
+        line-height: 1.28;
+        color: var(--ds-text);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    .detail-value.subtle {
+        font-size: 18px;
+    }
+
+    .detail-note {
+        font-size: 13px;
+        color: var(--ds-text-soft);
+        margin-top: 8px;
+    }
+
+    .highlight-band {
+        margin-top: auto;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: #0f172a;
+        color: #f8fafc;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .highlight-item {
+        min-width: 0;
+    }
+
+    .highlight-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: rgba(248, 250, 252, 0.64);
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .highlight-value {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #ffffff;
+        word-break: break-word;
+    }
+
+    .dashboard-right {
+        display: grid;
+        gap: 20px;
+        align-content: start;
+    }
+
+    .panel-card {
+        border-radius: var(--ds-radius-lg);
+        padding: 22px;
+    }
+
+    .side-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+    }
+
+    .profile-summary {
+        display: grid;
+        gap: 14px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
+    }
+
+    .summary-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .summary-key {
+        font-size: 13px;
+        color: var(--ds-text-muted);
+    }
+
+    .summary-val {
+        text-align: right;
+        font-size: 14px;
+        color: var(--ds-text);
+        font-weight: 700;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+        margin-top: 24px;
+    }
+
+    .metric-card {
+        border-radius: 24px;
+        padding: 22px;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card::after {
+        content: "";
+        position: absolute;
+        right: -18px;
+        top: -18px;
+        width: 90px;
+        height: 90px;
+        border-radius: 24px;
+        background: rgba(15, 23, 42, 0.04);
+    }
+
+    .metric-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .metric-title {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .metric-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ds-text);
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .metric-main {
+        position: relative;
+        z-index: 1;
+        margin-top: 18px;
+    }
+
+    .metric-value {
+        font-size: 34px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: var(--ds-text);
+        margin-bottom: 8px;
+        word-break: break-word;
+    }
+
+    .metric-desc {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ds-text-muted);
+        max-width: 240px;
+    }
+
+    .metric-footer {
+        position: relative;
+        z-index: 1;
+        margin-top: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ds-text-soft);
+        font-weight: 600;
+    }
+
+    .metric-card.dark {
+        background: #0f172a;
+        border-color: rgba(15, 23, 42, 0.6);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
+    }
+
+    .metric-card.dark .metric-title,
+    .metric-card.dark .metric-value {
+        color: #ffffff;
+    }
+
+    .metric-card.dark .metric-desc,
+    .metric-card.dark .metric-footer {
+        color: rgba(248, 250, 252, 0.72);
+    }
+
+    .metric-card.dark .metric-icon {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
+    .metric-card.dark::after {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    @@media (max-width: 1399.98px) {
+        .metrics-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 1199.98px) {
+        .dashboard-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-layout {
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .hero-profile {
+            border-right: 0;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            padding-right: 0;
+            padding-bottom: 24px;
+        }
+
+        .dashboard-right {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .student-dashboard {
+            padding-top: 20px;
+        }
+
+        .hero-card,
+        .panel-card,
+        .metric-card {
+            border-radius: 22px;
+        }
+
+        .hero-card {
+            padding: 20px;
+        }
+
+        .dashboard-right,
+        .metrics-grid,
+        .detail-grid,
+        .highlight-band {
+            grid-template-columns: 1fr;
+        }
+
+        .section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .identity-name {
+            font-size: 28px;
+        }
+
+        .detail-value {
+            font-size: 20px;
+        }
+
+        .metric-value {
+            font-size: 30px;
+        }
     }
 </style>
 
-<div class="container mt-4">
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+<div class="container-fluid px-3 px-lg-4 student-dashboard">
+    <div class="container-xxl">
+        <div class="dashboard-shell">
+            <section class="hero-card">
+                <div class="hero-layout">
+                    <div class="hero-profile">
+                        <div>
+                            <div class="avatar-wrap">
+                                <img src="@avatarPath" alt="Avatar học viên" class="avatar" />
+                            </div>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+                            <span class="identity-label">Học viên</span>
 
-    @if (TempData["Warning"] != null)
-    {
-        <div class="alert alert-warning">@TempData["Warning"]</div>
-    }
+                            <h1 class="identity-name">@displayName</h1>
 
-    @if (Model.IsProfileIncomplete)
-    {
-        <div class="alert alert-warning">
-            Hồ sơ của bạn còn thiếu thông tin. Các trường cần bổ sung được đánh dấu <span class="missing-star">*</span>
+                            <div class="identity-sub">
+                                @(string.IsNullOrWhiteSpace(Model.Email) ? "Thông tin liên hệ chưa cập nhật" : Model.Email)
+                            </div>
+
+                            <div class="identity-tags">
+                                @if (!string.IsNullOrWhiteSpace(Model.GioiTinh))
+                                {
+                                    <span class="soft-chip">@Model.GioiTinh</span>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(Model.Username))
+                                {
+                                    <span class="soft-chip">@@@Model.Username</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="contact-stack">
+                            <div class="contact-item">
+                                <div class="contact-icon">S</div>
+                                <div class="contact-meta">
+                                    <div class="contact-label">Số điện thoại</div>
+                                    <div class="contact-value">
+                                        @(string.IsNullOrWhiteSpace(Model.Sdt) ? "Chưa cập nhật" : Model.Sdt)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="contact-item">
+                                <div class="contact-icon">E</div>
+                                <div class="contact-meta">
+                                    <div class="contact-label">Email</div>
+                                    <div class="contact-value">
+                                        @(string.IsNullOrWhiteSpace(Model.Email) ? "Chưa cập nhật" : Model.Email)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-content">
+                        <div class="section-head">
+                            <div class="section-title-wrap">
+                                <h2>Tổng quan hồ sơ học viên</h2>
+                                <div class="section-desc">
+                                    Thông tin quan trọng được gom theo từng cụm rõ ràng để xem nhanh hồ sơ, tình trạng đăng ký và dữ liệu định danh.
+                                </div>
+                            </div>
+
+                            <div class="status-pill @(profileStatus.ToLower().Contains("duyệt") ? "approved" : "pending")">
+                                <span class="status-dot"></span>
+                                @profileStatus
+                            </div>
+                        </div>
+
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-label">Tên đăng nhập</div>
+                                <div class="detail-value subtle">
+                                    @(string.IsNullOrWhiteSpace(Model.Username) ? "Chưa cập nhật" : Model.Username)
+                                </div>
+                            </div>
+
+                            <div class="detail-card">
+                                <div class="detail-label">CMND/CCCD</div>
+                                <div class="detail-value subtle">
+                                    @(string.IsNullOrWhiteSpace(Model.SoCmndCccd) ? "Chưa cập nhật" : Model.SoCmndCccd)
+                                </div>
+                            </div>
+
+                            <div class="detail-card">
+                                <div class="detail-label">Ngày sinh</div>
+                                <div class="detail-value subtle">
+                                    @(Model.NamSinh?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+
+                            <div class="detail-card">
+                                <div class="detail-label">Ngày đăng ký</div>
+                                <div class="detail-value subtle">
+                                    @(Model.NgayDangKy?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="highlight-band">
+                            <div class="highlight-item">
+                                <div class="highlight-label">Hạng GPLX</div>
+                                <div class="highlight-value">@licenseRank</div>
+                            </div>
+
+                            <div class="highlight-item">
+                                <div class="highlight-label">Trạng thái GPLX</div>
+                                <div class="highlight-value">@licenseStatus</div>
+                            </div>
+
+                            <div class="highlight-item">
+                                <div class="highlight-label">Mã học viên</div>
+                                <div class="highlight-value">#@Model.HocVienId</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="dashboard-right">
+                <div class="panel-card">
+                    <h3 class="side-title">Thông tin nhanh</h3>
+
+                    <div class="profile-summary">
+                        <div class="summary-row">
+                            <div class="summary-key">Họ và tên</div>
+                            <div class="summary-val">@displayName</div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">Liên hệ chính</div>
+                            <div class="summary-val">@profileSub</div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">Hạng đào tạo</div>
+                            <div class="summary-val">@licenseRank</div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">Hồ sơ hiện tại</div>
+                            <div class="summary-val">@profileStatus</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h3 class="side-title">Nhận diện hồ sơ</h3>
+
+                    <div class="profile-summary">
+                        <div class="summary-row">
+                            <div class="summary-key">Mã học viên</div>
+                            <div class="summary-val">#@Model.HocVienId</div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">Tên đăng nhập</div>
+                            <div class="summary-val">
+                                @(string.IsNullOrWhiteSpace(Model.Username) ? "Chưa cập nhật" : Model.Username)
+                            </div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">CMND/CCCD</div>
+                            <div class="summary-val">
+                                @(string.IsNullOrWhiteSpace(Model.SoCmndCccd) ? "Chưa cập nhật" : Model.SoCmndCccd)
+                            </div>
+                        </div>
+
+                        <div class="summary-row">
+                            <div class="summary-key">Giới tính</div>
+                            <div class="summary-val">
+                                @(string.IsNullOrWhiteSpace(Model.GioiTinh) ? "Chưa cập nhật" : Model.GioiTinh)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
-    }
 
-    <div class="card shadow-sm rounded-4">
-        <div class="card-body">
-            <h3 class="mb-4">Trang cá nhân user</h3>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <h3 class="metric-title">Số buổi học</h3>
+                    <div class="metric-icon">H</div>
+                </div>
 
-            <div class="profile-avatar-wrap">
-                <img src="@avatarPath" alt="Avatar" class="profile-avatar" />
+                <div class="metric-main">
+                    <div class="metric-value">@Model.SoBuoiHoc</div>
+                    <div class="metric-desc">
+                        Tổng số buổi học đã được ghi nhận trong hồ sơ học tập hiện tại.
+                    </div>
+                </div>
+
+                <div class="metric-footer">Theo dõi tiến độ đào tạo</div>
             </div>
 
-            <div class="profile-info-item">
-                <span class="profile-label">Tên đăng nhập:</span> @Model.Username
+            <div class="metric-card">
+                <div class="metric-top">
+                    <h3 class="metric-title">Kỳ thi đã đăng ký</h3>
+                    <div class="metric-icon">K</div>
+                </div>
+
+                <div class="metric-main">
+                    <div class="metric-value">@Model.SoKyThi</div>
+                    <div class="metric-desc">
+                        Số lần đăng ký thi đã phát sinh từ hồ sơ thi sinh của học viên.
+                    </div>
+                </div>
+
+                <div class="metric-footer">Dữ liệu từ lịch thi</div>
             </div>
 
-            <div class="profile-info-item">
-                <span class="profile-label">Email:</span> @Model.Email
+            <div class="metric-card dark">
+                <div class="metric-top">
+                    <h3 class="metric-title">Tổng thanh toán</h3>
+                    <div class="metric-icon">₫</div>
+                </div>
+
+                <div class="metric-main">
+                    <div class="metric-value">@Model.TongThanhToan.ToString("N0")</div>
+                    <div class="metric-desc">
+                        Tổng số tiền đã ghi nhận từ các phiếu thanh toán liên kết với hồ sơ.
+                    </div>
+                </div>
+
+                <div class="metric-footer">Đơn vị: VNĐ</div>
             </div>
 
-            <div class="profile-info-item">
-                <span class="profile-label">Họ tên:</span> @Model.HoTen
-                @if (Model.IsMissingHoTen)
-                {
-                    <span class="missing-star">*</span>
-                }
-            </div>
+            <div class="metric-card">
+                <div class="metric-top">
+                    <h3 class="metric-title">Tình trạng GPLX</h3>
+                    <div class="metric-icon">G</div>
+                </div>
 
-            <div class="profile-info-item">
-                <span class="profile-label">Số CMND/CCCD:</span> @Model.SoCmndCccd
-                @if (Model.IsMissingSoCmndCccd)
-                {
-                    <span class="missing-star">*</span>
-                }
-            </div>
+                <div class="metric-main">
+                    <div class="metric-value" style="font-size:28px;">
+                        @licenseStatus
+                    </div>
+                    <div class="metric-desc">
+                        Trạng thái giấy phép lái xe hiện tại theo hồ sơ đang liên kết.
+                    </div>
+                </div>
 
-            <div class="profile-info-item">
-                <span class="profile-label">Năm sinh:</span> @(Model.NamSinh?.ToString("dd/MM/yyyy"))
-                @if (Model.IsMissingNamSinh)
-                {
-                    <span class="missing-star">*</span>
-                }
+                <div class="metric-footer">Kết quả từ hồ sơ GPLX</div>
             </div>
-
-            <div class="profile-info-item">
-                <span class="profile-label">Giới tính:</span> @Model.GioiTinh
-                @if (Model.IsMissingGioiTinh)
-                {
-                    <span class="missing-star">*</span>
-                }
-            </div>
-
-            <div class="profile-info-item">
-                <span class="profile-label">SĐT:</span> @Model.Sdt
-                @if (Model.IsMissingSdt)
-                {
-                    <span class="missing-star">*</span>
-                }
-            </div>
-
-            <div class="profile-info-item">
-                <span class="profile-label">Đường dẫn ảnh:</span> @Model.AvatarUrl
-            </div>
-
-            <a asp-action="Edit" asp-controller="User" class="btn btn-primary mt-3">Chỉnh sửa thông tin</a>
         </div>
     </div>
 </div>

@@ -528,43 +528,67 @@
             GPLX System
         </a>
 
-        <a class="menu-item" href="#">Hồ sơ</a>
+        <a class="menu-item @(currentController == "User" ? "menu-active" : "")"
+           asp-controller="User" asp-action="Index">
+            Hồ sơ
+        </a>
 
-            <div class="dropdown-custom">
-                <button type="button" class="dropdown-btn @(currentController == "KhoaHoc" ? "menu-active" : "")">
-                    Học tập ▾
-                </button>
+        <!-- Học tập -->
+        @{
+            var studyActive = currentController == "Hoc" || currentController == "KhoaHoc";
+        }
 
-                <div class="dropdown-menu-custom dropdown-menu-study">
-                    <div class="dropdown-section">
-                        <a class="dropdown-item-custom @(currentController == "Hoc" && currentAction == "Index" ? "dropdown-item-active" : "")"
-                           href="@Url.Action("Index", "Hoc")">
-                            Tài liệu
-                        </a>
-                    </div>
+        <div class="dropdown-custom">
+            <button type="button"
+                    class="dropdown-btn @(studyActive ? "menu-active" : "")">
+                Học tập ▾
+            </button>
 
-                    <div class="dropdown-divider-custom"></div>
+            <div class="dropdown-menu-custom dropdown-menu-study">
+                <div class="dropdown-section">
+                    <a class="dropdown-item-custom @(currentController == "Hoc" ? "dropdown-item-active" : "")"
+                       href="@Url.Action("Index", "Hoc")">
+                        Tài liệu
+                    </a>
+                </div>
 
-                    <div class="dropdown-section">
-                        <a class="dropdown-item-custom @(currentController == "KhoaHoc" && currentAction == "Index" ? "dropdown-item-active" : "")"
-                           href="@Url.Action("Index", "KhoaHoc")">
-                            Danh sách khóa học
-                        </a>
-                        <a class="dropdown-item-custom" href="#">Khóa học của tôi</a>
-                    </div>
+                <div class="dropdown-divider-custom"></div>
+
+                <div class="dropdown-section">
+                    <a class="dropdown-item-custom @(currentController == "KhoaHoc" ? "dropdown-item-active" : "")"
+                       href="@Url.Action("Index", "KhoaHoc")">
+                        Danh sách khóa học
+                    </a>
+
+                    <a class="dropdown-item-custom"
+                       href="#">
+                        Khóa học của tôi
+                    </a>
                 </div>
             </div>
-
-            <a class="menu-item" href="#">Thi thử</a>
-            <a class="menu-item" href="#">Kết quả</a>
-            <a class="menu-item @(currentController == "PaymentHistory" ? "menu-active" : "")"
-               href="@Url.Action("Index", "PaymentHistory")">
-                Thanh toán
-            </a>
         </div>
+
+        <!-- Thi thử -->
+        <a class="menu-item @(currentController == "ThiThu" ? "menu-active" : "")"
+           asp-controller="ThiThu" asp-action="Index">
+            Thi thử
+        </a>
+
+        <!-- Kết quả -->
+        <a class="menu-item @(currentController == "KetQua" ? "menu-active" : "")"
+           asp-controller="KetQua" asp-action="Index">
+            Kết quả
+        </a>
+
+        <!-- Thanh toán -->
+        <a class="menu-item @(currentController == "PaymentHistory" ? "menu-active" : "")"
+           href="@Url.Action("Index", "PaymentHistory")">
+            Thanh toán
+        </a>
 
     </div>
 
+    <!-- RIGHT BOX -->
     <div class="right-box">
         <form class="nav-search-wrap" method="get" action="#">
             <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
@@ -574,40 +598,52 @@
         @if (Context.Session.GetInt32("UserId") != null)
         {
             <div class="dropdown-custom user-dropdown-custom">
-                <button type="button" class="user-menu-trigger" aria-label="Tài khoản người dùng">
-                    <img src="@avatarUrl" alt="Avatar" class="user-avatar" />
+                <button type="button" class="user-menu-trigger">
+                    <img src="@avatarUrl" class="user-avatar" />
                     <span class="user-menu-name">@Context.Session.GetString("Username")</span>
                     <span class="user-menu-chevron">▾</span>
                 </button>
 
                 <div class="dropdown-menu-custom dropdown-menu-user">
-                    <div class="dropdown-user-header">
-                        <img src="@avatarUrl" alt="Avatar" class="user-avatar user-avatar-lg" />
-                        <div class="dropdown-user-meta">
-                            <div class="dropdown-user-name">@Context.Session.GetString("Username")</div>
+                <div class="dropdown-user-header">
+                    <img src="@avatarUrl" class="user-avatar user-avatar-lg" />
+                    <div class="dropdown-user-meta">
+                        <div class="dropdown-user-name">
+                            @Context.Session.GetString("Username")
                         </div>
                     </div>
-
-                    <div class="dropdown-divider-custom"></div>
-
-                    <div class="dropdown-section">
-                        <a class="dropdown-item-custom" asp-controller="Home" asp-action="Index">Dashboard</a>
-                    <a class="dropdown-item-custom" asp-controller="User" asp-action="Index">
-                    Tài khoản của tôi
-                    </a>
-                        <a class="dropdown-item-custom" href="#">Cài đặt</a>
-                    </div>
-
-                    <div class="dropdown-divider-custom"></div>
-
-                    <div class="dropdown-section">
-                        <a class="dropdown-item-custom dropdown-item-logout"
-                           asp-controller="Auth"
-                           asp-action="Logout">
-                            Đăng xuất
-                        </a>
-                    </div>
                 </div>
+
+                <div class="dropdown-divider-custom"></div>
+
+                <div class="dropdown-section">
+                    <!-- Dashboard -> User/Index -->
+                    <a class="dropdown-item-custom @(currentController == "User" && currentAction == "Index" ? "dropdown-item-active" : "")"
+                       asp-controller="User" asp-action="Index">
+                        Dashboard
+                    </a>
+
+                    <!-- Chỉnh sửa thông tin -> User/Edit -->
+                    <a class="dropdown-item-custom @(currentController == "User" && currentAction == "Edit" ? "dropdown-item-active" : "")"
+                       asp-controller="User" asp-action="Edit">
+                        Chỉnh sửa thông tin
+                    </a>
+
+                    <a class="dropdown-item-custom">
+                        Cài đặt
+                    </a>
+                </div>
+
+                <div class="dropdown-divider-custom"></div>
+
+                <div class="dropdown-section">
+                    <a class="dropdown-item-custom dropdown-item-logout"
+                       asp-controller="Auth"
+                       asp-action="Logout">
+                        Đăng xuất
+                    </a>
+                </div>
+            </div>
             </div>
         }
         else

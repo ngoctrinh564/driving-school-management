@@ -9,6 +9,7 @@ namespace driving_school_management.Services
         UserProfileVM? GetUserProfile(int userId);
         int UpdateUserProfile(EditUserVM model);
         Task<int> ResetPassword(string username, string newPassword);
+        UserDashboardVM? GetUserDashboard(int userId);
         Task<bool> IsProfileCompleted(int userId);
     }
 }

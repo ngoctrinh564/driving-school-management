@@ -16,17 +16,19 @@ namespace driving_school_management.Controllers
         public IActionResult Index()
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
+
             if (userId == null)
                 return RedirectToAction("Login", "Auth");
 
-            var profile = _authService.GetUserProfile(userId.Value);
-            if (profile == null)
+            var data = _authService.GetUserDashboard(userId.Value);
+
+            if (data == null)
             {
-                TempData["Error"] = "Không tìm thấy thông tin user";
+                TempData["Error"] = "Không tìm thấy dữ liệu";
                 return RedirectToAction("Index", "Home");
             }
 
-            return View(profile);
+            return View(data);
         }
 
         [HttpGet]
@@ -61,8 +63,29 @@ namespace driving_school_management.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(EditUserVM model, IFormFile avatarFile)
+        public IActionResult Edit(EditUserVM model, IFormFile? avatarFile)
         {
+            if (string.IsNullOrWhiteSpace(model.Username))
+            {
+                var current = _authService.GetUserProfile(model.UserId);
+                if (current != null)
+                {
+                    model.Username = current.Username;
+                }
+                ModelState.Remove(nameof(model.Username));
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Where(x => x.Value!.Errors.Count > 0)
+                    .Select(x => $"{x.Key}: {string.Join(" | ", x.Value!.Errors.Select(e => e.ErrorMessage))}")
+                    .ToList();
+
+                TempData["Error"] = "ModelState không hợp lệ: " + string.Join(" || ", errors);
+                return View(model);
+            }
+
             if (avatarFile != null && avatarFile.Length > 0)
             {
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(avatarFile.FileName);
@@ -83,16 +106,24 @@ namespace driving_school_management.Controllers
                 model.AvatarUrl = "/images/avatar/" + fileName;
             }
 
-            if (!ModelState.IsValid)
-                return View(model);
-
             int result = _authService.UpdateUserProfile(model);
 
             if (result == 1)
             {
-                HttpContext.Session.SetString("Username", model.Username);
                 TempData["Success"] = "Cập nhật thông tin thành công";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", "User");
+            }
+
+            if (result == -1)
+            {
+                TempData["Error"] = "Tên đăng nhập đã tồn tại";
+                return View(model);
+            }
+
+            if (result == -2)
+            {
+                TempData["Error"] = "Email đã tồn tại";
+                return View(model);
             }
 
             TempData["Error"] = "Cập nhật thất bại";

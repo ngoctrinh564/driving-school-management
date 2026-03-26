@@ -158,7 +158,6 @@ BEGIN
 END;
 /
 
-
 CREATE OR REPLACE PROCEDURE PROC_UPDATE_USER_PROFILE
 (
     p_userId       IN NUMBER,
@@ -174,6 +173,8 @@ CREATE OR REPLACE PROCEDURE PROC_UPDATE_USER_PROFILE
 )
 AS
     v_count NUMBER;
+    v_user_rows NUMBER;
+    v_hocvien_rows NUMBER;
 BEGIN
     -- check username trùng người khác
     SELECT COUNT(*) INTO v_count
@@ -201,6 +202,8 @@ BEGIN
     SET userName = p_username
     WHERE userId = p_userId;
 
+    v_user_rows := SQL%ROWCOUNT;
+
     UPDATE HocVien
     SET email = p_email,
         hoTen = p_hoTen,
@@ -211,10 +214,31 @@ BEGIN
         avatarUrl = p_avatarUrl
     WHERE userId = p_userId;
 
+    v_hocvien_rows := SQL%ROWCOUNT;
+
+    IF v_user_rows = 0 OR v_hocvien_rows = 0 THEN
+        ROLLBACK;
+        o_result := 0;
+        RETURN;
+    END IF;
+
+    COMMIT;
     o_result := 1;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        o_result := 0;
 END;
 /
 
 
-COMMIT;
 
+
+
+
+
+
+
+
+COMMIT;
