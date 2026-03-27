@@ -7,10 +7,12 @@ namespace driving_school_management.Controllers
     public class UserController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IPhotoValidationService _photoValidationService;
 
-        public UserController(IAuthService authService)
+        public UserController(IAuthService authService, IPhotoValidationService photoValidationService)
         {
             _authService = authService;
+            _photoValidationService = photoValidationService;
         }
 
         public IActionResult Index()
@@ -128,6 +130,13 @@ namespace driving_school_management.Controllers
 
             TempData["Error"] = "Cập nhật thất bại";
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ValidateAvatar(IFormFile? avatarFile)
+        {
+            var result = await _photoValidationService.ValidatePhotoAsync(avatarFile);
+            return Json(result);
         }
     }
 }   
