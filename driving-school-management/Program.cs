@@ -26,6 +26,7 @@ builder.Services.AddScoped<IPayPalService, PayPalService>();
 builder.Services.AddScoped<IMomoService, MomoService>();
 builder.Services.AddScoped<PaymentHistoryService>();
 builder.Services.AddScoped<PaymentInvoiceService>();
+builder.Services.AddScoped<IPhotoValidationService, PhotoValidationService>();
 //
 builder.Services.AddHttpClient();
 //

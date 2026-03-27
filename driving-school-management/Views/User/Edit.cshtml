@@ -32,6 +32,9 @@
         --danger-text: #991b1b;
         --warning-bg: #fff7ed;
         --warning-text: #9a3412;
+        --info-bg: #eff6ff;
+        --info-border: #bfdbfe;
+        --info-text: #1d4ed8;
         --shadow: 0 18px 50px rgba(15,23,42,.08);
         --shadow-hover: 0 24px 60px rgba(15,23,42,.12);
         --radius-xl: 28px;
@@ -42,7 +45,7 @@
     body { background: var(--bg); }
 
     .profile-edit-page {
-        max-width: 1220px;
+        max-width: 1280px;
         margin: 44px auto;
         padding: 0 18px;
         animation: pageFade .35s ease;
@@ -88,8 +91,8 @@
 
     .profile-edit-card {
         display: grid;
-        grid-template-columns: 340px minmax(0, 1fr);
-        gap: 34px;
+        grid-template-columns: 420px minmax(0, 1fr);
+        gap: 38px;
         background: var(--surface);
         border: 1px solid rgba(15,23,42,.08);
         border-radius: var(--radius-xl);
@@ -107,32 +110,81 @@
     }
 
     .profile-left {
-        padding-right: 30px;
+        padding-right: 34px;
         border-right: 1px solid rgba(15,23,42,.08);
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         text-align: center;
+        min-width: 0;
+    }
+
+    .avatar-panel {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid rgba(15,23,42,.08);
+        border-radius: 28px;
+        padding: 22px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+        margin-bottom: 22px;
+    }
+
+    .avatar-panel-top {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .avatar-shell {
-        width: 176px;
-        height: 176px;
-        border-radius: 36px;
+        width: 280px;
+        height: 280px;
+        border-radius: 42px;
         background: linear-gradient(180deg,#fff 0%,#f8fafc 100%);
-        border: 1px solid rgba(15,23,42,.08);
+        border: 1px solid rgba(15,23,42,.1);
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
-        margin-bottom: 18px;
+        box-shadow: 0 18px 44px rgba(15,23,42,.08);
+        margin: 0 auto 16px;
+        cursor: zoom-in;
+        position: relative;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .avatar-shell:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 56px rgba(15,23,42,.12);
+        border-color: rgba(15,23,42,.16);
+    }
+
+    .avatar-shell::after {
+        content: "Nhấn để xem ảnh lớn";
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(15,23,42,.64);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .01em;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .2s ease, transform .2s ease;
+        pointer-events: none;
+    }
+
+    .avatar-shell:hover::after {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .avatar-preview {
-        width: 148px;
-        height: 148px;
-        border-radius: 30px;
+        width: 236px;
+        height: 236px;
+        border-radius: 32px;
         object-fit: cover;
         display: block;
     }
@@ -142,28 +194,68 @@
         flex-direction: column;
         align-items: center;
         gap: 10px;
-        margin-bottom: 28px;
+        margin-bottom: 0;
     }
 
     .avatar-upload-btn {
-        border: 0;
-        background: transparent;
-        color: var(--muted);
-        font-size: 15px;
-        font-weight: 700;
+        min-width: 168px;
+        height: 46px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: #fff;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 800;
+        border-radius: 14px;
         cursor: pointer;
-        transition: color .2s ease, transform .2s ease;
-        padding: 0;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+        padding: 0 18px;
+        box-shadow: 0 10px 26px rgba(15,23,42,.05);
     }
 
     .avatar-upload-btn:hover {
-        color: var(--text);
         transform: translateY(-1px);
+        border-color: rgba(15,23,42,.12);
+        background: #f8fafc;
     }
 
     .avatar-upload-note {
         font-size: 12px;
         color: var(--muted);
+        line-height: 1.6;
+        max-width: 300px;
+    }
+
+    .photo-id-guide {
+        margin-top: 18px;
+        text-align: left;
+        background: var(--info-bg);
+        border: 1px solid var(--info-border);
+        border-radius: 20px;
+        padding: 18px 18px 16px;
+    }
+
+    .photo-id-guide-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 10px;
+    }
+
+    .photo-id-guide-subtitle {
+        font-size: 13px;
+        color: var(--info-text);
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .photo-id-guide-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+        color: #1e293b;
+        font-size: 13px;
+        line-height: 1.55;
     }
 
     .profile-name {
@@ -343,6 +435,109 @@
         color: var(--text);
     }
 
+    .avatar-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(2,6,23,.72);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 9999;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .avatar-modal.show {
+        display: flex;
+    }
+
+    .avatar-modal-dialog {
+        width: min(92vw, 760px);
+        background: rgba(255,255,255,.98);
+        border-radius: 28px;
+        border: 1px solid rgba(15,23,42,.08);
+        box-shadow: 0 30px 90px rgba(15,23,42,.22);
+        overflow: hidden;
+        animation: modalFade .2s ease;
+    }
+
+    @@keyframes modalFade {
+        from { opacity: 0; transform: scale(.96); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .avatar-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(15,23,42,.08);
+    }
+
+    .avatar-modal-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .avatar-modal-close {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        border: 1px solid rgba(15,23,42,.08);
+        background: #fff;
+        color: var(--text);
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .avatar-modal-close:hover {
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    .avatar-modal-body {
+        padding: 22px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .avatar-modal-image-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 420px;
+        border-radius: 22px;
+        background: #eef2f7;
+        overflow: hidden;
+    }
+
+    .avatar-modal-image {
+        max-width: 100%;
+        max-height: 72vh;
+        object-fit: contain;
+        display: block;
+    }
+
+    @@media (max-width: 1199.98px) {
+        .profile-edit-card {
+            grid-template-columns: 380px minmax(0, 1fr);
+        }
+
+        .avatar-shell {
+            width: 250px;
+            height: 250px;
+        }
+
+        .avatar-preview {
+            width: 212px;
+            height: 212px;
+        }
+    }
+
     @@media (max-width: 991.98px) {
         .profile-edit-card {
             grid-template-columns: 1fr;
@@ -380,6 +575,26 @@
         .btn-ui {
             width: 100%;
         }
+
+        .avatar-shell {
+            width: 220px;
+            height: 220px;
+            border-radius: 34px;
+        }
+
+        .avatar-preview {
+            width: 188px;
+            height: 188px;
+            border-radius: 26px;
+        }
+
+        .avatar-modal-body {
+            padding: 14px;
+        }
+
+        .avatar-modal-image-wrap {
+            min-height: 300px;
+        }
     }
 </style>
 
@@ -398,23 +613,44 @@
             <div class="alert-ui alert-warning-ui">@TempData["Warning"]</div>
         }
     </div>
-
+    <div id="avatarValidationContainer" class="alert-stack"></div>
     <form id="editProfileForm" asp-action="Edit" asp-controller="User" method="post" enctype="multipart/form-data">
         <input type="hidden" name="UserId" value="@Model.UserId" />
         <input type="hidden" name="HocVienId" value="@Model.HocVienId" />
         <input type="hidden" name="AvatarUrl" value="@Model.AvatarUrl" />
         <input type="hidden" name="Username" value="@Model.Username" />
         <input type="file" name="avatarFile" id="avatarInput" hidden accept="image/*" />
+        <input type="hidden" id="IsAvatarChecked" value="false" />
+        <input type="hidden" id="IsAvatarValid" value="false" />
 
         <div class="profile-edit-card">
             <div class="profile-left">
-                <div class="avatar-shell">
-                    <img id="avatarPreview" src="@avatarPath" alt="Avatar học viên" class="avatar-preview" />
-                </div>
+                <div class="avatar-panel">
+                    <div class="avatar-panel-top">
+                        <div class="avatar-shell" id="openAvatarPreview" title="Nhấn để xem ảnh lớn">
+                            <img id="avatarPreview" src="@avatarPath" alt="Ảnh thẻ học viên" class="avatar-preview" />
+                        </div>
 
-                <div class="avatar-actions">
-                    <button type="button" class="avatar-upload-btn" id="triggerAvatarUpload">Thay đổi ảnh</button>
-                    <div class="avatar-upload-note">Ảnh sẽ được xem trước ngay sau khi chọn</div>
+                        <div class="avatar-actions">
+                            <button type="button" class="avatar-upload-btn" id="triggerAvatarUpload">Tải ảnh thẻ lên</button>
+                            <div class="avatar-upload-note">
+                                Chọn ảnh thẻ để hệ thống kiểm tra ngay sau khi tải lên. Nhấn trực tiếp vào khung ảnh để xem ảnh lớn rõ hơn.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="photo-id-guide">
+                        <div class="photo-id-guide-title">Ảnh thẻ hồ sơ</div>
+                        <div class="photo-id-guide-subtitle">Yêu cầu ảnh trước khi lưu</div>
+                        <ul class="photo-id-guide-list">
+                            <li>Chỉ chấp nhận ảnh định dạng JPG, JPEG, PNG.</li>
+                            <li>Ảnh phải có đúng 1 khuôn mặt.</li>
+                            <li>Khuôn mặt phải nằm gần trung tâm ảnh.</li>
+                            <li>Tỉ lệ khuôn mặt phải phù hợp so với chiều rộng ảnh.</li>
+                            <li>Kích thước ảnh tối thiểu từ 400 x 400 pixel.</li>
+                            <li>Ảnh không được quá mờ, quá tối hoặc quá sáng.</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="profile-name">@displayName</div>
@@ -491,12 +727,74 @@
     </form>
 </div>
 
+<div class="avatar-modal" id="avatarModal">
+    <div class="avatar-modal-dialog">
+        <div class="avatar-modal-header">
+            <div class="avatar-modal-title">Xem trước ảnh thẻ</div>
+            <button type="button" class="avatar-modal-close" id="closeAvatarModal" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="avatar-modal-body">
+            <div class="avatar-modal-image-wrap">
+                <img id="avatarModalImage" src="@avatarPath" alt="Ảnh thẻ xem trước" class="avatar-modal-image" />
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         (function () {
             const avatarInput = document.getElementById('avatarInput');
             const avatarPreview = document.getElementById('avatarPreview');
+            const avatarModalImage = document.getElementById('avatarModalImage');
+            const openAvatarPreview = document.getElementById('openAvatarPreview');
+            const avatarModal = document.getElementById('avatarModal');
+            const closeAvatarModal = document.getElementById('closeAvatarModal');
             const triggerAvatarUpload = document.getElementById('triggerAvatarUpload');
+            const avatarValidationContainer = document.getElementById('avatarValidationContainer');
+            const editProfileForm = document.getElementById('editProfileForm');
+            const isAvatarChecked = document.getElementById('IsAvatarChecked');
+            const isAvatarValid = document.getElementById('IsAvatarValid');
+
+            const validateUrl = '@Url.Action("ValidateAvatar", "User")';
+
+            function renderAlert(type, messages) {
+                const cssMap = {
+                    success: 'alert-ui alert-success-ui',
+                    danger: 'alert-ui alert-danger-ui',
+                    warning: 'alert-ui alert-warning-ui'
+                };
+
+                const items = Array.isArray(messages) ? messages : [messages];
+
+                avatarValidationContainer.innerHTML = `
+                    <div class="${cssMap[type]}">
+                        ${items.map(x => `<div>${x}</div>`).join('')}
+                    </div>
+                `;
+            }
+
+            function clearAlert() {
+                avatarValidationContainer.innerHTML = '';
+            }
+
+            function setAvatarState(checked, valid) {
+                isAvatarChecked.value = checked ? 'true' : 'false';
+                isAvatarValid.value = valid ? 'true' : 'false';
+            }
+
+            function openModal() {
+                if (!avatarModal || !avatarModalImage || !avatarPreview) return;
+                avatarModalImage.src = avatarPreview.src;
+                avatarModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                if (!avatarModal) return;
+                avatarModal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
 
             if (triggerAvatarUpload && avatarInput) {
                 triggerAvatarUpload.addEventListener('click', function () {
@@ -504,16 +802,99 @@
                 });
             }
 
+            if (openAvatarPreview) {
+                openAvatarPreview.addEventListener('click', function () {
+                    openModal();
+                });
+            }
+
+            if (closeAvatarModal) {
+                closeAvatarModal.addEventListener('click', function () {
+                    closeModal();
+                });
+            }
+
+            if (avatarModal) {
+                avatarModal.addEventListener('click', function (e) {
+                    if (e.target === avatarModal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && avatarModal && avatarModal.classList.contains('show')) {
+                    closeModal();
+                }
+            });
+
             if (avatarInput && avatarPreview) {
-                avatarInput.addEventListener('change', function () {
+                avatarInput.addEventListener('change', async function () {
                     const file = this.files && this.files[0];
                     if (!file) return;
 
+                    clearAlert();
+                    setAvatarState(false, false);
+
                     const reader = new FileReader();
                     reader.onload = function (e) {
-                        avatarPreview.src = e.target.result;
+                        const imageUrl = e.target.result;
+                        avatarPreview.src = imageUrl;
+                        if (avatarModalImage) {
+                            avatarModalImage.src = imageUrl;
+                        }
                     };
                     reader.readAsDataURL(file);
+
+                    renderAlert('warning', 'Đang kiểm tra ảnh...');
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('avatarFile', file);
+
+                        const response = await fetch(validateUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        setAvatarState(true, result.isValid === true);
+
+                        if (result.isValid) {
+                            renderAlert('success', [
+                                'Ảnh thẻ hợp lệ.',
+                                'Ảnh đáp ứng yêu cầu kiểm tra và có thể sử dụng để lưu hồ sơ.'
+                            ]);
+                        } else {
+                            const reasons = result.reasons && result.reasons.length > 0
+                                ? result.reasons
+                                : ['Ảnh không hợp lệ.'];
+
+                            renderAlert('danger', reasons);
+                        }
+                    } catch {
+                        setAvatarState(true, false);
+                        renderAlert('danger', 'Không thể kết nối tới chức năng kiểm tra ảnh.');
+                    }
+                });
+            }
+
+            if (editProfileForm) {
+                editProfileForm.addEventListener('submit', function (e) {
+                    const file = avatarInput && avatarInput.files && avatarInput.files[0];
+                    if (!file) return;
+
+                    if (isAvatarChecked.value !== 'true') {
+                        e.preventDefault();
+                        renderAlert('warning', 'Ảnh đang được kiểm tra hoặc chưa kiểm tra xong.');
+                        return;
+                    }
+
+                    if (isAvatarValid.value !== 'true') {
+                        e.preventDefault();
+                        renderAlert('danger', 'Ảnh không hợp lệ, không thể lưu.');
+                    }
                 });
             }
         })();
