@@ -560,8 +560,8 @@
                         Danh sách khóa học
                     </a>
 
-                    <a class="dropdown-item-custom"
-                       href="#">
+                    <a class="dropdown-item-custom @(currentController == "MyCourse" && currentAction == "Index" ? "dropdown-item-active" : "")"
+                       href="@Url.Action("Index", "MyCourse")">
                         Khóa học của tôi
                     </a>
                 </div>

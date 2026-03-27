@@ -2995,6 +2995,222 @@ BEGIN
         WHERE u.userId = p_userId;
 END;
 /
+CREATE OR REPLACE PROCEDURE SP_MY_COURSES_BY_USER
+(
+    p_userId IN NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT
+            kh.khoaHocId,
+            kh.tenKhoaHoc,
+            kh.ngayBatDau,
+            kh.ngayKetThuc,
+            kh.diaDiem,
+            kh.trangThai AS trangThaiKhoaHocGoc,
+            hg.hangId,
+            hg.tenHang,
+            hg.loaiPhuongTien,
+            hg.hocPhi,
+            hs.hoSoId,
+            hs.tenHoSo,
+            hv.hocVienId,
+            hv.hoTen AS hoTenHocVien,
+            pt.phieuId,
+            pt.tenPhieu,
+            pt.ngayLap,
+            pt.ngayNop,
+            pt.tongTien,
+            NVL(pt.phuongThuc, N'') AS phuongThuc,
+            NVL(ct.loaiPhi, N'') AS loaiPhi,
+            NVL(ct.ghiChu, N'') AS ghiChu,
+            kq.ketQuaHocTapId,
+            ct_kq.lyThuyetKq,
+            ct_kq.saHinhKq,
+            ct_kq.duongTruongKq,
+            ct_kq.moPhongKq,
+            CASE
+                WHEN NVL(ct_kq.lyThuyetKq, 0) = 1
+                 AND NVL(ct_kq.saHinhKq, 0) = 1
+                 AND NVL(ct_kq.duongTruongKq, 0) = 1
+                 AND NVL(ct_kq.moPhongKq, 0) = 1
+                THEN N'Hoàn thành'
+                WHEN TRUNC(SYSDATE) BETWEEN TRUNC(kh.ngayBatDau) AND TRUNC(kh.ngayKetThuc)
+                THEN N'Đang học'
+                WHEN TRUNC(SYSDATE) > TRUNC(kh.ngayKetThuc)
+                     AND NOT (
+                        NVL(ct_kq.lyThuyetKq, 0) = 1
+                        AND NVL(ct_kq.saHinhKq, 0) = 1
+                        AND NVL(ct_kq.duongTruongKq, 0) = 1
+                        AND NVL(ct_kq.moPhongKq, 0) = 1
+                     )
+                THEN N'Không hoàn thành'
+                ELSE N'Chưa bắt đầu'
+            END AS trangThaiHocTap,
+            CASE
+                WHEN NVL(ct_kq.lyThuyetKq, 0) = 1
+                 AND NVL(ct_kq.saHinhKq, 0) = 1
+                 AND NVL(ct_kq.duongTruongKq, 0) = 1
+                 AND NVL(ct_kq.moPhongKq, 0) = 1
+                THEN 1
+                ELSE 0
+            END AS daHoanThanh,
+            CASE
+                WHEN TRUNC(SYSDATE) BETWEEN TRUNC(kh.ngayBatDau) AND TRUNC(kh.ngayKetThuc)
+                     AND NOT (
+                        NVL(ct_kq.lyThuyetKq, 0) = 1
+                        AND NVL(ct_kq.saHinhKq, 0) = 1
+                        AND NVL(ct_kq.duongTruongKq, 0) = 1
+                        AND NVL(ct_kq.moPhongKq, 0) = 1
+                     )
+                THEN 1
+                ELSE 0
+            END AS dangHoc,
+            CASE
+                WHEN TRUNC(SYSDATE) > TRUNC(kh.ngayKetThuc)
+                     AND NOT (
+                        NVL(ct_kq.lyThuyetKq, 0) = 1
+                        AND NVL(ct_kq.saHinhKq, 0) = 1
+                        AND NVL(ct_kq.duongTruongKq, 0) = 1
+                        AND NVL(ct_kq.moPhongKq, 0) = 1
+                     )
+                THEN 1
+                ELSE 0
+            END AS khongHoanThanh
+        FROM HocVien hv
+        JOIN HoSoThiSinh hs
+            ON hs.hocVienId = hv.hocVienId
+        JOIN ChiTietPhieuThanhToan ct
+            ON ct.hoSoId = hs.hoSoId
+        JOIN PhieuThanhToan pt
+            ON pt.phieuId = ct.phieuId
+        JOIN KetQuaHocTap kq
+            ON kq.ketQuaHocTapId = ct.ketQuaHocTapId
+        JOIN ChiTietKetQuaHocTap ct_kq
+            ON ct_kq.ketQuaHocTapId = kq.ketQuaHocTapId
+        JOIN KhoaHoc kh
+            ON kh.khoaHocId = ct_kq.khoaHocId
+        JOIN HangGplx hg
+            ON hg.hangId = kh.hangId
+        WHERE hv.userId = p_userId
+          AND pt.ngayNop IS NOT NULL
+        ORDER BY kh.ngayBatDau DESC, pt.phieuId DESC;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_MY_COURSE_DETAIL
+(
+    p_userId    IN NUMBER,
+    p_khoaHocId IN NUMBER,
+    p_cursor    OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.diaDiem,
+                kh.trangThai AS trangThaiKhoaHocGoc,
+                hg.hangId,
+                hg.tenHang,
+                hg.moTa,
+                hg.loaiPhuongTien,
+                hg.soCauHoi,
+                hg.diemDat,
+                hg.thoiGianTn,
+                hg.hocPhi,
+
+                hv.hocVienId,
+                hv.hoTen AS hoTenHocVien,
+                hv.sdt,
+                hv.email,
+
+                u.userId,
+                u.userName,
+                u.isActive,
+
+                hs.hoSoId,
+                hs.tenHoSo,
+                hs.ngayDangKy,
+                hs.trangThai AS trangThaiHoSo,
+                NVL(hs.ghiChu, N'') AS ghiChuHoSo,
+
+                pt.phieuId,
+                pt.tenPhieu,
+                pt.ngayLap,
+                pt.ngayNop,
+                pt.tongTien,
+                NVL(pt.phuongThuc, N'') AS phuongThuc,
+                NVL(ct.loaiPhi, N'') AS loaiPhi,
+                NVL(ct.ghiChu, N'') AS ghiChuThanhToan,
+
+                kq.ketQuaHocTapId,
+                NVL(kq.nhanXet, N'') AS nhanXet,
+                kq.soBuoiHoc,
+                kq.soBuoiVang,
+                NVL(kq.soKmHoanThanh, N'') AS soKmHoanThanh,
+
+                ct_kq.lyThuyetKq,
+                ct_kq.saHinhKq,
+                ct_kq.duongTruongKq,
+                ct_kq.moPhongKq,
+
+                CASE
+                    WHEN NVL(ct_kq.lyThuyetKq, 0) = 1
+                     AND NVL(ct_kq.saHinhKq, 0) = 1
+                     AND NVL(ct_kq.duongTruongKq, 0) = 1
+                     AND NVL(ct_kq.moPhongKq, 0) = 1
+                    THEN N'Hoàn thành'
+                    WHEN TRUNC(SYSDATE) BETWEEN TRUNC(kh.ngayBatDau) AND TRUNC(kh.ngayKetThuc)
+                    THEN N'Đang học'
+                    WHEN TRUNC(SYSDATE) > TRUNC(kh.ngayKetThuc)
+                         AND NOT (
+                            NVL(ct_kq.lyThuyetKq, 0) = 1
+                            AND NVL(ct_kq.saHinhKq, 0) = 1
+                            AND NVL(ct_kq.duongTruongKq, 0) = 1
+                            AND NVL(ct_kq.moPhongKq, 0) = 1
+                         )
+                    THEN N'Không hoàn thành'
+                    ELSE N'Chưa bắt đầu'
+                END AS trangThaiHocTap,
+
+                ROW_NUMBER() OVER
+                (
+                    ORDER BY pt.ngayNop DESC, pt.phieuId DESC, kq.ketQuaHocTapId DESC
+                ) AS rn
+            FROM HocVien hv
+            JOIN "User" u
+                ON u.userId = hv.userId
+            JOIN HoSoThiSinh hs
+                ON hs.hocVienId = hv.hocVienId
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.hoSoId = hs.hoSoId
+            JOIN PhieuThanhToan pt
+                ON pt.phieuId = ct.phieuId
+            JOIN KetQuaHocTap kq
+                ON kq.ketQuaHocTapId = ct.ketQuaHocTapId
+            JOIN ChiTietKetQuaHocTap ct_kq
+                ON ct_kq.ketQuaHocTapId = kq.ketQuaHocTapId
+            JOIN KhoaHoc kh
+                ON kh.khoaHocId = ct_kq.khoaHocId
+            JOIN HangGplx hg
+                ON hg.hangId = kh.hangId
+            WHERE hv.userId = p_userId
+              AND kh.khoaHocId = p_khoaHocId
+              AND pt.ngayNop IS NOT NULL
+        )
+        WHERE rn = 1;
+END;
+/
+
 
 
 

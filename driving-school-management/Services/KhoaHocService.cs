@@ -156,6 +156,149 @@ public class KhoaHocService
         return result;
     }
 
+    public List<MyCourseDto> GetMyCourses(int userId)
+    {
+        var result = new List<MyCourseDto>();
+
+        using (var conn = new OracleConnection(_connectionString))
+        using (var cmd = new OracleCommand("SP_MY_COURSES_BY_USER", conn))
+        {
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result.Add(new MyCourseDto
+                    {
+                        KhoaHocId = GetInt32Value(reader["khoaHocId"]),
+                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
+                        NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayBatDau"]),
+                        NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayKetThuc"]),
+                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
+                        TrangThaiKhoaHocGoc = reader["trangThaiKhoaHocGoc"] == DBNull.Value ? string.Empty : reader["trangThaiKhoaHocGoc"].ToString()!,
+
+                        HangId = GetInt32Value(reader["hangId"]),
+                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
+                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString()!,
+                        HocPhi = GetDecimalValue(reader["hocPhi"]),
+
+                        HoSoId = GetInt32Value(reader["hoSoId"]),
+                        TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
+                        HocVienId = GetInt32Value(reader["hocVienId"]),
+                        HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
+
+                        PhieuId = GetInt32Value(reader["phieuId"]),
+                        TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
+                        NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
+                        NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
+                        TongTien = GetDecimalValue(reader["tongTien"]),
+                        PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
+                        LoaiPhi = reader["loaiPhi"] == DBNull.Value ? string.Empty : reader["loaiPhi"].ToString()!,
+                        GhiChu = reader["ghiChu"] == DBNull.Value ? string.Empty : reader["ghiChu"].ToString()!,
+
+                        KetQuaHocTapId = GetInt32Value(reader["ketQuaHocTapId"]),
+                        LyThuyetKq = GetNullableInt32Value(reader["lyThuyetKq"]),
+                        SaHinhKq = GetNullableInt32Value(reader["saHinhKq"]),
+                        DuongTruongKq = GetNullableInt32Value(reader["duongTruongKq"]),
+                        MoPhongKq = GetNullableInt32Value(reader["moPhongKq"]),
+
+                        TrangThaiHocTap = reader["trangThaiHocTap"] == DBNull.Value ? string.Empty : reader["trangThaiHocTap"].ToString()!,
+                        DaHoanThanh = GetInt32Value(reader["daHoanThanh"]),
+                        DangHoc = GetInt32Value(reader["dangHoc"]),
+                        KhongHoanThanh = GetInt32Value(reader["khongHoanThanh"])
+                    });
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public MyCourseDetailDto? GetMyCourseDetail(int userId, int khoaHocId)
+    {
+        MyCourseDetailDto? result = null;
+
+        using (var conn = new OracleConnection(_connectionString))
+        using (var cmd = new OracleCommand("SP_MY_COURSE_DETAIL", conn))
+        {
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_khoaHocId", OracleDbType.Int32).Value = khoaHocId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    result = new MyCourseDetailDto
+                    {
+                        KhoaHocId = GetInt32Value(reader["khoaHocId"]),
+                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
+                        NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayBatDau"]),
+                        NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayKetThuc"]),
+                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
+                        TrangThaiKhoaHocGoc = reader["trangThaiKhoaHocGoc"] == DBNull.Value ? string.Empty : reader["trangThaiKhoaHocGoc"].ToString()!,
+
+                        HangId = GetInt32Value(reader["hangId"]),
+                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
+                        MoTa = reader["moTa"] == DBNull.Value ? string.Empty : reader["moTa"].ToString()!,
+                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString()!,
+                        SoCauHoi = GetNullableInt32Value(reader["soCauHoi"]),
+                        DiemDat = GetNullableInt32Value(reader["diemDat"]),
+                        ThoiGianTn = GetNullableInt32Value(reader["thoiGianTn"]),
+                        HocPhi = GetDecimalValue(reader["hocPhi"]),
+
+                        HocVienId = GetInt32Value(reader["hocVienId"]),
+                        HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
+                        Sdt = reader["sdt"] == DBNull.Value ? string.Empty : reader["sdt"].ToString()!,
+                        Email = reader["email"] == DBNull.Value ? string.Empty : reader["email"].ToString()!,
+
+                        UserId = GetInt32Value(reader["userId"]),
+                        UserName = reader["userName"] == DBNull.Value ? string.Empty : reader["userName"].ToString()!,
+                        IsActive = GetInt32Value(reader["isActive"]),
+
+                        HoSoId = GetInt32Value(reader["hoSoId"]),
+                        TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
+                        NgayDangKy = reader["ngayDangKy"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayDangKy"]),
+                        TrangThaiHoSo = reader["trangThaiHoSo"] == DBNull.Value ? string.Empty : reader["trangThaiHoSo"].ToString()!,
+                        GhiChuHoSo = reader["ghiChuHoSo"] == DBNull.Value ? string.Empty : reader["ghiChuHoSo"].ToString()!,
+
+                        PhieuId = GetInt32Value(reader["phieuId"]),
+                        TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
+                        NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
+                        NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
+                        TongTien = GetDecimalValue(reader["tongTien"]),
+                        PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
+                        LoaiPhi = reader["loaiPhi"] == DBNull.Value ? string.Empty : reader["loaiPhi"].ToString()!,
+                        GhiChuThanhToan = reader["ghiChuThanhToan"] == DBNull.Value ? string.Empty : reader["ghiChuThanhToan"].ToString()!,
+
+                        KetQuaHocTapId = GetInt32Value(reader["ketQuaHocTapId"]),
+                        NhanXet = reader["nhanXet"] == DBNull.Value ? string.Empty : reader["nhanXet"].ToString()!,
+                        SoBuoiHoc = GetNullableInt32Value(reader["soBuoiHoc"]),
+                        SoBuoiVang = GetNullableInt32Value(reader["soBuoiVang"]),
+                        SoKmHoanThanh = reader["soKmHoanThanh"] == DBNull.Value ? string.Empty : reader["soKmHoanThanh"].ToString()!,
+
+                        LyThuyetKq = GetNullableInt32Value(reader["lyThuyetKq"]),
+                        SaHinhKq = GetNullableInt32Value(reader["saHinhKq"]),
+                        DuongTruongKq = GetNullableInt32Value(reader["duongTruongKq"]),
+                        MoPhongKq = GetNullableInt32Value(reader["moPhongKq"]),
+
+                        TrangThaiHocTap = reader["trangThaiHocTap"] == DBNull.Value ? string.Empty : reader["trangThaiHocTap"].ToString()!
+                    };
+                }
+            }
+        }
+
+        return result;
+    }
+
     public KhoaHocDangKyCheckDto? GetKhoaHocConfirmInfo(int userId, int khoaHocId)
     {
         return CheckDangKyKhoaHoc(userId, khoaHocId);
