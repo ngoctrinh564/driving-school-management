@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{{EMAIL_SUBJECT}}</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f6f6;font-family:Arial,sans-serif;">
+    <div style="padding:24px;background:#f6f6f6;">
+        <div style="max-width:620px;margin:auto;background:#ffffff;border-radius:14px;padding:28px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+            <div style="text-align:center;margin-bottom:20px;">
+                <h2 style="margin:0;color:#198754;">GPLX System</h2>
+                <p style="margin:8px 0 0;color:#6b7280;font-size:14px;">Thông báo thanh toán thành công</p>
+            </div>
+
+            <h3 style="color:#111827;margin-bottom:16px;">{{TITLE}}</h3>
+
+            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 14px;">
+                Xin chào <strong>{{HO_TEN}}</strong>,
+            </p>
+
+            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 14px;">
+                Hệ thống đã ghi nhận thanh toán thành công cho phiếu <strong>#{{PHIEU_ID}}</strong>.
+            </p>
+
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;margin:18px 0;">
+                <p style="margin:0 0 8px;font-size:14px;color:#111827;"><strong>Khóa học:</strong> {{TEN_KHOA_HOC}}</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#111827;"><strong>Hạng:</strong> {{TEN_HANG}}</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#111827;"><strong>Phương thức:</strong> {{PHUONG_THUC}}</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#111827;"><strong>Tổng tiền:</strong> {{TONG_TIEN}}</p>
+                <p style="margin:0;font-size:14px;color:#111827;"><strong>Ngày thanh toán:</strong> {{NGAY_NOP}}</p>
+            </div>
+
+            <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 14px;">
+                Hóa đơn thanh toán được đính kèm trong email này dưới dạng file PDF.
+            </p>
+
+            <hr style="margin:22px 0;border:none;border-top:1px solid #e5e7eb;" />
+
+            <p style="font-size:12px;color:#6b7280;text-align:center;margin:0;">
+                Đây là email tự động từ hệ thống. Vui lòng không trả lời email này.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

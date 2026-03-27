@@ -1,7 +1,9 @@
 ﻿using driving_school_management.Librarys;
+using driving_school_management.Models.DTOs;
 using driving_school_management.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using QuestPDF.Fluent;
 using System.Globalization;
 using System.Text;
 
@@ -11,16 +13,26 @@ namespace driving_school_management.Controllers
     public class PaymentController : Controller
     {
         private readonly PaymentService _paymentService;
+        private readonly PaymentInvoiceService _paymentInvoiceService;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _config;
         private readonly IPayPalService _payPalService;
         private readonly IMomoService _momoService;
+
         public PaymentController(
-            PaymentService paymentService, 
-            IConfiguration config, 
-            IPayPalService payPalService, 
+            PaymentService paymentService,
+            PaymentInvoiceService paymentInvoiceService,
+            IEmailService emailService,
+            IWebHostEnvironment environment,
+            IConfiguration config,
+            IPayPalService payPalService,
             IMomoService momoService)
         {
             _paymentService = paymentService;
+            _paymentInvoiceService = paymentInvoiceService;
+            _emailService = emailService;
+            _environment = environment;
             _config = config;
             _payPalService = payPalService;
             _momoService = momoService;
@@ -152,7 +164,7 @@ namespace driving_school_management.Controllers
         }
 
         [HttpGet("VnPayReturn")]
-        public IActionResult VnPayReturn()
+        public async Task<IActionResult> VnPayReturn()
         {
             var vnp = new VnPayLibrary();
 
@@ -183,6 +195,8 @@ namespace driving_school_management.Controllers
                     return View("PaymentFail");
                 }
 
+                await TrySendPaymentInvoiceEmailAsync(phieuId);
+
                 TempData["Success"] = "Thanh toán thành công!";
                 return View("PaymentSuccess");
             }
@@ -193,6 +207,7 @@ namespace driving_school_management.Controllers
                 return View("PaymentFail");
             }
         }
+
         private static string RemoveVietnameseSigns(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return string.Empty;
@@ -277,6 +292,7 @@ namespace driving_school_management.Controllers
                     return View("PaymentFail");
                 }
 
+                await TrySendPaymentInvoiceEmailAsync(phieuId);
                 TempData["Success"] = "Thanh toán PayPal thành công!";
                 return View("PaymentSuccess");
             }
@@ -325,6 +341,7 @@ namespace driving_school_management.Controllers
 
             return Redirect(payUrl);
         }
+
         [HttpGet("MoMoReturn")]
         public async Task<IActionResult> MoMoReturn()
         {
@@ -356,15 +373,18 @@ namespace driving_school_management.Controllers
                 return View("PaymentFail");
             }
 
+            await TrySendPaymentInvoiceEmailAsync(result.PhieuId.Value);
             return View("PaymentSuccess");
         }
+
         [HttpPost("MoMoIpn")]
         public IActionResult MoMoIpn()
         {
             return Ok();
         }
+
         [HttpGet("FakeMoMo")]
-        public IActionResult FakeMoMo(int phieuId)
+        public async Task<IActionResult> FakeMoMo(int phieuId)
         {
             var result = _paymentService.MarkMomoSuccess(phieuId);
 
@@ -374,7 +394,88 @@ namespace driving_school_management.Controllers
                 return View("PaymentFail");
             }
 
+            await TrySendPaymentInvoiceEmailAsync(phieuId);
             return View("PaymentSuccess");
+        }
+
+        // Gửi mail
+        private async Task TrySendPaymentInvoiceEmailAsync(int phieuId)
+        {
+            try
+            {
+                var invoice = GetInvoiceDetailForCurrentUser(phieuId);
+                if (invoice == null)
+                    return;
+
+                if (string.IsNullOrWhiteSpace(invoice.Email))
+                    return;
+
+                var pdfBytes = GenerateInvoicePdfBytes(invoice);
+                var pdfFileName = $"HoaDonThanhToan_{invoice.PhieuId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+                await _emailService.SendPaymentSuccessEmailAsync(
+                    invoice.Email,
+                    invoice.HoTenHocVien,
+                    invoice.PhieuId,
+                    invoice.TenKhoaHoc,
+                    invoice.TenHang,
+                    invoice.PhuongThuc,
+                    invoice.TongTien,
+                    invoice.NgayNop,
+                    pdfBytes,
+                    pdfFileName
+                );
+            }
+            catch
+            {
+            }
+        }
+
+        private PaymentInvoiceDto? GetInvoiceDetailForCurrentUser(int phieuId)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return null;
+
+            return _paymentInvoiceService.GetInvoiceDetail(userId.Value, phieuId);
+        }
+
+        private byte[] GenerateInvoicePdfBytes(PaymentInvoiceDto model)
+        {
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+            var logoPath = Path.Combine(_environment.WebRootPath, "images", "logo", "logo-full.png");
+            if (!System.IO.File.Exists(logoPath))
+                throw new FileNotFoundException("Không tìm thấy logo trung tâm.", logoPath);
+
+            var paymentLogoPath = GetPaymentLogoPath(model.PhuongThuc);
+            if (!string.IsNullOrWhiteSpace(paymentLogoPath) && !System.IO.File.Exists(paymentLogoPath))
+                paymentLogoPath = null;
+
+            var document = new PaymentInvoicePdfDocument(
+                model,
+                DateTime.Now,
+                logoPath,
+                paymentLogoPath
+            );
+
+            return document.GeneratePdf();
+        }
+
+        private string? GetPaymentLogoPath(string method)
+        {
+            var normalized = (method ?? string.Empty).Trim().ToUpper();
+
+            if (normalized == "VNPAY")
+                return Path.Combine(_environment.WebRootPath, "images", "logo", "vnpay-logo.png");
+
+            if (normalized == "PAYPAL")
+                return Path.Combine(_environment.WebRootPath, "images", "logo", "paypal-logo.png");
+
+            if (normalized == "MOMO")
+                return Path.Combine(_environment.WebRootPath, "images", "logo", "momo-logo.png");
+
+            return null;
         }
     }
 }
