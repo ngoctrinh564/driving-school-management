@@ -477,6 +477,22 @@ END;
 /
 
 -- KHÓA HỌC
+CREATE OR REPLACE TRIGGER trg_khoahoc_trangthai
+BEFORE INSERT OR UPDATE ON KhoaHoc
+FOR EACH ROW
+BEGIN
+    :NEW.trangThai :=
+        CASE
+            WHEN TRUNC(SYSDATE) < TRUNC(:NEW.ngayBatDau)
+                THEN N'Sắp khai giảng'
+            WHEN TRUNC(SYSDATE) BETWEEN TRUNC(:NEW.ngayBatDau) AND TRUNC(:NEW.ngayKetThuc)
+                THEN N'Đang học'
+            WHEN TRUNC(SYSDATE) > TRUNC(:NEW.ngayKetThuc)
+                THEN N'Đã kết thúc'
+        END;
+END;
+/
+
 CREATE OR REPLACE PROCEDURE sp_GetKhoaHocDangMo (
     p_cursor OUT SYS_REFCURSOR
 )
@@ -3569,11 +3585,679 @@ EXCEPTION
         p_missingFields := N'Học viên';
 END;
 /
+CREATE OR REPLACE FUNCTION FN_CAN_EDIT_HOSO (
+    p_userId IN NUMBER,
+    p_hoSoId IN NUMBER
+) RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM HoSoThiSinh hs
+         JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+    WHERE hs.hoSoId = p_hoSoId
+      AND hv.userId = p_userId
+      AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE)
+      AND hs.trangThai IN (N'Đang xử lý', N'Bị loại');
 
+    RETURN v_count;
+END;
+/
+CREATE OR REPLACE FUNCTION FN_HAS_VALID_HOSO_OTHER_HANG (
+    p_userId IN NUMBER,
+    p_hangId IN NUMBER,
+    p_hoSoId IN NUMBER
+) RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM HoSoThiSinh hs
+         JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+    WHERE hv.userId = p_userId
+      AND hs.hangId = p_hangId
+      AND hs.hoSoId <> p_hoSoId
+      AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE);
 
+    RETURN v_count;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_GET_EDIT_HOSO_BY_USER (
+    p_userId IN NUMBER,
+    p_hoSoId IN NUMBER,
+    p_info OUT SYS_REFCURSOR,
+    p_images OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_info FOR
+        SELECT hs.hoSoId,
+               hv.hoTen,
+               hv.soCmndCccd,
+               hv.namSinh,
+               hv.gioiTinh,
+               hv.sdt,
+               hv.email,
+               hv.avatarUrl,
+               hs.tenHoSo,
+               hs.loaiHoSo,
+               hs.ngayDangKy,
+               hs.trangThai,
+               hs.ghiChu,
+               hs.hangId,
+               hg.tenHang,
+               pk.khamSucKhoeId,
+               pk.hieuLuc,
+               pk.thoiHan,
+               pk.khamMat,
+               pk.huyetAp,
+               pk.chieuCao,
+               pk.canNang,
+               pk.urlAnh
+        FROM HoSoThiSinh hs
+             JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+             JOIN HangGplx hg ON hg.hangId = hs.hangId
+             LEFT JOIN PhieuKhamSucKhoe pk ON pk.khamSucKhoeId = hs.khamSucKhoeId
+        WHERE hs.hoSoId = p_hoSoId
+          AND hv.userId = p_userId;
 
+    OPEN p_images FOR
+        SELECT ag.anhId,
+               ag.urlAnh
+        FROM HoSoThiSinh hs
+             JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+             JOIN AnhGksk ag ON ag.khamSucKhoeId = hs.khamSucKhoeId
+        WHERE hs.hoSoId = p_hoSoId
+          AND hv.userId = p_userId
+        ORDER BY ag.anhId;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_UPDATE_MY_HOSO (
+    p_userId           IN NUMBER,
+    p_hoSoId           IN NUMBER,
+    p_hangId           IN NUMBER,
+    p_loaiHoSo         IN NVARCHAR2,
+    p_ghiChu           IN NVARCHAR2,
+    p_hieuLuc          IN NVARCHAR2,
+    p_thoiHan          IN DATE,
+    p_khamMat          IN NVARCHAR2,
+    p_huyetAp          IN NVARCHAR2,
+    p_chieuCao         IN NUMBER,
+    p_canNang          IN NUMBER,
+    p_khamSucKhoeId    OUT NUMBER,
+    p_message          OUT NVARCHAR2
+)
+AS
+    v_hocVienId     NUMBER;
+    v_hoTen         NVARCHAR2(100);
+    v_avatarUrl     NVARCHAR2(500);
+    v_tenHang       NVARCHAR2(50);
+    v_tenHoSo       NVARCHAR2(255);
+    v_canEdit       NUMBER;
+    v_exists        NUMBER;
+BEGIN
+    p_khamSucKhoeId := NULL;
+    p_message := NULL;
 
+    v_canEdit := FN_CAN_EDIT_HOSO(p_userId, p_hoSoId);
 
+    IF v_canEdit = 0 THEN
+        p_message := N'Hồ sơ này không còn đủ điều kiện để chỉnh sửa.';
+        RETURN;
+    END IF;
+
+    v_exists := FN_HAS_VALID_HOSO_OTHER_HANG(p_userId, p_hangId, p_hoSoId);
+
+    IF v_exists > 0 THEN
+        p_message := N'Bạn đã có hồ sơ còn hạn cho hạng này. Vui lòng sử dụng hồ sơ hiện có.';
+        RETURN;
+    END IF;
+
+    SELECT hv.hocVienId, hv.hoTen, hv.avatarUrl
+    INTO v_hocVienId, v_hoTen, v_avatarUrl
+    FROM HocVien hv
+    WHERE hv.userId = p_userId;
+
+    SELECT hg.tenHang
+    INTO v_tenHang
+    FROM HangGplx hg
+    WHERE hg.hangId = p_hangId;
+
+    v_tenHoSo := p_loaiHoSo || N' - Hồ sơ hạng ' || v_tenHang || N' - ' || v_hoTen;
+
+    UPDATE HoSoThiSinh
+    SET tenHoSo = v_tenHoSo,
+        loaiHoSo = p_loaiHoSo,
+        ghiChu = CASE
+                    WHEN p_ghiChu IS NULL OR TRIM(p_ghiChu) = '' THEN NULL
+                    ELSE p_ghiChu
+                 END,
+        hangId = p_hangId
+    WHERE hoSoId = p_hoSoId
+      AND hocVienId = v_hocVienId;
+
+    SELECT hs.khamSucKhoeId
+    INTO p_khamSucKhoeId
+    FROM HoSoThiSinh hs
+    WHERE hs.hoSoId = p_hoSoId;
+
+    UPDATE PhieuKhamSucKhoe
+    SET hieuLuc = p_hieuLuc,
+        thoiHan = p_thoiHan,
+        khamMat = p_khamMat,
+        huyetAp = p_huyetAp,
+        chieuCao = p_chieuCao,
+        canNang = p_canNang,
+        urlAnh = v_avatarUrl
+    WHERE khamSucKhoeId = p_khamSucKhoeId;
+
+    p_message := N'Cập nhật hồ sơ thành công';
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_message := N'Không tìm thấy hồ sơ hợp lệ để cập nhật';
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20011, SQLERRM);
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_DELETE_ANH_GKSK_BY_KHAMID (
+    p_khamSucKhoeId IN NUMBER,
+    p_message OUT NVARCHAR2
+)
+AS
+BEGIN
+    DELETE FROM AnhGksk
+    WHERE khamSucKhoeId = p_khamSucKhoeId;
+
+    p_message := N'Đã xóa ảnh cũ';
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20012, SQLERRM);
+END;
+/
+CREATE OR REPLACE VIEW VW_HOSO_HOCVIEN_HIEULUC
+AS
+SELECT
+    hs.hoSoId,
+    hs.hocVienId,
+    hs.tenHoSo,
+    hs.hangId,
+    hs.ngayDangKy,
+    hs.trangThai,
+    ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) AS ngayHetHan,
+    CASE
+        WHEN hs.ngayDangKy IS NOT NULL
+         AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE)
+        THEN 1
+        ELSE 0
+    END AS conHan
+FROM HoSoThiSinh hs;
+/
+CREATE OR REPLACE PACKAGE PKG_KHOAHOC
+AS
+    PROCEDURE SP_GET_KHOAHOC_DANG_MO
+    (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE SP_GET_KHOAHOC_DETAIL
+    (
+        p_khoaHocId IN NUMBER,
+        p_cursor    OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE SP_GET_HOSO_STATUS_INDEX
+    (
+        p_userId IN NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE SP_CHECK_DANGKY
+    (
+        p_userId    IN NUMBER,
+        p_khoaHocId IN NUMBER,
+        p_cursor    OUT SYS_REFCURSOR
+    );
+END PKG_KHOAHOC;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_KHOAHOC
+AS
+    PROCEDURE SP_GET_KHOAHOC_DANG_MO
+    (
+        p_cursor OUT SYS_REFCURSOR
+    )
+    AS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.diaDiem,
+                kh.trangThai,
+                hg.tenHang,
+                hg.hocPhi
+            FROM KhoaHoc kh
+            JOIN HangGplx hg ON kh.hangId = hg.hangId
+            WHERE kh.trangThai IN (N'Sắp khai giảng', N'Đang học')
+            ORDER BY kh.ngayBatDau ASC;
+    END SP_GET_KHOAHOC_DANG_MO;
+
+    PROCEDURE SP_GET_KHOAHOC_DETAIL
+    (
+        p_khoaHocId IN NUMBER,
+        p_cursor    OUT SYS_REFCURSOR
+    )
+    AS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                kh.khoaHocId,
+                kh.tenKhoaHoc,
+                kh.ngayBatDau,
+                kh.ngayKetThuc,
+                kh.diaDiem,
+                kh.trangThai,
+                hg.hangId,
+                hg.tenHang,
+                hg.moTa,
+                hg.loaiPhuongTien,
+                hg.soCauHoi,
+                hg.diemDat,
+                hg.thoiGianTn,
+                hg.hocPhi
+            FROM KhoaHoc kh
+            JOIN HangGplx hg ON kh.hangId = hg.hangId
+            WHERE kh.khoaHocId = p_khoaHocId;
+    END SP_GET_KHOAHOC_DETAIL;
+
+    PROCEDURE SP_GET_HOSO_STATUS_INDEX
+    (
+        p_userId IN NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    )
+    AS
+    BEGIN
+        OPEN p_cursor FOR
+            WITH HOC_VIEN_USER AS
+            (
+                SELECT hv.hocVienId
+                FROM HocVien hv
+                WHERE hv.userId = p_userId
+            ),
+            HOSO_ALL AS
+            (
+                SELECT v.*
+                FROM VW_HOSO_HOCVIEN_HIEULUC v
+                JOIN HOC_VIEN_USER hvu ON hvu.hocVienId = v.hocVienId
+            ),
+            TONG_HOP AS
+            (
+                SELECT
+                    COUNT(*) AS tongHoSo,
+                    SUM(CASE WHEN conHan = 1 THEN 1 ELSE 0 END) AS tongHoSoConHan,
+                    SUM(CASE WHEN conHan = 1 AND trangThai = N'Đã duyệt' THEN 1 ELSE 0 END) AS tongHoSoDaDuyetConHan,
+                    SUM(CASE WHEN conHan = 1 AND trangThai = N'Đang xử lý' THEN 1 ELSE 0 END) AS tongHoSoDangXuLyConHan,
+                    SUM(CASE WHEN conHan = 0 THEN 1 ELSE 0 END) AS tongHoSoHetHan
+                FROM HOSO_ALL
+            )
+            SELECT
+                NVL(t.tongHoSo, 0) AS tongHoSo,
+                NVL(t.tongHoSoConHan, 0) AS tongHoSoConHan,
+                NVL(t.tongHoSoDaDuyetConHan, 0) AS tongHoSoDaDuyetConHan,
+                NVL(t.tongHoSoDangXuLyConHan, 0) AS tongHoSoDangXuLyConHan,
+                NVL(t.tongHoSoHetHan, 0) AS tongHoSoHetHan,
+                CASE
+                    WHEN NVL(t.tongHoSo, 0) = 0 THEN 1
+                    WHEN NVL(t.tongHoSoConHan, 0) = 0 THEN 1
+                    ELSE 0
+                END AS showModal,
+                CASE
+                    WHEN NVL(t.tongHoSo, 0) = 0 THEN N'NO_PROFILE'
+                    WHEN NVL(t.tongHoSoConHan, 0) = 0 THEN N'ALL_EXPIRED'
+                    ELSE N'OK'
+                END AS statusCode,
+                CASE
+                    WHEN NVL(t.tongHoSo, 0) = 0 THEN
+                        N'Bạn hiện chưa có hồ sơ học viên. Để đăng ký khóa học và sử dụng đầy đủ chức năng của hệ thống, vui lòng tạo hồ sơ mới.'
+                    WHEN NVL(t.tongHoSoConHan, 0) = 0 THEN
+                        N'Hồ sơ hiện tại của bạn đã hết hiệu lực. Vui lòng tạo hồ sơ mới để tiếp tục đăng ký khóa học.'
+                    ELSE
+                        N'Hồ sơ hợp lệ.'
+                END AS statusMessage
+            FROM TONG_HOP t;
+    END SP_GET_HOSO_STATUS_INDEX;
+
+    PROCEDURE SP_CHECK_DANGKY
+    (
+        p_userId    IN NUMBER,
+        p_khoaHocId IN NUMBER,
+        p_cursor    OUT SYS_REFCURSOR
+    )
+    AS
+    BEGIN
+        OPEN p_cursor FOR
+            WITH KHOA_HOC_TARGET AS
+            (
+                SELECT
+                    kh.khoaHocId,
+                    kh.tenKhoaHoc,
+                    kh.ngayBatDau,
+                    kh.ngayKetThuc,
+                    kh.diaDiem,
+                    kh.trangThai,
+                    hg.hangId,
+                    hg.tenHang,
+                    hg.moTa,
+                    hg.loaiPhuongTien,
+                    hg.soCauHoi,
+                    hg.diemDat,
+                    hg.thoiGianTn,
+                    hg.hocPhi
+                FROM KhoaHoc kh
+                JOIN HangGplx hg ON hg.hangId = kh.hangId
+                WHERE kh.khoaHocId = p_khoaHocId
+            ),
+            HOC_VIEN_USER AS
+            (
+                SELECT hv.hocVienId
+                FROM HocVien hv
+                WHERE hv.userId = p_userId
+            ),
+            HO_SO_ALL AS
+            (
+                SELECT v.*
+                FROM VW_HOSO_HOCVIEN_HIEULUC v
+                JOIN HOC_VIEN_USER hvu ON hvu.hocVienId = v.hocVienId
+            ),
+            THONG_KE_ALL AS
+            (
+                SELECT
+                    COUNT(*) AS tongHoSo,
+                    SUM(CASE WHEN conHan = 1 THEN 1 ELSE 0 END) AS tongHoSoConHan
+                FROM HO_SO_ALL
+            ),
+            HO_SO_CUNG_HANG AS
+            (
+                SELECT
+                    hs.hoSoId,
+                    hs.tenHoSo,
+                    hs.ngayDangKy,
+                    hs.trangThai,
+                    hs.ngayHetHan,
+                    hs.conHan,
+                    hs.hangId
+                FROM HO_SO_ALL hs
+                JOIN KHOA_HOC_TARGET kht ON kht.hangId = hs.hangId
+            ),
+            THONG_KE_CUNG_HANG AS
+            (
+                SELECT
+                    COUNT(*) AS tongHoSoCungHang,
+                    SUM(CASE WHEN conHan = 1 THEN 1 ELSE 0 END) AS tongHoSoCungHangConHan,
+                    SUM(CASE WHEN conHan = 1 AND trangThai = N'Đã duyệt' THEN 1 ELSE 0 END) AS tongHoSoDaDuyetConHan,
+                    SUM(CASE WHEN conHan = 1 AND trangThai = N'Đang xử lý' THEN 1 ELSE 0 END) AS tongHoSoDangXuLyConHan,
+                    SUM(CASE WHEN conHan = 1 AND trangThai = N'Bị loại' THEN 1 ELSE 0 END) AS tongHoSoBiLoaiConHan,
+                    SUM(CASE WHEN conHan = 0 THEN 1 ELSE 0 END) AS tongHoSoHetHan
+                FROM HO_SO_CUNG_HANG
+            ),
+            HO_SO_PHU_HOP_DA_DUYET AS
+            (
+                SELECT *
+                FROM
+                (
+                    SELECT
+                        hs.hoSoId,
+                        hs.tenHoSo,
+                        hs.ngayDangKy,
+                        hs.trangThai,
+                        hs.ngayHetHan,
+                        ROW_NUMBER() OVER
+                        (
+                            ORDER BY hs.ngayDangKy DESC, hs.hoSoId DESC
+                        ) AS rn
+                    FROM HO_SO_CUNG_HANG hs
+                    WHERE hs.conHan = 1
+                      AND hs.trangThai = N'Đã duyệt'
+                )
+                WHERE rn = 1
+            ),
+            DA_HOC_HANG AS
+            (
+                SELECT COUNT(*) AS soLanDaHoc
+                FROM KetQuaHocTap kq
+                JOIN HoSoThiSinh hs ON hs.hoSoId = kq.hoSoId
+                JOIN HOC_VIEN_USER hvu ON hvu.hocVienId = hs.hocVienId
+                JOIN ChiTietKetQuaHocTap ct ON ct.ketQuaHocTapId = kq.ketQuaHocTapId
+                JOIN KhoaHoc kh ON kh.khoaHocId = ct.khoaHocId
+                JOIN KHOA_HOC_TARGET kht ON kht.hangId = kh.hangId
+            ),
+            KHOA_HOC_DA_DANG_KY AS
+            (
+                SELECT
+                    kh.khoaHocId,
+                    kh.tenKhoaHoc,
+                    kh.ngayBatDau,
+                    kh.ngayKetThuc,
+                    kh.trangThai,
+                    hg.hangId,
+                    hg.tenHang,
+                    ct.phieuId,
+                    pt.ngayLap,
+                    pt.ngayNop,
+                    ROW_NUMBER() OVER
+                    (
+                        PARTITION BY kh.khoaHocId
+                        ORDER BY pt.phieuId DESC
+                    ) AS rn
+                FROM HocVien hv
+                JOIN HoSoThiSinh hs ON hs.hocVienId = hv.hocVienId
+                JOIN ChiTietPhieuThanhToan ct ON ct.hoSoId = hs.hoSoId
+                JOIN PhieuThanhToan pt ON pt.phieuId = ct.phieuId
+                JOIN KetQuaHocTap kq ON kq.ketQuaHocTapId = ct.ketQuaHocTapId
+                JOIN ChiTietKetQuaHocTap ct_kq ON ct_kq.ketQuaHocTapId = kq.ketQuaHocTapId
+                JOIN KhoaHoc kh ON kh.khoaHocId = ct_kq.khoaHocId
+                JOIN HangGplx hg ON hg.hangId = kh.hangId
+                WHERE hv.userId = p_userId
+                  AND pt.ngayNop IS NOT NULL
+            ),
+            KHOA_HOC_DA_DANG_KY_DISTINCT AS
+            (
+                SELECT *
+                FROM KHOA_HOC_DA_DANG_KY
+                WHERE rn = 1
+            ),
+            DA_DANG_KY_CHINH_KHOA_HOC AS
+            (
+                SELECT
+                    COUNT(*) AS soLuongDangKy,
+                    MAX(khdk.khoaHocId) AS khoaHocIdDaDangKy,
+                    MAX(khdk.tenKhoaHoc) KEEP
+                    (
+                        DENSE_RANK LAST ORDER BY khdk.khoaHocId
+                    ) AS tenKhoaHocDaDangKy
+                FROM KHOA_HOC_DA_DANG_KY_DISTINCT khdk
+                JOIN KHOA_HOC_TARGET kht ON kht.khoaHocId = khdk.khoaHocId
+            ),
+            DANG_TRUNG_THOI_GIAN AS
+            (
+                SELECT
+                    COUNT(*) AS soLuongTrung,
+                    MAX(khdk.khoaHocId) AS khoaHocIdTrung,
+                    MAX(khdk.tenKhoaHoc) KEEP
+                    (
+                        DENSE_RANK LAST ORDER BY khdk.khoaHocId
+                    ) AS tenKhoaHocTrung,
+                    MAX(khdk.ngayBatDau) KEEP
+                    (
+                        DENSE_RANK LAST ORDER BY khdk.khoaHocId
+                    ) AS ngayBatDauTrung,
+                    MAX(khdk.ngayKetThuc) KEEP
+                    (
+                        DENSE_RANK LAST ORDER BY khdk.khoaHocId
+                    ) AS ngayKetThucTrung
+                FROM KHOA_HOC_DA_DANG_KY_DISTINCT khdk
+                CROSS JOIN KHOA_HOC_TARGET kht
+                WHERE khdk.ngayBatDau IS NOT NULL
+                  AND khdk.ngayKetThuc IS NOT NULL
+                  AND kht.ngayBatDau IS NOT NULL
+                  AND kht.ngayKetThuc IS NOT NULL
+                  AND khdk.ngayBatDau <= kht.ngayKetThuc
+                  AND khdk.ngayKetThuc >= kht.ngayBatDau
+            ),
+            DA_DANG_KY_CUNG_HANG AS
+            (
+                SELECT
+                    COUNT(*) AS soLuongCungHang,
+                    MAX(khdk.khoaHocId) AS khoaHocIdCungHang,
+                    MAX(khdk.tenKhoaHoc) KEEP
+                    (
+                        DENSE_RANK LAST ORDER BY khdk.khoaHocId
+                    ) AS tenKhoaHocCungHang
+                FROM KHOA_HOC_DA_DANG_KY_DISTINCT khdk
+                JOIN KHOA_HOC_TARGET kht ON kht.hangId = khdk.hangId
+                WHERE khdk.khoaHocId <> kht.khoaHocId
+            )
+            SELECT
+                kht.khoaHocId,
+                kht.tenKhoaHoc,
+                kht.ngayBatDau,
+                kht.ngayKetThuc,
+                kht.diaDiem,
+                kht.trangThai,
+                kht.hangId,
+                kht.tenHang,
+                kht.moTa,
+                kht.loaiPhuongTien,
+                kht.soCauHoi,
+                kht.diemDat,
+                kht.thoiGianTn,
+                kht.hocPhi,
+
+                CASE WHEN kht.trangThai = N'Sắp khai giảng' THEN 1 ELSE 0 END AS isMoDangKy,
+
+                NVL(ta.tongHoSo, 0) AS tongHoSo,
+                NVL(ta.tongHoSoConHan, 0) AS tongHoSoConHan,
+                NVL(tk.tongHoSoCungHang, 0) AS tongHoSoCungHang,
+                NVL(tk.tongHoSoDaDuyetConHan, 0) AS tongHoSoDaDuyetConHan,
+                NVL(tk.tongHoSoDangXuLyConHan, 0) AS tongHoSoDangXuLyConHan,
+                NVL(tk.tongHoSoBiLoaiConHan, 0) AS tongHoSoBiLoaiConHan,
+                NVL(tk.tongHoSoHetHan, 0) AS tongHoSoHetHan,
+
+                CASE
+                    WHEN hsp.hoSoId IS NOT NULL THEN 1
+                    ELSE 0
+                END AS hasHoSoPhuHop,
+
+                CASE
+                    WHEN NVL(tk.tongHoSoDangXuLyConHan, 0) > 0
+                         AND hsp.hoSoId IS NULL THEN 1
+                    ELSE 0
+                END AS hasHoSoChuaDuyet,
+
+                NVL(hsp.hoSoId, 0) AS hoSoIdPhuHop,
+                NVL(hsp.tenHoSo, N'') AS tenHoSoPhuHop,
+                hsp.ngayDangKy AS ngayDangKyHoSo,
+                NVL(hsp.trangThai, N'') AS trangThaiHoSo,
+
+                CASE
+                    WHEN NVL(dhh.soLanDaHoc, 0) > 0 THEN 1
+                    ELSE 0
+                END AS daTungHocHang,
+
+                NVL(dhh.soLanDaHoc, 0) AS soLanDaHocHang,
+
+                CASE
+                    WHEN NVL(ddkckh.soLuongDangKy, 0) > 0 THEN 1
+                    ELSE 0
+                END AS daDangKyChinhKhoaHoc,
+
+                NVL(ddkckh.khoaHocIdDaDangKy, 0) AS khoaHocIdDaDangKy,
+                NVL(ddkckh.tenKhoaHocDaDangKy, N'') AS tenKhoaHocDaDangKy,
+
+                CASE
+                    WHEN NVL(dttg.soLuongTrung, 0) > 0 THEN 1
+                    ELSE 0
+                END AS biTrungThoiGianHoc,
+
+                NVL(dttg.khoaHocIdTrung, 0) AS khoaHocIdTrungThoiGian,
+                NVL(dttg.tenKhoaHocTrung, N'') AS tenKhoaHocTrungThoiGian,
+                dttg.ngayBatDauTrung AS ngayBatDauTrungThoiGian,
+                dttg.ngayKetThucTrung AS ngayKetThucTrungThoiGian,
+
+                CASE
+                    WHEN NVL(ddkch.soLuongCungHang, 0) > 0 THEN 1
+                    ELSE 0
+                END AS daTungDangKyCungHang,
+
+                NVL(ddkch.khoaHocIdCungHang, 0) AS khoaHocIdCungHangGanNhat,
+                NVL(ddkch.tenKhoaHocCungHang, N'') AS tenKhoaHocCungHangGanNhat,
+
+                CASE
+                    WHEN kht.trangThai <> N'Sắp khai giảng' THEN N'COURSE_NOT_OPEN'
+                    WHEN NVL(ta.tongHoSo, 0) = 0 THEN N'NO_PROFILE'
+                    WHEN NVL(ta.tongHoSoConHan, 0) = 0 THEN N'ALL_PROFILE_EXPIRED'
+                    WHEN NVL(tk.tongHoSoCungHang, 0) = 0 THEN N'NO_PROFILE_FOR_HANG'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0
+                         AND NVL(ddkckh.soLuongDangKy, 0) > 0 THEN N'ALREADY_REGISTERED'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0
+                         AND NVL(dttg.soLuongTrung, 0) > 0 THEN N'TIME_CONFLICT'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0 THEN N'ELIGIBLE'
+                    WHEN NVL(tk.tongHoSoDangXuLyConHan, 0) > 0 THEN N'PENDING_APPROVAL'
+                    WHEN NVL(tk.tongHoSoHetHan, 0) > 0 THEN N'PROFILE_EXPIRED'
+                    WHEN NVL(tk.tongHoSoBiLoaiConHan, 0) > 0 THEN N'PROFILE_REJECTED'
+                    ELSE N'NO_PROFILE_FOR_HANG'
+                END AS statusCode,
+
+                CASE
+                    WHEN kht.trangThai <> N'Sắp khai giảng' THEN
+                        N'Khóa học này hiện chưa mở đăng ký.'
+                    WHEN NVL(ta.tongHoSo, 0) = 0 THEN
+                        N'Bạn chưa có hồ sơ học viên. Vui lòng tạo hồ sơ mới trước khi đăng ký khóa học.'
+                    WHEN NVL(ta.tongHoSoConHan, 0) = 0 THEN
+                        N'Hồ sơ hiện tại của bạn đã hết hiệu lực. Vui lòng tạo hồ sơ mới để tiếp tục đăng ký khóa học.'
+                    WHEN NVL(tk.tongHoSoCungHang, 0) = 0 THEN
+                        N'Bạn chưa có hồ sơ hạng ' || kht.tenHang || N'. Vui lòng tạo hồ sơ đúng hạng để đăng ký khóa học này.'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0
+                         AND NVL(ddkckh.soLuongDangKy, 0) > 0 THEN
+                        N'Bạn đã đăng ký khóa học "' || NVL(ddkckh.tenKhoaHocDaDangKy, kht.tenKhoaHoc) || N'" rồi.'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0
+                         AND NVL(dttg.soLuongTrung, 0) > 0 THEN
+                        N'Bạn đã có khóa học "' || NVL(dttg.tenKhoaHocTrung, N'') || N'" bị trùng thời gian học, nên chưa thể đăng ký thêm khóa học này.'
+                    WHEN NVL(tk.tongHoSoDaDuyetConHan, 0) > 0 THEN
+                        N'Đủ điều kiện đăng ký khóa học.'
+                    WHEN NVL(tk.tongHoSoDangXuLyConHan, 0) > 0 THEN
+                        N'Bạn đã có hồ sơ hạng ' || kht.tenHang || N' đang chờ duyệt. Vui lòng đợi quản trị viên xác nhận trước khi đăng ký khóa học.'
+                    WHEN NVL(tk.tongHoSoHetHan, 0) > 0 THEN
+                        N'Hồ sơ hạng ' || kht.tenHang || N' của bạn đã hết hiệu lực. Vui lòng tạo hồ sơ mới để tiếp tục đăng ký.'
+                    WHEN NVL(tk.tongHoSoBiLoaiConHan, 0) > 0 THEN
+                        N'Hồ sơ hạng ' || kht.tenHang || N' của bạn hiện không đủ điều kiện sử dụng. Vui lòng tạo hồ sơ mới hoặc liên hệ quản trị viên để được hỗ trợ.'
+                    ELSE
+                        N'Bạn chưa đủ điều kiện đăng ký khóa học này.'
+                END AS statusMessage,
+
+                CASE
+                    WHEN kht.trangThai = N'Sắp khai giảng'
+                     AND NVL(tk.tongHoSoDaDuyetConHan, 0) > 0
+                     AND NVL(ddkckh.soLuongDangKy, 0) = 0
+                     AND NVL(dttg.soLuongTrung, 0) = 0
+                    THEN 1
+                    ELSE 0
+                END AS coTheDangKy
+            FROM KHOA_HOC_TARGET kht
+            LEFT JOIN THONG_KE_ALL ta ON 1 = 1
+            LEFT JOIN THONG_KE_CUNG_HANG tk ON 1 = 1
+            LEFT JOIN HO_SO_PHU_HOP_DA_DUYET hsp ON 1 = 1
+            LEFT JOIN DA_HOC_HANG dhh ON 1 = 1
+            LEFT JOIN DA_DANG_KY_CHINH_KHOA_HOC ddkckh ON 1 = 1
+            LEFT JOIN DANG_TRUNG_THOI_GIAN dttg ON 1 = 1
+            LEFT JOIN DA_DANG_KY_CUNG_HANG ddkch ON 1 = 1;
+    END SP_CHECK_DANGKY;
+END PKG_KHOAHOC;
+/
 
 
 

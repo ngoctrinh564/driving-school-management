@@ -43,5 +43,15 @@
         public int DaDangKyChinhKhoaHoc { get; set; }
         public int KhoaHocIdDaDangKy { get; set; }
         public string TenKhoaHocDaDangKy { get; set; } = string.Empty;
+        public int TongHoSo { get; set; }
+        public int TongHoSoConHan { get; set; }
+        public int TongHoSoCungHang { get; set; }
+        public int TongHoSoDaDuyetConHan { get; set; }
+        public int TongHoSoDangXuLyConHan { get; set; }
+        public int TongHoSoBiLoaiConHan { get; set; }
+        public int TongHoSoHetHan { get; set; }
+
+        public string StatusCode { get; set; } = string.Empty;
+        public string StatusMessage { get; set; } = string.Empty;
     }
 }

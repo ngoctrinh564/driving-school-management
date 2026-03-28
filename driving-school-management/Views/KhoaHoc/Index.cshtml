@@ -426,6 +426,24 @@
     </div>
 </div>
 
+<div id="profileStatusModal" class="modal-backdrop-custom">
+    <div class="modal-box">
+        <div class="modal-header-custom">
+            <div>
+                <div class="modal-eyebrow">Thông báo hồ sơ</div>
+                <h3 class="modal-title">Cập nhật hồ sơ học viên</h3>
+            </div>
+            <button type="button" id="btnCloseProfileModal" class="modal-close-btn" aria-label="Đóng">×</button>
+        </div>
+
+        <div id="profileStatusContent" class="course-detail-summary"></div>
+
+        <div class="modal-footer">
+            <button type="button" id="btnGoCreateHoSo" class="btn-primary">Tạo hồ sơ mới</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let isLoggedIn = @(Context.Session.GetInt32("UserId") != null ? "true" : "false");
 
@@ -552,6 +570,14 @@
                 const data = await res.json();
 
                 if (!data.success) {
+                    if (data.redirectUrl) {
+                        const ok = confirm(data.message + '\n\nNhấn OK để chuyển sang trang tạo hồ sơ.');
+                        if (ok) {
+                            window.location.href = data.redirectUrl;
+                        }
+                        return;
+                    }
+
                     alert(data.message);
                     return;
                 }
@@ -578,5 +604,33 @@
         }
     };
 
+    async function checkProfileStatusOnIndex() {
+        const res = await fetch('/KhoaHoc/GetHoSoStatusIndex');
+        const data = await res.json();
+
+        if (!data.isLoggedIn) return;
+        if (!data.showModal) return;
+
+        document.getElementById('profileStatusContent').innerText = data.message;
+
+        const btnGoCreateHoSo = document.getElementById('btnGoCreateHoSo');
+        btnGoCreateHoSo.onclick = () => {
+            window.location.href = data.redirectUrl;
+        };
+
+        document.getElementById('profileStatusModal').style.display = 'flex';
+    }
+
+    document.getElementById('btnCloseProfileModal').onclick = () => {
+        document.getElementById('profileStatusModal').style.display = 'none';
+    };
+
+    document.getElementById('profileStatusModal').onclick = (e) => {
+        if (e.target.id === 'profileStatusModal') {
+            document.getElementById('profileStatusModal').style.display = 'none';
+        }
+    };
+
     loadCourses();
+    checkProfileStatusOnIndex();
 </script>

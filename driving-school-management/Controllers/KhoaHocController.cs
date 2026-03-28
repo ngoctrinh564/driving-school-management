@@ -34,6 +34,39 @@ namespace driving_school_management.Controllers
             return Json(data);
         }
 
+        // ✅ thêm mới
+        [HttpGet]
+        public IActionResult GetHoSoStatusIndex()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return Json(new
+                {
+                    isLoggedIn = false
+                });
+            }
+
+            var data = _service.GetHoSoStatusIndex(userId.Value);
+            if (data == null)
+            {
+                return Json(new
+                {
+                    isLoggedIn = true,
+                    showModal = false
+                });
+            }
+
+            return Json(new
+            {
+                isLoggedIn = true,
+                showModal = data.ShowModal == 1,
+                statusCode = data.StatusCode,
+                message = data.StatusMessage,
+                redirectUrl = Url.Action("Create", "HoSo")
+            });
+        }
+
         [HttpGet]
         public IActionResult CheckDangKyKhoaHoc(int khoaHocId)
         {
@@ -57,6 +90,32 @@ namespace driving_school_management.Controllers
                     message = "Không tìm thấy khóa học."
                 });
             }
+
+            // ❗ bổ sung kiểm tra mới (ưu tiên statusCode từ DB)
+            if (check.CoTheDangKy == 0)
+            {
+                return Json(new
+                {
+                    success = false,
+                    statusCode = check.StatusCode,
+                    needProfile = check.StatusCode == "NO_PROFILE"
+                               || check.StatusCode == "ALL_PROFILE_EXPIRED"
+                               || check.StatusCode == "NO_PROFILE_FOR_HANG"
+                               || check.StatusCode == "PROFILE_EXPIRED"
+                               || check.StatusCode == "PROFILE_REJECTED",
+                    needApprovedProfile = check.StatusCode == "PENDING_APPROVAL",
+                    message = check.StatusMessage,
+                    redirectUrl = (check.StatusCode == "NO_PROFILE"
+                                || check.StatusCode == "ALL_PROFILE_EXPIRED"
+                                || check.StatusCode == "NO_PROFILE_FOR_HANG"
+                                || check.StatusCode == "PROFILE_EXPIRED"
+                                || check.StatusCode == "PROFILE_REJECTED")
+                                ? Url.Action("Create", "HoSo")
+                                : null
+                });
+            }
+
+            // ================= GIỮ NGUYÊN CODE CŨ =================
 
             if (check.IsMoDangKy == 0)
             {
@@ -131,6 +190,7 @@ namespace driving_school_management.Controllers
             });
         }
 
+        // ❗ GIỮ NGUYÊN 100%
         [HttpGet]
         public IActionResult Confirm(int khoaHocId)
         {
@@ -178,6 +238,7 @@ namespace driving_school_management.Controllers
             return View(model);
         }
 
+        // ❗ GIỮ NGUYÊN 100%
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult XacNhanDangKy(int khoaHocId)

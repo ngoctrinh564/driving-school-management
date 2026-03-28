@@ -528,14 +528,17 @@
             GPLX System
         </a>
 
-        <a class="menu-item @(currentController == "Hoso" ? "menu-active" : "")"
+        <a class="menu-item @(currentController == "HoSo" ? "menu-active" : "")"
            asp-controller="Hoso" asp-action="Index">
             Hồ sơ
         </a>
 
         <!-- Học tập -->
         @{
-            var studyActive = currentController == "Hoc" || currentController == "KhoaHoc";
+            var studyActive =
+                currentController == "Hoc" ||
+                currentController == "KhoaHoc" ||
+                currentController == "MyCourse";
         }
 
         <div class="dropdown-custom">

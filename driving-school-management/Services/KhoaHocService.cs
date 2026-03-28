@@ -17,7 +17,7 @@ public class KhoaHocService
         var result = new List<KhoaHocDto>();
 
         using (var conn = new OracleConnection(_connectionString))
-        using (var cmd = new OracleCommand("sp_GetKhoaHocDangMo", conn))
+        using (var cmd = new OracleCommand("PKG_KHOAHOC.SP_GET_KHOAHOC_DANG_MO", conn))
         {
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
@@ -31,12 +31,12 @@ public class KhoaHocService
                     result.Add(new KhoaHocDto
                     {
                         KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString(),
+                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
                         NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ngayBatDau"]),
                         NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ngayKetThuc"]),
-                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString(),
-                        TrangThai = reader["trangThai"] == DBNull.Value ? string.Empty : reader["trangThai"].ToString(),
-                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString(),
+                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
+                        TrangThai = reader["trangThai"] == DBNull.Value ? string.Empty : reader["trangThai"].ToString()!,
+                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
                         HocPhi = GetDecimalValue(reader["hocPhi"])
                     });
                 }
@@ -51,7 +51,7 @@ public class KhoaHocService
         KhoaHocDetailDto? result = null;
 
         using (var conn = new OracleConnection(_connectionString))
-        using (var cmd = new OracleCommand("sp_GetKhoaHocDetail", conn))
+        using (var cmd = new OracleCommand("PKG_KHOAHOC.SP_GET_KHOAHOC_DETAIL", conn))
         {
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add("p_khoaHocId", OracleDbType.Int32).Value = khoaHocId;
@@ -66,20 +66,54 @@ public class KhoaHocService
                     result = new KhoaHocDetailDto
                     {
                         KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString(),
+                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
                         NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ngayBatDau"]),
                         NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ngayKetThuc"]),
-                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString(),
-                        TrangThai = reader["trangThai"] == DBNull.Value ? string.Empty : reader["trangThai"].ToString(),
-
+                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
+                        TrangThai = reader["trangThai"] == DBNull.Value ? string.Empty : reader["trangThai"].ToString()!,
                         HangId = GetInt32Value(reader["hangId"]),
-                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString(),
-                        MoTa = reader["moTa"] == DBNull.Value ? string.Empty : reader["moTa"].ToString(),
-                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString(),
+                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
+                        MoTa = reader["moTa"] == DBNull.Value ? string.Empty : reader["moTa"].ToString()!,
+                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString()!,
                         SoCauHoi = GetNullableInt32Value(reader["soCauHoi"]),
                         DiemDat = GetNullableInt32Value(reader["diemDat"]),
                         ThoiGianTn = GetNullableInt32Value(reader["thoiGianTn"]),
                         HocPhi = GetDecimalValue(reader["hocPhi"])
+                    };
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public HoSoIndexStatusDto? GetHoSoStatusIndex(int userId)
+    {
+        HoSoIndexStatusDto? result = null;
+
+        using (var conn = new OracleConnection(_connectionString))
+        using (var cmd = new OracleCommand("PKG_KHOAHOC.SP_GET_HOSO_STATUS_INDEX", conn))
+        {
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    result = new HoSoIndexStatusDto
+                    {
+                        TongHoSo = GetInt32Value(reader["tongHoSo"]),
+                        TongHoSoConHan = GetInt32Value(reader["tongHoSoConHan"]),
+                        TongHoSoDaDuyetConHan = GetInt32Value(reader["tongHoSoDaDuyetConHan"]),
+                        TongHoSoDangXuLyConHan = GetInt32Value(reader["tongHoSoDangXuLyConHan"]),
+                        TongHoSoHetHan = GetInt32Value(reader["tongHoSoHetHan"]),
+                        ShowModal = GetInt32Value(reader["showModal"]),
+                        StatusCode = reader["statusCode"] == DBNull.Value ? string.Empty : reader["statusCode"].ToString()!,
+                        StatusMessage = reader["statusMessage"] == DBNull.Value ? string.Empty : reader["statusMessage"].ToString()!
                     };
                 }
             }
@@ -93,7 +127,7 @@ public class KhoaHocService
         KhoaHocDangKyCheckDto? result = null;
 
         using (var conn = new OracleConnection(_connectionString))
-        using (var cmd = new OracleCommand("SP_KHOAHOC_CHECK_DANGKY", conn))
+        using (var cmd = new OracleCommand("PKG_KHOAHOC.SP_CHECK_DANGKY", conn))
         {
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
@@ -143,6 +177,17 @@ public class KhoaHocService
                         DaTungDangKyCungHang = GetInt32Value(reader["daTungDangKyCungHang"]),
                         KhoaHocIdCungHangGanNhat = GetInt32Value(reader["khoaHocIdCungHangGanNhat"]),
                         TenKhoaHocCungHangGanNhat = reader["tenKhoaHocCungHangGanNhat"] == DBNull.Value ? string.Empty : reader["tenKhoaHocCungHangGanNhat"].ToString()!,
+
+                        TongHoSo = GetInt32Value(reader["tongHoSo"]),
+                        TongHoSoConHan = GetInt32Value(reader["tongHoSoConHan"]),
+                        TongHoSoCungHang = GetInt32Value(reader["tongHoSoCungHang"]),
+                        TongHoSoDaDuyetConHan = GetInt32Value(reader["tongHoSoDaDuyetConHan"]),
+                        TongHoSoDangXuLyConHan = GetInt32Value(reader["tongHoSoDangXuLyConHan"]),
+                        TongHoSoBiLoaiConHan = GetInt32Value(reader["tongHoSoBiLoaiConHan"]),
+                        TongHoSoHetHan = GetInt32Value(reader["tongHoSoHetHan"]),
+
+                        StatusCode = reader["statusCode"] == DBNull.Value ? string.Empty : reader["statusCode"].ToString()!,
+                        StatusMessage = reader["statusMessage"] == DBNull.Value ? string.Empty : reader["statusMessage"].ToString()!,
 
                         CoTheDangKy = GetInt32Value(reader["coTheDangKy"]),
                         DaDangKyChinhKhoaHoc = GetInt32Value(reader["daDangKyChinhKhoaHoc"]),

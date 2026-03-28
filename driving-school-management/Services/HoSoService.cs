@@ -453,4 +453,255 @@ public class HoSoService
             }
         }
     }
+
+    // Sửa
+    public EditHoSoDto? GetEditHoSoByUser(int hoSoId, int userId)
+    {
+        EditHoSoDto? result = null;
+
+        using (var conn = new OracleConnection(_conn))
+        {
+            conn.Open();
+
+            using (var cmd = new OracleCommand("SP_GET_EDIT_HOSO_BY_USER", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+                cmd.Parameters.Add("p_hoSoId", OracleDbType.Int32).Value = hoSoId;
+                cmd.Parameters.Add("p_info", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+                cmd.Parameters.Add("p_images", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+                cmd.ExecuteNonQuery();
+
+                using (var reader = ((OracleRefCursor)cmd.Parameters["p_info"].Value).GetDataReader())
+                {
+                    if (reader.Read())
+                    {
+                        result = new EditHoSoDto
+                        {
+                            HoSoId = GetInt32(reader["hoSoId"]),
+                            HoTen = GetNullableString(reader["hoTen"]),
+                            SoCmndCccd = GetNullableString(reader["soCmndCccd"]),
+                            NamSinh = GetNullableDate(reader["namSinh"]),
+                            GioiTinh = GetNullableString(reader["gioiTinh"]),
+                            Sdt = GetNullableString(reader["sdt"]),
+                            Email = GetNullableString(reader["email"]),
+                            AvatarUrl = GetNullableString(reader["avatarUrl"]),
+                            TenHoSo = GetNullableString(reader["tenHoSo"]),
+                            LoaiHoSo = GetNullableString(reader["loaiHoSo"]),
+                            NgayDangKy = GetNullableDate(reader["ngayDangKy"]),
+                            TrangThai = GetNullableString(reader["trangThai"]),
+                            GhiChu = GetNullableString(reader["ghiChu"]),
+                            HangId = GetInt32(reader["hangId"]),
+                            TenHang = GetNullableString(reader["tenHang"]),
+                            KhamSucKhoeId = GetNullableInt32(reader["khamSucKhoeId"]),
+                            HieuLuc = GetNullableString(reader["hieuLuc"]),
+                            ThoiHan = GetNullableDate(reader["thoiHan"]),
+                            KhamMat = GetNullableString(reader["khamMat"]),
+                            HuyetAp = GetNullableString(reader["huyetAp"]),
+                            ChieuCao = GetNullableDecimal(reader["chieuCao"]),
+                            CanNang = GetNullableDecimal(reader["canNang"])
+                        };
+                    }
+                }
+
+                if (result != null)
+                {
+                    using (var reader = ((OracleRefCursor)cmd.Parameters["p_images"].Value).GetDataReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var urlAnh = GetNullableString(reader["urlAnh"]);
+                            if (!string.IsNullOrWhiteSpace(urlAnh))
+                            {
+                                result.ExistingImages.Add(urlAnh);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public async Task<CreateHoSoResultDto> UpdateHoSoAsync(int userId, EditHoSoDto model)
+    {
+        var result = new CreateHoSoResultDto();
+
+        using (var conn = new OracleConnection(_conn))
+        {
+            await conn.OpenAsync();
+
+            using (var transaction = conn.BeginTransaction())
+            {
+                var newUploadedFiles = new List<string>();
+                var oldImageUrls = new List<string>();
+
+                try
+                {
+                    int? khamSucKhoeId = null;
+                    string message = string.Empty;
+
+                    var oldData = GetEditHoSoByUser(model.HoSoId, userId);
+                    if (oldData == null)
+                    {
+                        result.Success = false;
+                        result.Message = "Không tìm thấy hồ sơ để cập nhật.";
+                        return result;
+                    }
+
+                    oldImageUrls = oldData.ExistingImages.ToList();
+
+                    using (var cmd = new OracleCommand("SP_UPDATE_MY_HOSO", conn))
+                    {
+                        cmd.Transaction = transaction;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+                        cmd.Parameters.Add("p_hoSoId", OracleDbType.Int32).Value = model.HoSoId;
+                        cmd.Parameters.Add("p_hangId", OracleDbType.Int32).Value = model.HangId;
+                        cmd.Parameters.Add("p_loaiHoSo", OracleDbType.NVarchar2).Value = model.LoaiHoSo;
+                        cmd.Parameters.Add("p_ghiChu", OracleDbType.NVarchar2).Value =
+                            string.IsNullOrWhiteSpace(model.GhiChu) ? DBNull.Value : model.GhiChu;
+
+                        cmd.Parameters.Add("p_hieuLuc", OracleDbType.NVarchar2).Value =
+                            string.IsNullOrWhiteSpace(model.HieuLuc) ? DBNull.Value : model.HieuLuc;
+                        cmd.Parameters.Add("p_thoiHan", OracleDbType.Date).Value =
+                            model.ThoiHan.HasValue ? model.ThoiHan.Value : DBNull.Value;
+                        cmd.Parameters.Add("p_khamMat", OracleDbType.NVarchar2).Value =
+                            string.IsNullOrWhiteSpace(model.KhamMat) ? DBNull.Value : model.KhamMat;
+                        cmd.Parameters.Add("p_huyetAp", OracleDbType.NVarchar2).Value =
+                            string.IsNullOrWhiteSpace(model.HuyetAp) ? DBNull.Value : model.HuyetAp;
+                        cmd.Parameters.Add("p_chieuCao", OracleDbType.Decimal).Value =
+                            model.ChieuCao.HasValue ? model.ChieuCao.Value : DBNull.Value;
+                        cmd.Parameters.Add("p_canNang", OracleDbType.Decimal).Value =
+                            model.CanNang.HasValue ? model.CanNang.Value : DBNull.Value;
+
+                        cmd.Parameters.Add("p_khamSucKhoeId", OracleDbType.Int32).Direction = ParameterDirection.Output;
+                        cmd.Parameters.Add("p_message", OracleDbType.NVarchar2, 500).Direction = ParameterDirection.Output;
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        message = cmd.Parameters["p_message"].Value?.ToString() ?? string.Empty;
+
+                        var khamParam = cmd.Parameters["p_khamSucKhoeId"].Value;
+                        if (khamParam != null && khamParam != DBNull.Value)
+                        {
+                            if (khamParam is OracleDecimal odKham && !odKham.IsNull)
+                            {
+                                khamSucKhoeId = odKham.ToInt32();
+                            }
+                            else if (khamParam is decimal decKham)
+                            {
+                                khamSucKhoeId = decimal.ToInt32(decKham);
+                            }
+                        }
+                    }
+
+                    if (!khamSucKhoeId.HasValue)
+                    {
+                        transaction.Rollback();
+                        result.Success = false;
+                        result.Message = message;
+                        return result;
+                    }
+
+                    if (model.NewImages != null && model.NewImages.Count > 0)
+                    {
+                        using (var cmdDelete = new OracleCommand("SP_DELETE_ANH_GKSK_BY_KHAMID", conn))
+                        {
+                            cmdDelete.Transaction = transaction;
+                            cmdDelete.CommandType = CommandType.StoredProcedure;
+
+                            cmdDelete.Parameters.Add("p_khamSucKhoeId", OracleDbType.Int32).Value = khamSucKhoeId.Value;
+                            cmdDelete.Parameters.Add("p_message", OracleDbType.NVarchar2, 200).Direction = ParameterDirection.Output;
+
+                            await cmdDelete.ExecuteNonQueryAsync();
+                        }
+
+                        var rootFolder = Path.Combine(_env.WebRootPath, "images", "healths");
+                        if (!Directory.Exists(rootFolder))
+                        {
+                            Directory.CreateDirectory(rootFolder);
+                        }
+
+                        foreach (var file in model.NewImages)
+                        {
+                            if (file == null || file.Length <= 0)
+                            {
+                                continue;
+                            }
+
+                            var ext = Path.GetExtension(file.FileName);
+                            var fileName = $"{Guid.NewGuid():N}{ext}";
+                            var fullPath = Path.Combine(rootFolder, fileName);
+                            var dbUrl = $"/images/healths/{fileName}";
+
+                            using (var stream = new FileStream(fullPath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(stream);
+                            }
+
+                            newUploadedFiles.Add(fullPath);
+
+                            using (var cmdImg = new OracleCommand("SP_ADD_ANH_GKSK", conn))
+                            {
+                                cmdImg.Transaction = transaction;
+                                cmdImg.CommandType = CommandType.StoredProcedure;
+
+                                cmdImg.Parameters.Add("p_khamSucKhoeId", OracleDbType.Int32).Value = khamSucKhoeId.Value;
+                                cmdImg.Parameters.Add("p_urlAnh", OracleDbType.NVarchar2).Value = dbUrl;
+                                cmdImg.Parameters.Add("p_message", OracleDbType.NVarchar2, 200).Direction = ParameterDirection.Output;
+
+                                await cmdImg.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
+
+                    transaction.Commit();
+
+                    if (model.NewImages != null && model.NewImages.Count > 0)
+                    {
+                        foreach (var oldUrl in oldImageUrls)
+                        {
+                            if (string.IsNullOrWhiteSpace(oldUrl))
+                            {
+                                continue;
+                            }
+
+                            var relativePath = oldUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                            var fullOldPath = Path.Combine(_env.WebRootPath, relativePath);
+
+                            if (File.Exists(fullOldPath))
+                            {
+                                File.Delete(fullOldPath);
+                            }
+                        }
+                    }
+
+                    result.Success = true;
+                    result.HoSoId = model.HoSoId;
+                    result.KhamSucKhoeId = khamSucKhoeId;
+                    result.Message = string.IsNullOrWhiteSpace(message) ? "Cập nhật hồ sơ thành công." : message;
+                    return result;
+                }
+                catch
+                {
+                    transaction.Rollback();
+
+                    foreach (var path in newUploadedFiles)
+                    {
+                        if (File.Exists(path))
+                        {
+                            File.Delete(path);
+                        }
+                    }
+
+                    throw;
+                }
+            }
+        }
+    }
 }
