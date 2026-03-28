@@ -5,6 +5,11 @@
 @{
     ViewData["Title"] = "Hồ sơ của tôi";
     var detailJson = JsonSerializer.Serialize(Model?.Details ?? new List<HoSoDetailDto>());
+    var missingFieldsJson = JsonSerializer.Serialize(Model?.MissingFields ?? new List<string>());
+    var canCreateHoSo = Model?.CanCreateHoSo ?? false;
+    var hocVienAvatarUrl = string.IsNullOrWhiteSpace(Model?.HocVienAvatarUrl)
+        ? Url.Content("~/images/avatar/default.png")
+        : Model!.HocVienAvatarUrl;
 }
 
 <style>
@@ -692,6 +697,176 @@
         font-size: 12px;
         color: var(--text-sub);
     }
+
+    .create-check-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .42);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: calc(var(--app-header-height) + 20px) 24px 24px;
+        z-index: 3500;
+        overflow-y: auto;
+    }
+
+    .create-check-modal-overlay.show {
+        display: flex;
+    }
+
+    .create-check-modal {
+        width: min(760px, 100%);
+        background: rgba(255,255,255,.98);
+        border: 1px solid rgba(231,235,242,.9);
+        border-radius: 28px;
+        box-shadow: 0 24px 70px rgba(15,23,42,.14);
+        overflow: hidden;
+        animation: createCheckFade .24s ease;
+    }
+
+    @@keyframes createCheckFade {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(.985);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .create-check-header {
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .create-check-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .create-check-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .create-check-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+        letter-spacing: -.02em;
+    }
+
+    .create-check-subtitle {
+        margin-top: 4px;
+        color: var(--text-sub);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .create-check-close {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text-main);
+        font-size: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .create-check-body {
+        padding: 22px 24px 24px;
+        display: grid;
+        gap: 18px;
+    }
+
+    .create-check-panel {
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px;
+    }
+
+    .create-check-panel-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 10px;
+    }
+
+    .create-check-note {
+        font-size: 14px;
+        color: var(--text-sub);
+        line-height: 1.65;
+    }
+
+    .create-check-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+        color: var(--text-main);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .create-check-list li::marker {
+        color: var(--danger);
+    }
+
+    .create-check-alert-ok {
+        color: var(--success);
+        background: var(--success-bg);
+        border: 1px solid rgba(21,128,61,.14);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.6;
+    }
+
+    .create-check-alert-missing {
+        color: var(--danger);
+        background: var(--danger-bg);
+        border: 1px solid rgba(180,35,24,.14);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.6;
+    }
+
+    .create-check-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding-top: 4px;
+    }
+
+    .create-check-actions-left,
+    .create-check-actions-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 </style>
 
 <div class="page">
@@ -738,7 +913,7 @@
             </div>
 
             <div class="action-bar">
-                <a href="/HoSo/Create" class="btn-ui btn-ui-primary">+ Tạo hồ sơ</a>
+                <button type="button" class="btn-ui btn-ui-primary" onclick="openCreateCheckModal()">+ Tạo hồ sơ</button>
             </div>
         </div>
 
@@ -843,6 +1018,26 @@
     </div>
 </div>
 
+<div id="createCheckOverlay" class="create-check-modal-overlay">
+    <div class="create-check-modal">
+        <div class="create-check-header">
+            <div class="create-check-title-wrap">
+                <img src="@hocVienAvatarUrl" class="create-check-avatar" alt="avatar học viên" />
+                <div>
+                    <div class="create-check-title">Tạo hồ sơ mới</div>
+                    <div class="create-check-subtitle">
+                        Kiểm tra điều kiện trước khi chuyển sang màn hình tạo hồ sơ.
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="create-check-close" onclick="closeCreateCheckModal()">×</button>
+        </div>
+
+        <div class="create-check-body" id="createCheckBody"></div>
+    </div>
+</div>
+
 <script>
 const details = @Html.Raw(detailJson);
 const cards = Array.from(document.querySelectorAll('#grid .card'));
@@ -938,7 +1133,7 @@ function openDetail(id) {
         ? `<a href="/HoSo/Edit/${item.hoSoId ?? item.HoSoId}" class="btn-ui btn-ui-secondary">Sửa hồ sơ</a>`
         : `<button type="button" class="btn-ui btn-ui-disabled">Sửa hồ sơ</button>`;
 
-    const createButtonHtml = `<a href="/HoSo/Create" class="btn-ui btn-ui-primary">+ Tạo hồ sơ</a>`;
+    const createButtonHtml = `<button type="button" class="btn-ui btn-ui-primary" onclick="closeModal(); openCreateCheckModal();">+ Tạo hồ sơ</button>`;
 
     document.getElementById('hosoModalAvatar').src = avatar;
     document.getElementById('hosoModalTitle').textContent = title;
@@ -1106,4 +1301,99 @@ document.addEventListener('keydown', function (e) {
 if (cards.length > 0) {
     renderPage();
 }
+
+const createCheckCanCreate = @Html.Raw(JsonSerializer.Serialize(canCreateHoSo));
+const createCheckMissingFields = @Html.Raw(missingFieldsJson);
+const createCheckAvatarUrl = @Html.Raw(JsonSerializer.Serialize(hocVienAvatarUrl));
+
+function openCreateCheckModal() {
+    const body = document.getElementById('createCheckBody');
+
+    if (createCheckCanCreate) {
+        body.innerHTML = `
+            <div class="create-check-alert-ok">
+                Hồ sơ học viên đã đủ điều kiện để tạo hồ sơ mới.
+            </div>
+
+            <div class="create-check-panel">
+                <div class="create-check-panel-title">Tải mẫu giấy khám sức khỏe</div>
+                <div class="create-check-note">
+                    Học viên tải mẫu giấy khám sức khỏe mới nhất, mang theo khi đi khám và sau khi có kết quả thì chụp ảnh rõ nét để tải lên làm minh chứng.
+                </div>
+            </div>
+
+            <div class="create-check-panel">
+                <div class="create-check-panel-title">Ảnh thẻ sẽ được sử dụng</div>
+                <div class="create-check-note">
+                    Ảnh thẻ hiện tại của học viên sẽ được dùng làm <strong>ảnh chính</strong> và sẽ được lưu vào <strong>Phiếu khám sức khỏe.URLANH</strong> khi tạo hồ sơ.
+                </div>
+            </div>
+
+            <div class="create-check-actions">
+                <div class="create-check-actions-left">
+                    <a href="/resources/mau-kham-suc-khoe-lai-xe.doc" class="btn-ui btn-ui-soft" download>Tải mẫu giấy khám</a>
+                </div>
+
+                <div class="create-check-actions-right">
+                    <button type="button" class="btn-ui btn-ui-secondary" onclick="closeCreateCheckModal()">Đóng</button>
+                    <a href="/HoSo/Create" class="btn-ui btn-ui-primary">Tiếp tục</a>
+                </div>
+            </div>
+        `;
+    } else {
+        const missingHtml = createCheckMissingFields.length > 0
+            ? `<ul class="create-check-list">${createCheckMissingFields.map(x => `<li>${x}</li>`).join('')}</ul>`
+            : `<div class="create-check-note">Không đủ dữ liệu để xác minh.</div>`;
+
+        body.innerHTML = `
+            <div class="create-check-alert-missing">
+                Học viên chưa đủ điều kiện để tạo hồ sơ mới. Cần bổ sung đầy đủ thông tin bắt buộc trong hồ sơ học viên.
+            </div>
+
+            <div class="create-check-panel">
+                <div class="create-check-panel-title">Các thông tin còn thiếu</div>
+                ${missingHtml}
+            </div>
+
+            <div class="create-check-panel">
+                <div class="create-check-panel-title">Thông tin bắt buộc</div>
+                <div class="create-check-note">
+                    Cần có đầy đủ: CCCD, số điện thoại, ảnh thẻ, giới tính, họ tên và email.
+                </div>
+            </div>
+
+            <div class="create-check-actions">
+                <div class="create-check-actions-left"></div>
+
+                <div class="create-check-actions-right">
+                    <button type="button" class="btn-ui btn-ui-secondary" onclick="closeCreateCheckModal()">Đóng</button>
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('createCheckOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCreateCheckModal() {
+    document.getElementById('createCheckOverlay').classList.remove('show');
+
+    if (!document.getElementById('hosoModalOverlay').classList.contains('show')) {
+        document.body.style.overflow = '';
+    }
+}
+
+document.getElementById('createCheckOverlay').addEventListener('click', function (e) {
+    if (e.target === this) {
+        closeCreateCheckModal();
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.getElementById('createCheckOverlay').classList.contains('show')) {
+        closeCreateCheckModal();
+    }
+});
+
 </script>
