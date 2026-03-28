@@ -3569,10 +3569,198 @@ EXCEPTION
         p_missingFields := N'Học viên';
 END;
 /
+CREATE OR REPLACE FUNCTION FN_CAN_EDIT_HOSO (
+    p_userId IN NUMBER,
+    p_hoSoId IN NUMBER
+) RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM HoSoThiSinh hs
+         JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+    WHERE hs.hoSoId = p_hoSoId
+      AND hv.userId = p_userId
+      AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE)
+      AND hs.trangThai IN (N'Đang xử lý', N'Bị loại');
 
+    RETURN v_count;
+END;
+/
+CREATE OR REPLACE FUNCTION FN_HAS_VALID_HOSO_OTHER_HANG (
+    p_userId IN NUMBER,
+    p_hangId IN NUMBER,
+    p_hoSoId IN NUMBER
+) RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM HoSoThiSinh hs
+         JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+    WHERE hv.userId = p_userId
+      AND hs.hangId = p_hangId
+      AND hs.hoSoId <> p_hoSoId
+      AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE);
 
+    RETURN v_count;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_GET_EDIT_HOSO_BY_USER (
+    p_userId IN NUMBER,
+    p_hoSoId IN NUMBER,
+    p_info OUT SYS_REFCURSOR,
+    p_images OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_info FOR
+        SELECT hs.hoSoId,
+               hv.hoTen,
+               hv.soCmndCccd,
+               hv.namSinh,
+               hv.gioiTinh,
+               hv.sdt,
+               hv.email,
+               hv.avatarUrl,
+               hs.tenHoSo,
+               hs.loaiHoSo,
+               hs.ngayDangKy,
+               hs.trangThai,
+               hs.ghiChu,
+               hs.hangId,
+               hg.tenHang,
+               pk.khamSucKhoeId,
+               pk.hieuLuc,
+               pk.thoiHan,
+               pk.khamMat,
+               pk.huyetAp,
+               pk.chieuCao,
+               pk.canNang,
+               pk.urlAnh
+        FROM HoSoThiSinh hs
+             JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+             JOIN HangGplx hg ON hg.hangId = hs.hangId
+             LEFT JOIN PhieuKhamSucKhoe pk ON pk.khamSucKhoeId = hs.khamSucKhoeId
+        WHERE hs.hoSoId = p_hoSoId
+          AND hv.userId = p_userId;
 
+    OPEN p_images FOR
+        SELECT ag.anhId,
+               ag.urlAnh
+        FROM HoSoThiSinh hs
+             JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+             JOIN AnhGksk ag ON ag.khamSucKhoeId = hs.khamSucKhoeId
+        WHERE hs.hoSoId = p_hoSoId
+          AND hv.userId = p_userId
+        ORDER BY ag.anhId;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_UPDATE_MY_HOSO (
+    p_userId           IN NUMBER,
+    p_hoSoId           IN NUMBER,
+    p_hangId           IN NUMBER,
+    p_loaiHoSo         IN NVARCHAR2,
+    p_ghiChu           IN NVARCHAR2,
+    p_hieuLuc          IN NVARCHAR2,
+    p_thoiHan          IN DATE,
+    p_khamMat          IN NVARCHAR2,
+    p_huyetAp          IN NVARCHAR2,
+    p_chieuCao         IN NUMBER,
+    p_canNang          IN NUMBER,
+    p_khamSucKhoeId    OUT NUMBER,
+    p_message          OUT NVARCHAR2
+)
+AS
+    v_hocVienId     NUMBER;
+    v_hoTen         NVARCHAR2(100);
+    v_avatarUrl     NVARCHAR2(500);
+    v_tenHang       NVARCHAR2(50);
+    v_tenHoSo       NVARCHAR2(255);
+    v_canEdit       NUMBER;
+    v_exists        NUMBER;
+BEGIN
+    p_khamSucKhoeId := NULL;
+    p_message := NULL;
 
+    v_canEdit := FN_CAN_EDIT_HOSO(p_userId, p_hoSoId);
+
+    IF v_canEdit = 0 THEN
+        p_message := N'Hồ sơ này không còn đủ điều kiện để chỉnh sửa.';
+        RETURN;
+    END IF;
+
+    v_exists := FN_HAS_VALID_HOSO_OTHER_HANG(p_userId, p_hangId, p_hoSoId);
+
+    IF v_exists > 0 THEN
+        p_message := N'Bạn đã có hồ sơ còn hạn cho hạng này. Vui lòng sử dụng hồ sơ hiện có.';
+        RETURN;
+    END IF;
+
+    SELECT hv.hocVienId, hv.hoTen, hv.avatarUrl
+    INTO v_hocVienId, v_hoTen, v_avatarUrl
+    FROM HocVien hv
+    WHERE hv.userId = p_userId;
+
+    SELECT hg.tenHang
+    INTO v_tenHang
+    FROM HangGplx hg
+    WHERE hg.hangId = p_hangId;
+
+    v_tenHoSo := p_loaiHoSo || N' - Hồ sơ hạng ' || v_tenHang || N' - ' || v_hoTen;
+
+    UPDATE HoSoThiSinh
+    SET tenHoSo = v_tenHoSo,
+        loaiHoSo = p_loaiHoSo,
+        ghiChu = CASE
+                    WHEN p_ghiChu IS NULL OR TRIM(p_ghiChu) = '' THEN NULL
+                    ELSE p_ghiChu
+                 END,
+        hangId = p_hangId
+    WHERE hoSoId = p_hoSoId
+      AND hocVienId = v_hocVienId;
+
+    SELECT hs.khamSucKhoeId
+    INTO p_khamSucKhoeId
+    FROM HoSoThiSinh hs
+    WHERE hs.hoSoId = p_hoSoId;
+
+    UPDATE PhieuKhamSucKhoe
+    SET hieuLuc = p_hieuLuc,
+        thoiHan = p_thoiHan,
+        khamMat = p_khamMat,
+        huyetAp = p_huyetAp,
+        chieuCao = p_chieuCao,
+        canNang = p_canNang,
+        urlAnh = v_avatarUrl
+    WHERE khamSucKhoeId = p_khamSucKhoeId;
+
+    p_message := N'Cập nhật hồ sơ thành công';
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_message := N'Không tìm thấy hồ sơ hợp lệ để cập nhật';
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20011, SQLERRM);
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_DELETE_ANH_GKSK_BY_KHAMID (
+    p_khamSucKhoeId IN NUMBER,
+    p_message OUT NVARCHAR2
+)
+AS
+BEGIN
+    DELETE FROM AnhGksk
+    WHERE khamSucKhoeId = p_khamSucKhoeId;
+
+    p_message := N'Đã xóa ảnh cũ';
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20012, SQLERRM);
+END;
+/
 
 
 

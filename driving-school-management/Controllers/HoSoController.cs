@@ -99,4 +99,82 @@ public class HoSoController : Controller
         TempData["Success"] = "Tạo hồ sơ thành công";
         return RedirectToAction("Index");
     }
+
+    // SỬA
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var model = _service.GetEditHoSoByUser(id, userId.Value);
+        if (model == null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.HocVienName = _service.GetHocVienNameByUserId(userId.Value);
+        ViewBag.HangOptions = new SelectList(_service.GetHangGplxOptions(), "HangId", "TenHang", model.HangId);
+        ViewBag.LoaiHoSoOptions = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "Đăng ký mới", Text = "Đăng ký mới" },
+        new SelectListItem { Value = "Nâng hạng", Text = "Nâng hạng" }
+    };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [RequestFormLimits(MultipartBodyLengthLimit = 104857600)]
+    [RequestSizeLimit(104857600)]
+    public async Task<IActionResult> Edit(EditHoSoDto model)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        ViewBag.HocVienName = _service.GetHocVienNameByUserId(userId.Value);
+        ViewBag.HangOptions = new SelectList(_service.GetHangGplxOptions(), "HangId", "TenHang", model.HangId);
+        ViewBag.LoaiHoSoOptions = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "Đăng ký mới", Text = "Đăng ký mới" },
+            new SelectListItem { Value = "Nâng hạng", Text = "Nâng hạng" }
+        };
+
+        var oldData = _service.GetEditHoSoByUser(model.HoSoId, userId.Value);
+        if (oldData != null && (model.NewImages == null || model.NewImages.Count == 0))
+        {
+            model.ExistingImages = oldData.ExistingImages;
+            model.HoTen = oldData.HoTen;
+            model.SoCmndCccd = oldData.SoCmndCccd;
+            model.NamSinh = oldData.NamSinh;
+            model.GioiTinh = oldData.GioiTinh;
+            model.Sdt = oldData.Sdt;
+            model.Email = oldData.Email;
+            model.AvatarUrl = oldData.AvatarUrl;
+            model.NgayDangKy = oldData.NgayDangKy;
+            model.TrangThai = oldData.TrangThai;
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var result = await _service.UpdateHoSoAsync(userId.Value, model);
+
+        if (!result.Success)
+        {
+            ModelState.AddModelError(string.Empty, result.Message);
+            return View(model);
+        }
+
+        TempData["Success"] = "Cập nhật hồ sơ thành công";
+        return RedirectToAction("Index");
+    }
 }

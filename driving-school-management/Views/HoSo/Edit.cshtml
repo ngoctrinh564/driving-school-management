@@ -1,0 +1,1461 @@
+﻿@using System.Text.Json
+@model EditHoSoDto
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using driving_school_management.Models.DTOs
+
+@{
+    ViewData["Title"] = "Sửa hồ sơ";
+    var hocVienName = ViewBag.HocVienName as string ?? Model?.HoTen ?? "Học viên";
+    var avatarUrl = string.IsNullOrWhiteSpace(Model?.AvatarUrl)
+        ? Url.Content("~/images/avatar/default.png")
+        : Model!.AvatarUrl;
+
+    var existingImagesJson = JsonSerializer.Serialize(Model?.ExistingImages ?? new List<string>());
+
+    var serverErrors = ViewData.ModelState.Values
+        .SelectMany(v => v.Errors)
+        .Select(e => e.ErrorMessage)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .ToList();
+
+    var cannotEditMessage = serverErrors.FirstOrDefault(x =>
+        x.Contains("không còn đủ điều kiện", StringComparison.OrdinalIgnoreCase) ||
+        x.Contains("hồ sơ còn hạn cho hạng này", StringComparison.OrdinalIgnoreCase) ||
+        x.Contains("sử dụng hồ sơ hiện có", StringComparison.OrdinalIgnoreCase));
+}
+
+<style>
+    :root {
+        --bg: #f6f8fb;
+        --surface: rgba(255,255,255,.96);
+        --surface-soft: #fbfcfe;
+        --border: #e7ebf2;
+        --border-strong: #d9e0ea;
+        --text-main: #0f172a;
+        --text-sub: #667085;
+        --text-soft: #94a3b8;
+        --success: #15803d;
+        --success-bg: #edfdf3;
+        --danger: #b42318;
+        --danger-bg: #fef3f2;
+        --warning: #b54708;
+        --warning-bg: #fffaeb;
+        --accent: #111827;
+        --shadow-sm: 0 10px 30px rgba(15,23,42,.04);
+        --shadow-md: 0 18px 40px rgba(15,23,42,.08);
+        --app-header-height: 96px;
+    }
+
+    .page {
+        padding: calc(var(--app-header-height) + 32px) 40px 56px;
+        background: var(--bg);
+        min-height: 100vh;
+    }
+
+    .page-shell {
+        max-width: 1360px;
+        margin: 0 auto;
+    }
+
+    .hero {
+        display: grid;
+        grid-template-columns: 1.35fr .85fr;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    .hero-main,
+    .hero-side-card,
+    .form-panel,
+    .summary-card,
+    .upload-card,
+    .helper-card,
+    .student-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hero-main {
+        border-radius: 28px;
+        padding: 30px 32px;
+    }
+
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-sub);
+    }
+
+    .hero-title {
+        margin: 16px 0 10px;
+        font-size: 40px;
+        line-height: 1.1;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -.03em;
+    }
+
+    .hero-subtitle,
+    .section-note,
+    .field-help,
+    .helper-text,
+    .upload-note,
+    .meta-note {
+        color: var(--text-sub);
+    }
+
+    .hero-subtitle {
+        max-width: 760px;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .hero-side {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .hero-side-card {
+        border-radius: 24px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .metric-label,
+    .field-label,
+    .block-label {
+        color: var(--text-soft);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+
+    .metric-value {
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -.03em;
+        margin-top: 10px;
+    }
+
+    .metric-owner {
+        color: var(--text-main);
+        font-weight: 700;
+    }
+
+    .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(320px, .85fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .form-panel {
+        border-radius: 26px;
+        padding: 24px;
+    }
+
+    .panel-section + .panel-section {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+    }
+
+    .panel-title-row {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .panel-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -.02em;
+    }
+
+    .panel-subtitle {
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--text-sub);
+        line-height: 1.6;
+    }
+
+    .step-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+        flex-shrink: 0;
+    }
+
+    .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px 18px;
+    }
+
+    .field-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .field.full {
+        grid-column: 1 / -1;
+    }
+
+    .field-label {
+        margin-bottom: 2px;
+    }
+
+    .input-ui,
+    .select-ui,
+    .textarea-ui {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 500;
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        box-shadow: 0 1px 2px rgba(15,23,42,.02);
+    }
+
+    .textarea-ui {
+        min-height: 118px;
+        padding: 14px;
+        resize: vertical;
+    }
+
+    .input-ui:focus,
+    .select-ui:focus,
+    .textarea-ui:focus {
+        border-color: #c9d4e3;
+        box-shadow: 0 0 0 4px rgba(17,24,39,.04);
+    }
+
+    .input-readonly {
+        background: #f8fafc;
+        color: var(--text-main);
+    }
+
+    .field-help {
+        font-size: 12px;
+        line-height: 1.55;
+    }
+
+    .summary-stack,
+    .helper-stack {
+        display: grid;
+        gap: 18px;
+    }
+
+    .summary-card,
+    .upload-card,
+    .helper-card,
+    .student-card {
+        border-radius: 24px;
+        padding: 22px;
+    }
+
+    .summary-title,
+    .upload-title,
+    .helper-title,
+    .student-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 14px;
+        letter-spacing: -.01em;
+    }
+
+    .summary-preview,
+    .student-preview {
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .summary-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+        letter-spacing: -.02em;
+    }
+
+    .summary-meta {
+        margin-top: 6px;
+        font-size: 14px;
+        color: var(--text-sub);
+        line-height: 1.6;
+    }
+
+    .summary-grid,
+    .student-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 14px;
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+    }
+
+    .summary-item,
+    .student-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .summary-value,
+    .student-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .badge-soft {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text-sub);
+    }
+
+    .badge-soft-success {
+        color: var(--success);
+        background: var(--success-bg);
+        border-color: rgba(21,128,61,.14);
+    }
+
+    .badge-soft-warning {
+        color: var(--warning);
+        background: var(--warning-bg);
+        border-color: rgba(181,71,8,.14);
+    }
+
+    .badge-soft-danger {
+        color: var(--danger);
+        background: var(--danger-bg);
+        border-color: rgba(180,35,24,.14);
+    }
+
+    .dropzone {
+        position: relative;
+        border: 1px dashed var(--border-strong);
+        background: #fbfcfe;
+        border-radius: 18px;
+        padding: 22px 18px;
+        text-align: center;
+        transition: border-color .2s ease, background .2s ease;
+    }
+
+    .dropzone:hover {
+        border-color: #cdd7e3;
+        background: #f8fafc;
+    }
+
+    .dropzone input[type=file] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .dropzone-icon {
+        font-size: 24px;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+
+    .dropzone-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+
+    .dropzone-subtitle {
+        margin-top: 5px;
+        font-size: 13px;
+        color: var(--text-sub);
+        line-height: 1.55;
+    }
+
+    .upload-preview-list,
+    .existing-preview-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .upload-preview-item,
+    .existing-preview-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .upload-preview-item img,
+    .existing-preview-item img {
+        width: 100%;
+        height: 130px;
+        max-height: 180px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .upload-preview-caption,
+    .existing-preview-caption {
+        padding: 10px 12px;
+        font-size: 12px;
+        color: var(--text-sub);
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .replace-note {
+        margin-top: 14px;
+        background: var(--warning-bg);
+        color: var(--warning);
+        border: 1px solid rgba(181,71,8,.14);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .helper-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+        color: var(--text-sub);
+        font-size: 13px;
+        line-height: 1.65;
+    }
+
+    .form-actions {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        padding-top: 22px;
+        border-top: 1px solid var(--border);
+    }
+
+    .action-left,
+    .action-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-ui {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-ui:hover {
+        transform: translateY(-1px);
+        border-color: var(--border-strong);
+        text-decoration: none;
+        color: var(--text-main);
+    }
+
+    .btn-ui-primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+    }
+
+    .btn-ui-primary:hover {
+        color: #fff;
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-ui-soft {
+        background: #f8fafc;
+        color: var(--text-main);
+    }
+
+    .meta-note {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .validation-summary-errors,
+    .text-danger {
+        color: var(--danger);
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .validation-summary-errors {
+        margin-bottom: 14px;
+        background: #fff8f7;
+        border: 1px solid rgba(180,35,24,.12);
+        border-radius: 16px;
+        padding: 14px 16px;
+    }
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .preview-lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .82);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: calc(var(--app-header-height) + 72px) 28px 28px;
+        z-index: 4000;
+        overflow-y: auto;
+    }
+
+    .preview-lightbox.show {
+        display: flex;
+    }
+
+    .preview-lightbox-inner {
+        position: relative;
+        max-width: min(980px, 88vw);
+        max-height: calc(100vh - var(--app-header-height) - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .preview-lightbox-img {
+        max-width: 100%;
+        max-height: calc(100vh - var(--app-header-height) - 140px);
+        object-fit: contain;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(0,0,0,.28);
+    }
+
+    .preview-lightbox-close {
+        position: absolute;
+        top: -14px;
+        right: -14px;
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(15, 23, 42, .78);
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .upload-preview-item,
+    .existing-preview-item {
+        cursor: pointer;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .upload-preview-item:hover,
+    .existing-preview-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-strong);
+    }
+
+    .notify-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .42);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 5000;
+    }
+
+    .notify-modal-overlay.show {
+        display: flex;
+    }
+
+    .notify-modal {
+        width: min(560px, 100%);
+        background: rgba(255,255,255,.98);
+        border: 1px solid rgba(231,235,242,.9);
+        border-radius: 24px;
+        box-shadow: 0 24px 70px rgba(15,23,42,.16);
+        overflow: hidden;
+        animation: notifyFade .22s ease;
+    }
+
+    @@keyframes notifyFade {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(.985);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .notify-modal-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 20px 22px 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .notify-modal-title-wrap {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .notify-modal-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--danger-bg);
+        color: var(--danger);
+        border: 1px solid rgba(180,35,24,.14);
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .notify-modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .notify-modal-subtitle {
+        margin-top: 5px;
+        color: var(--text-sub);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .notify-modal-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text-main);
+        font-size: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .notify-modal-body {
+        padding: 20px 22px 22px;
+    }
+
+    .notify-modal-message {
+        background: #fff8f7;
+        border: 1px solid rgba(180,35,24,.12);
+        border-radius: 16px;
+        padding: 16px 18px;
+        color: var(--text-main);
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .notify-modal-actions {
+        margin-top: 18px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    @@media (max-width: 1199px) {
+        .hero,
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .page {
+            padding: 24px 16px 32px;
+        }
+
+        .hero-title {
+            font-size: 32px;
+        }
+
+        .field-grid,
+        .field-grid-3,
+        .summary-grid,
+        .student-grid,
+        .upload-preview-list,
+        .existing-preview-list {
+            grid-template-columns: 1fr;
+        }
+
+        .form-panel,
+        .summary-card,
+        .upload-card,
+        .helper-card,
+        .student-card {
+            padding: 18px;
+        }
+    }
+</style>
+
+<div class="page">
+    <div class="page-shell">
+        <div class="hero">
+            <div class="hero-main">
+                <div class="eyebrow">Chỉnh sửa hồ sơ</div>
+                <div class="hero-title">Sửa hồ sơ của tôi</div>
+                <div class="hero-subtitle">
+                    Cập nhật thông tin hồ sơ thí sinh, phiếu khám sức khỏe và thay thế lại toàn bộ ảnh giấy khám sức khỏe nếu cần.
+                </div>
+            </div>
+
+            <div class="hero-side">
+                <div class="hero-side-card">
+                    <div class="metric-label">Tên học viên</div>
+                    <div class="metric-value" style="font-size:26px;">@hocVienName</div>
+                    <div class="meta-note">
+                        Chỉ chỉnh sửa dữ liệu thuộc hồ sơ của <strong class="metric-owner">@hocVienName</strong>
+                    </div>
+                </div>
+
+                <div class="hero-side-card">
+                    <div class="metric-label">Trạng thái hồ sơ</div>
+                    <div class="metric-value" style="font-size:26px;">@(Model?.TrangThai ?? "—")</div>
+                    <div class="meta-note">
+                        Chỉ được chỉnh sửa khi hồ sơ còn hạn và trạng thái là <strong class="metric-owner">Đang xử lý</strong> hoặc <strong class="metric-owner">Bị loại</strong>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-head">
+            <div>
+                <div class="section-title">Thông tin chỉnh sửa hồ sơ</div>
+                <div class="section-note">Chỉ cập nhật 3 bảng: Hồ sơ thí sinh, Phiếu khám sức khỏe và Ảnh giấy khám sức khỏe.</div>
+            </div>
+        </div>
+
+        <div class="layout">
+            <div class="form-panel">
+                @Html.ValidationSummary(false, "", new { @class = "validation-summary-errors" })
+
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" id="hosoEditForm">
+                    @Html.AntiForgeryToken()
+
+                    <input asp-for="HoSoId" type="hidden" />
+                    <input asp-for="KhamSucKhoeId" type="hidden" />
+                    <input asp-for="HieuLuc" type="hidden" id="HieuLucHidden" value="@(Model?.HieuLuc ?? "12 tháng")" />
+                    <input asp-for="ThoiHan" type="hidden" id="ThoiHanHidden" />
+                    <input asp-for="KhamMat" type="hidden" id="KhamMatHidden" />
+                    <input asp-for="HuyetAp" type="hidden" id="HuyetApHidden" />
+
+                    <div class="panel-section">
+                        <div class="panel-title-row">
+                            <div>
+                                <div class="panel-title">Phần 1 · Hồ sơ thí sinh</div>
+                                <div class="panel-subtitle">
+                                    Chỉ chỉnh sửa loại hồ sơ, hạng GPLX và ghi chú. Tên hồ sơ sẽ tự cập nhật lại theo dữ liệu mới.
+                                </div>
+                            </div>
+                            <div class="step-chip">Bước 1</div>
+                        </div>
+
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label">Hạng GPLX</label>
+                                <select asp-for="HangId" class="select-ui" id="HangIdSelect">
+                                    <option value="">-- Chọn hạng GPLX --</option>
+                                    @if (ViewBag.HangOptions != null)
+                                    {
+                                        foreach (var item in (IEnumerable<SelectListItem>)ViewBag.HangOptions)
+                                        {
+                                            <option value="@item.Value" selected="@(item.Value == Model.HangId.ToString() ? "selected" : null)">
+                                                @item.Text
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="HangId" class="text-danger"></span>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Loại hồ sơ</label>
+                                <select asp-for="LoaiHoSo" asp-items="ViewBag.LoaiHoSoOptions" class="select-ui" id="LoaiHoSoSelect">
+                                    <option value="">-- Chọn loại hồ sơ --</option>
+                                </select>
+                                <span asp-validation-for="LoaiHoSo" class="text-danger"></span>
+                            </div>
+
+                            <div class="field full">
+                                <label class="field-label">Tên hồ sơ</label>
+                                <input type="text" class="input-ui input-readonly" id="TenHoSoPreview" value="@Model.TenHoSo" readonly />
+                                <div class="field-help">Tên hồ sơ sẽ được tự động tạo lại theo loại hồ sơ, hạng GPLX và tên học viên.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Ngày đăng ký</label>
+                                <input type="text" class="input-ui input-readonly" value="@(Model.NgayDangKy?.ToString("dd/MM/yyyy") ?? "")" readonly />
+                                <div class="field-help">Ngày đăng ký là dữ liệu đã có của hồ sơ.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Trạng thái hồ sơ</label>
+                                <input type="text" class="input-ui input-readonly" value="@Model.TrangThai" readonly />
+                                <div class="field-help">Trạng thái chỉ để theo dõi, không chỉnh sửa tại màn hình này.</div>
+                            </div>
+
+                            <div class="field full">
+                                <label class="field-label">Ghi chú</label>
+                                <textarea asp-for="GhiChu" class="textarea-ui" placeholder="Nhập ghi chú nếu cần..."></textarea>
+                                <span asp-validation-for="GhiChu" class="text-danger"></span>
+                                <div class="field-help">Có thể để trống, hệ thống sẽ lưu NULL.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-title-row">
+                            <div>
+                                <div class="panel-title">Phần 2 · Phiếu khám sức khỏe</div>
+                                <div class="panel-subtitle">
+                                    Cập nhật lại các chỉ số trên phiếu khám sức khỏe. Ảnh thẻ chính của phiếu luôn đồng bộ theo ảnh học viên.
+                                </div>
+                            </div>
+                            <div class="step-chip">Bước 2</div>
+                        </div>
+
+                        <div class="field-grid-3">
+                            <div class="field">
+                                <label class="field-label">Ngày hết hạn giấy khám</label>
+                                <input type="date" class="input-ui" id="NgayHetHanInput" value="@(Model.ThoiHan?.ToString("yyyy-MM-dd") ?? "")" />
+                                <div class="field-help">Có thể cập nhật lại trực tiếp ngày hết hạn hiện tại của giấy khám.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Hiệu lực</label>
+                                <input type="text" class="input-ui input-readonly" value="@(Model.HieuLuc ?? "12 tháng")" readonly />
+                                <div class="field-help">Giá trị này sẽ được lưu dưới dạng chuỗi.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Thời hạn hiển thị</label>
+                                <input type="text" class="input-ui input-readonly" id="ThoiHanPreview" value="@(Model.ThoiHan?.ToString("dd/MM/yyyy") ?? "")" readonly />
+                                <div class="field-help">Ô này dùng để hiển thị lại ngày hết hạn theo định dạng dễ đọc.</div>
+                            </div>
+                        </div>
+
+                        <div class="field-grid" style="margin-top:18px;">
+                            <div class="field">
+                                <label class="field-label">Khám mắt</label>
+                                <input type="number" class="input-ui" id="KhamMatInput" min="1" max="10" step="1"
+                                       value="@((Model.KhamMat ?? "").Replace("/10", ""))" placeholder="Ví dụ: 10" />
+                                <span asp-validation-for="KhamMat" class="text-danger"></span>
+                                <div class="field-help">Nhập từ 1 đến 10. Khi lưu sẽ tự chuyển thành dạng <strong>x/10</strong>.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Huyết áp</label>
+                                <input type="text" class="input-ui" id="HuyetApInput"
+                                       value="@((Model.HuyetAp ?? "").Replace(" mmHg", "").Replace("mmHg", "").Trim())"
+                                       placeholder="Ví dụ: 120/80" />
+                                <span asp-validation-for="HuyetAp" class="text-danger"></span>
+                                <div class="field-help">Khi lưu sẽ tự thêm hậu tố <strong>mmHg</strong>.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Chiều cao (m)</label>
+                                <input asp-for="ChieuCao" type="number" step="0.01" min="0" class="input-ui" placeholder="Ví dụ: 1.60" />
+                                <span asp-validation-for="ChieuCao" class="text-danger"></span>
+                                <div class="field-help">Nhập theo mét. Ví dụ 1.60 tức 1 mét 60.</div>
+                            </div>
+
+                            <div class="field">
+                                <label class="field-label">Cân nặng (kg)</label>
+                                <input asp-for="CanNang" type="number" step="0.01" min="0" class="input-ui" placeholder="Ví dụ: 60.5" />
+                                <span asp-validation-for="CanNang" class="text-danger"></span>
+                                <div class="field-help">Nhập theo đơn vị kilogram.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <div class="panel-title-row">
+                            <div>
+                                <div class="panel-title">Ảnh giấy khám sức khỏe</div>
+                                <div class="panel-subtitle">
+                                    Danh sách bên dưới là ảnh hiện tại. Nếu chọn ảnh mới, toàn bộ ảnh cũ sẽ bị thay thế.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="existing-preview-list" id="existingPreviewList"></div>
+
+                        <div class="replace-note">
+                            Khi bạn chọn ảnh mới và lưu hồ sơ, toàn bộ ảnh giấy khám cũ sẽ bị xóa và thay bằng bộ ảnh mới.
+                        </div>
+
+                        <div class="upload-card" style="padding:0; border:none; box-shadow:none; background:transparent; margin-top:16px;">
+                            <div class="dropzone">
+                                <input asp-for="NewImages" type="file" id="NewImagesInput" multiple accept="image/*" />
+                                <div class="dropzone-icon">⬆</div>
+                                <div class="dropzone-title">Chọn ảnh mới hoặc kéo thả vào đây</div>
+                                <div class="dropzone-subtitle">Nếu chọn ảnh mới, bộ ảnh cũ sẽ bị thay thế hoàn toàn sau khi lưu.</div>
+                            </div>
+
+                            <div id="uploadPreviewList" class="upload-preview-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <div class="action-left">
+                            <a href="/HoSo" class="btn-ui btn-ui-soft">← Quay lại danh sách</a>
+                        </div>
+
+                        <div class="action-right">
+                            <div class="meta-note">Kiểm tra lại dữ liệu trước khi cập nhật hồ sơ.</div>
+                            <button type="submit" class="btn-ui btn-ui-primary">Lưu cập nhật</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="summary-stack">
+                <div class="student-card">
+                    <div class="student-title">Thông tin học viên</div>
+
+                    <div class="student-preview">
+                        <div class="badge-row" style="margin-top:0; margin-bottom:14px;">
+                            <span class="badge-soft badge-soft-warning">Chỉ xem</span>
+                            <span class="badge-soft">Không chỉnh sửa tại đây</span>
+                        </div>
+
+                        <div class="student-grid" style="margin-top:0; padding-top:0; border-top:none;">
+                            <div class="student-item">
+                                <div class="block-label">Họ tên</div>
+                                <div class="student-value">@Model.HoTen</div>
+                            </div>
+
+                            <div class="student-item">
+                                <div class="block-label">CCCD</div>
+                                <div class="student-value">@Model.SoCmndCccd</div>
+                            </div>
+
+                            <div class="student-item">
+                                <div class="block-label">Ngày sinh</div>
+                                <div class="student-value">@(Model.NamSinh?.ToString("dd/MM/yyyy") ?? "—")</div>
+                            </div>
+
+                            <div class="student-item">
+                                <div class="block-label">Giới tính</div>
+                                <div class="student-value">@Model.GioiTinh</div>
+                            </div>
+
+                            <div class="student-item">
+                                <div class="block-label">Số điện thoại</div>
+                                <div class="student-value">@Model.Sdt</div>
+                            </div>
+
+                            <div class="student-item">
+                                <div class="block-label">Email</div>
+                                <div class="student-value">@Model.Email</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-title">Xem trước hồ sơ sau cập nhật</div>
+
+                    <div class="summary-preview">
+                        <div class="summary-name" id="SummaryName">@hocVienName</div>
+                        <div class="summary-meta" id="SummaryTenHoSo">@Model.TenHoSo</div>
+
+                        <div class="badge-row">
+                            <span class="badge-soft" id="LoaiHoSoBadge">@Model.LoaiHoSo</span>
+                            <span class="badge-soft badge-soft-success">@Model.TrangThai</span>
+                        </div>
+
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="block-label">Hạng GPLX</div>
+                                <div class="summary-value" id="SummaryHang">@Model.TenHang</div>
+                            </div>
+
+                            <div class="summary-item">
+                                <div class="block-label">Ngày đăng ký</div>
+                                <div class="summary-value">@(Model.NgayDangKy?.ToString("dd/MM/yyyy") ?? "—")</div>
+                            </div>
+
+                            <div class="summary-item">
+                                <div class="block-label">Hiệu lực</div>
+                                <div class="summary-value">@(Model.HieuLuc ?? "12 tháng")</div>
+                            </div>
+
+                            <div class="summary-item">
+                                <div class="block-label">Thời hạn hiện tại</div>
+                                <div class="summary-value" id="SummaryThoiHan">@(Model.ThoiHan?.ToString("dd/MM/yyyy") ?? "—")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="helper-card">
+                    <div class="helper-title">Quy tắc cập nhật</div>
+                    <ul class="helper-list">
+                        <li>Chỉ được sửa loại hồ sơ, hạng GPLX, ghi chú và dữ liệu phiếu khám sức khỏe.</li>
+                        <li>Tên hồ sơ sẽ tự cập nhật lại theo loại hồ sơ, hạng GPLX và tên học viên.</li>
+                        <li>Khi chọn ảnh mới và lưu, toàn bộ ảnh giấy khám cũ sẽ bị xóa và thay bằng bộ ảnh mới.</li>
+                        <li>Ảnh thẻ chính của phiếu khám luôn được đồng bộ theo ảnh học viên.</li>
+                        <li>Thông tin học viên chỉ để hiển thị, không chỉnh sửa tại màn hình này.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="previewLightbox" class="preview-lightbox">
+    <div class="preview-lightbox-inner">
+        <button type="button" class="preview-lightbox-close" id="previewLightboxClose">×</button>
+        <img id="previewLightboxImg" class="preview-lightbox-img" src="" alt="Ảnh giấy khám sức khỏe" />
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(cannotEditMessage))
+{
+    <div id="cannotEditModal" class="notify-modal-overlay show">
+        <div class="notify-modal">
+            <div class="notify-modal-header">
+                <div class="notify-modal-title-wrap">
+                    <div class="notify-modal-icon">!</div>
+                    <div>
+                        <div class="notify-modal-title">Không thể cập nhật hồ sơ</div>
+                        <div class="notify-modal-subtitle">
+                            Hệ thống đã từ chối thao tác cập nhật do hồ sơ không còn phù hợp với điều kiện chỉnh sửa hiện tại.
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="notify-modal-close" onclick="closeCannotEditModal()">×</button>
+            </div>
+
+            <div class="notify-modal-body">
+                <div class="notify-modal-message">
+                    @cannotEditMessage
+                </div>
+
+                <div class="notify-modal-actions">
+                    <a href="/HoSo" class="btn-ui btn-ui-soft">Về danh sách hồ sơ</a>
+                    <button type="button" class="btn-ui btn-ui-primary" onclick="closeCannotEditModal()">Đã hiểu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const hocVienName = @Html.Raw(JsonSerializer.Serialize(hocVienName));
+        const existingImages = @Html.Raw(existingImagesJson);
+
+        const hangSelect = document.getElementById('HangIdSelect');
+        const loaiHoSoSelect = document.getElementById('LoaiHoSoSelect');
+
+        const tenHoSoPreview = document.getElementById('TenHoSoPreview');
+        const summaryTenHoSo = document.getElementById('SummaryTenHoSo');
+        const summaryHang = document.getElementById('SummaryHang');
+        const loaiHoSoBadge = document.getElementById('LoaiHoSoBadge');
+
+        const ngayHetHanInput = document.getElementById('NgayHetHanInput');
+        const thoiHanPreview = document.getElementById('ThoiHanPreview');
+        const summaryThoiHan = document.getElementById('SummaryThoiHan');
+        const thoiHanHidden = document.getElementById('ThoiHanHidden');
+        const hieuLucHidden = document.getElementById('HieuLucHidden');
+
+        const khamMatInput = document.getElementById('KhamMatInput');
+        const khamMatHidden = document.getElementById('KhamMatHidden');
+
+        const huyetApInput = document.getElementById('HuyetApInput');
+        const huyetApHidden = document.getElementById('HuyetApHidden');
+
+        const fileInput = document.getElementById('NewImagesInput');
+        const uploadPreviewList = document.getElementById('uploadPreviewList');
+        const existingPreviewList = document.getElementById('existingPreviewList');
+
+        const form = document.getElementById('hosoEditForm');
+
+        function pad2(n) {
+            return String(n).padStart(2, '0');
+        }
+
+        function formatDateDisplay(date) {
+            return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+        }
+
+        function getSelectedText(selectEl) {
+            if (!selectEl) return '';
+            const opt = selectEl.options[selectEl.selectedIndex];
+            if (!opt || !opt.value) return '';
+            return (opt.text || '').trim();
+        }
+
+        function buildTenHoSo() {
+            const hangText = getSelectedText(hangSelect);
+            const loaiText = getSelectedText(loaiHoSoSelect);
+
+            if (!hangText) {
+                return '';
+            }
+
+            if (!loaiText) {
+                return `Hồ sơ hạng ${hangText} - ${hocVienName}`;
+            }
+
+            return `${loaiText} - Hồ sơ hạng ${hangText} - ${hocVienName}`;
+        }
+
+        function updateTenHoSoPreview() {
+            const tenHoSo = buildTenHoSo();
+            const hangText = getSelectedText(hangSelect);
+
+            tenHoSoPreview.value = tenHoSo;
+            summaryTenHoSo.textContent = tenHoSo || 'Tên hồ sơ sẽ hiển thị sau khi chọn hạng';
+            summaryHang.textContent = hangText || '—';
+        }
+
+        function updateLoaiHoSoPreview() {
+            const loai = getSelectedText(loaiHoSoSelect);
+            loaiHoSoBadge.textContent = loai || 'Chưa chọn loại hồ sơ';
+            updateTenHoSoPreview();
+        }
+
+        function updateThoiHan() {
+            const value = (ngayHetHanInput.value || '').trim();
+
+            if (!value) {
+                thoiHanPreview.value = '';
+                summaryThoiHan.textContent = '—';
+                thoiHanHidden.value = '';
+                return;
+            }
+
+            const thoiHan = new Date(value + 'T00:00:00');
+            if (Number.isNaN(thoiHan.getTime())) {
+                thoiHanPreview.value = '';
+                summaryThoiHan.textContent = '—';
+                thoiHanHidden.value = '';
+                return;
+            }
+
+            const display = formatDateDisplay(thoiHan);
+
+            thoiHanPreview.value = display;
+            summaryThoiHan.textContent = display;
+            thoiHanHidden.value = value;
+            hieuLucHidden.value = '12 tháng';
+        }
+
+        function normalizeKhamMat() {
+            const raw = (khamMatInput.value || '').trim();
+
+            if (!raw) {
+                khamMatHidden.value = '';
+                return true;
+            }
+
+            const num = parseInt(raw, 10);
+            if (Number.isNaN(num) || num < 1 || num > 10) {
+                alert('Khám mắt chỉ được nhập số từ 1 đến 10.');
+                khamMatInput.focus();
+                return false;
+            }
+
+            khamMatHidden.value = `${num}/10`;
+            return true;
+        }
+
+        function normalizeHuyetAp() {
+            const raw = (huyetApInput.value || '').trim();
+
+            if (!raw) {
+                huyetApHidden.value = '';
+                return true;
+            }
+
+            const cleaned = raw.replace(/\s+/g, '');
+            const pattern = /^\d{2,3}\/\d{2,3}$/;
+
+            if (!pattern.test(cleaned)) {
+                alert('Huyết áp phải ở dạng hợp lý, ví dụ: 120/80');
+                huyetApInput.focus();
+                return false;
+            }
+
+            huyetApHidden.value = `${cleaned} mmHg`;
+            return true;
+        }
+
+        function openImagePreview(src) {
+            if (!src) return;
+            document.getElementById('previewLightboxImg').src = src;
+            document.getElementById('previewLightbox').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImagePreview() {
+            document.getElementById('previewLightbox').classList.remove('show');
+            document.getElementById('previewLightboxImg').src = '';
+            document.body.style.overflow = '';
+        }
+
+        function renderExistingImages() {
+            existingPreviewList.innerHTML = '';
+
+            if (!existingImages || existingImages.length === 0) {
+                existingPreviewList.innerHTML = `
+                    <div class="existing-preview-item">
+                        <div class="existing-preview-caption">Không có ảnh giấy khám sức khỏe hiện tại.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            existingImages.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'existing-preview-item';
+
+                const image = document.createElement('img');
+                image.src = img;
+                image.alt = `Ảnh giấy khám ${index + 1}`;
+
+                const caption = document.createElement('div');
+                caption.className = 'existing-preview-caption';
+                caption.textContent = `${index + 1}. Ảnh giấy khám hiện tại`;
+
+                item.appendChild(image);
+                item.appendChild(caption);
+
+                item.addEventListener('click', function () {
+                    openImagePreview(img);
+                });
+
+                existingPreviewList.appendChild(item);
+            });
+        }
+
+        function clearPreviewFiles() {
+            uploadPreviewList.innerHTML = '';
+        }
+
+        function renderPreviewFiles(files) {
+            clearPreviewFiles();
+
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            Array.from(files).forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'upload-preview-item';
+
+                const caption = document.createElement('div');
+                caption.className = 'upload-preview-caption';
+                caption.textContent = `${index + 1}. ${file.name}`;
+
+                if (file.type && file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.alt = file.name;
+                    item.appendChild(img);
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const src = e.target.result;
+                        img.src = src;
+
+                        item.addEventListener('click', function () {
+                            openImagePreview(src);
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                item.appendChild(caption);
+                uploadPreviewList.appendChild(item);
+            });
+        }
+
+        function closeCannotEditModal() {
+            const modal = document.getElementById('cannotEditModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        document.getElementById('previewLightboxClose').addEventListener('click', closeImagePreview);
+
+        document.getElementById('previewLightbox').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeImagePreview();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeImagePreview();
+                closeCannotEditModal();
+            }
+        });
+
+        if (hangSelect) {
+            hangSelect.addEventListener('change', updateTenHoSoPreview);
+        }
+
+        if (loaiHoSoSelect) {
+            loaiHoSoSelect.addEventListener('change', updateLoaiHoSoPreview);
+        }
+
+        if (ngayHetHanInput) {
+            ngayHetHanInput.addEventListener('change', updateThoiHan);
+            ngayHetHanInput.addEventListener('input', updateThoiHan);
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                renderPreviewFiles(this.files);
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                updateTenHoSoPreview();
+                updateThoiHan();
+
+                if (!ngayHetHanInput.value) {
+                    alert('Vui lòng nhập thời hạn giấy khám.');
+                    ngayHetHanInput.focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                const okKhamMat = normalizeKhamMat();
+                const okHuyetAp = normalizeHuyetAp();
+
+                if (!okKhamMat || !okHuyetAp) {
+                    e.preventDefault();
+                    return;
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderExistingImages();
+            updateTenHoSoPreview();
+            updateLoaiHoSoPreview();
+            updateThoiHan();
+            normalizeKhamMat();
+            normalizeHuyetAp();
+        });
+    </script>
+}
