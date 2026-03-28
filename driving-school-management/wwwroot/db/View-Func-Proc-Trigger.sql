@@ -3210,6 +3210,367 @@ BEGIN
         WHERE rn = 1;
 END;
 /
+-- HỒ SƠ THÍ SINH
+CREATE OR REPLACE VIEW VW_DANH_SACH_HOSO AS
+SELECT 
+    hs.hoSoId,
+    hv.hoTen,
+    hv.sdt,
+    hg.tenHang,
+    hs.ngayDangKy,
+    hs.trangThai,
+    pksk.thoiHan,
+    
+    FLOOR(MONTHS_BETWEEN(ADD_MONTHS(hs.ngayDangKy, 12), SYSDATE)) AS soThangConLai,
+    FLOOR(ADD_MONTHS(hs.ngayDangKy, 12) - SYSDATE) AS soNgayConLai
+
+FROM HoSoThiSinh hs
+JOIN HocVien hv ON hs.hocVienId = hv.hocVienId
+JOIN HangGplx hg ON hs.hangId = hg.hangId
+LEFT JOIN PhieuKhamSucKhoe pksk ON hs.khamSucKhoeId = pksk.khamSucKhoeId;
+/
+
+CREATE OR REPLACE PROCEDURE SP_GET_MY_HOSO (
+    p_userId IN NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+    SELECT 
+        hs.hoSoId,
+        hv.hoTen,
+        hv.avatarUrl,
+        hs.tenHoSo,
+        hg.tenHang,
+        hs.ngayDangKy,
+        hs.trangThai,
+        FLOOR(MONTHS_BETWEEN(ADD_MONTHS(hs.ngayDangKy, 12), SYSDATE)) AS soThangConLai,
+        FLOOR(ADD_MONTHS(hs.ngayDangKy, 12) - SYSDATE) AS soNgayConLai
+    FROM HoSoThiSinh hs
+    JOIN HocVien hv ON hs.hocVienId = hv.hocVienId
+    JOIN HangGplx hg ON hs.hangId = hg.hangId
+    WHERE hv.userId = p_userId
+    ORDER BY hs.ngayDangKy DESC;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_GET_MY_HOSO_DETAIL (
+    p_hoSoId IN NUMBER,
+    p_userId IN NUMBER,
+    p_info OUT SYS_REFCURSOR,
+    p_images OUT SYS_REFCURSOR
+)
+AS
+    v_khamSucKhoeId NUMBER;
+BEGIN
+    SELECT hs.khamSucKhoeId
+    INTO v_khamSucKhoeId
+    FROM HoSoThiSinh hs
+    JOIN HocVien hv ON hs.hocVienId = hv.hocVienId
+    WHERE hs.hoSoId = p_hoSoId
+      AND hv.userId = p_userId;
+
+    OPEN p_info FOR
+    SELECT 
+        hs.hoSoId,
+        hv.hoTen,
+        hv.soCmndCccd,
+        hv.namSinh,
+        hv.gioiTinh,
+        hv.sdt,
+        hv.email,
+        hv.avatarUrl,
+        hs.tenHoSo,
+        hs.loaiHoSo,
+        hs.ngayDangKy,
+        hs.trangThai,
+        hs.ghiChu,
+        hg.tenHang,
+        pksk.hieuLuc,
+        pksk.thoiHan,
+        pksk.khamMat,
+        pksk.huyetAp,
+        pksk.chieuCao,
+        pksk.canNang
+    FROM HoSoThiSinh hs
+    JOIN HocVien hv ON hs.hocVienId = hv.hocVienId
+    JOIN HangGplx hg ON hs.hangId = hg.hangId
+    LEFT JOIN PhieuKhamSucKhoe pksk ON hs.khamSucKhoeId = pksk.khamSucKhoeId
+    WHERE hs.hoSoId = p_hoSoId
+      AND hv.userId = p_userId;
+
+    OPEN p_images FOR
+    SELECT ag.urlAnh
+    FROM AnhGksk ag
+    WHERE ag.khamSucKhoeId = v_khamSucKhoeId
+    ORDER BY ag.anhId;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        OPEN p_info FOR
+        SELECT 
+            CAST(NULL AS NUMBER) AS hoSoId,
+            CAST(NULL AS NVARCHAR2(100)) AS hoTen,
+            CAST(NULL AS NVARCHAR2(20)) AS soCmndCccd,
+            CAST(NULL AS DATE) AS namSinh,
+            CAST(NULL AS NVARCHAR2(10)) AS gioiTinh,
+            CAST(NULL AS NVARCHAR2(15)) AS sdt,
+            CAST(NULL AS NVARCHAR2(50)) AS email,
+            CAST(NULL AS NVARCHAR2(500)) AS avatarUrl,
+            CAST(NULL AS NVARCHAR2(100)) AS tenHoSo,
+            CAST(NULL AS NVARCHAR2(50)) AS loaiHoSo,
+            CAST(NULL AS DATE) AS ngayDangKy,
+            CAST(NULL AS NVARCHAR2(50)) AS trangThai,
+            CAST(NULL AS NVARCHAR2(255)) AS ghiChu,
+            CAST(NULL AS NVARCHAR2(20)) AS tenHang,
+            CAST(NULL AS NVARCHAR2(50)) AS hieuLuc,
+            CAST(NULL AS DATE) AS thoiHan,
+            CAST(NULL AS NVARCHAR2(50)) AS khamMat,
+            CAST(NULL AS NVARCHAR2(50)) AS huyetAp,
+            CAST(NULL AS NUMBER(5,2)) AS chieuCao,
+            CAST(NULL AS NUMBER(5,2)) AS canNang
+        FROM dual
+        WHERE 1 = 0;
+
+        OPEN p_images FOR
+        SELECT CAST(NULL AS NVARCHAR2(300)) AS urlAnh
+        FROM dual
+        WHERE 1 = 0;
+END;
+/
+CREATE OR REPLACE FUNCTION FN_HAS_VALID_HOSO_BY_USER_HANG (
+    p_userId IN NUMBER,
+    p_hangId IN NUMBER
+) RETURN NUMBER
+AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM HoSoThiSinh hs
+         JOIN HocVien hv ON hv.hocVienId = hs.hocVienId
+    WHERE hv.userId = p_userId
+      AND hs.hangId = p_hangId
+      AND ADD_MONTHS(TRUNC(hs.ngayDangKy), 12) >= TRUNC(SYSDATE);
+
+    RETURN v_count;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_CREATE_HOSO (
+    p_userId           IN NUMBER,
+    p_hangId           IN NUMBER,
+    p_loaiHoSo         IN NVARCHAR2,
+    p_ghiChu           IN NVARCHAR2,
+    p_hieuLuc          IN NVARCHAR2,
+    p_thoiHan          IN DATE,
+    p_khamMat          IN NVARCHAR2,
+    p_huyetAp          IN NVARCHAR2,
+    p_chieuCao         IN NUMBER,
+    p_canNang          IN NUMBER,
+    p_hoSoId           OUT NUMBER,
+    p_khamSucKhoeId    OUT NUMBER,
+    p_message          OUT NVARCHAR2
+)
+AS
+    v_hocVienId     NUMBER;
+    v_hoTen         NVARCHAR2(100);
+    v_avatarUrl     NVARCHAR2(500);
+    v_tenHang       NVARCHAR2(50);
+    v_tenHoSo       NVARCHAR2(255);
+    v_exists        NUMBER;
+BEGIN
+    p_hoSoId := NULL;
+    p_khamSucKhoeId := NULL;
+    p_message := NULL;
+
+    SELECT hv.hocVienId, hv.hoTen, hv.avatarUrl
+    INTO v_hocVienId, v_hoTen, v_avatarUrl
+    FROM HocVien hv
+    WHERE hv.userId = p_userId;
+
+    SELECT hg.tenHang
+    INTO v_tenHang
+    FROM HangGplx hg
+    WHERE hg.hangId = p_hangId;
+
+    v_exists := FN_HAS_VALID_HOSO_BY_USER_HANG(p_userId, p_hangId);
+
+    IF v_exists > 0 THEN
+        p_message := N'Bạn đã có hồ sơ còn hạn cho hạng này. Vui lòng sử dụng hồ sơ hiện có.';
+        RETURN;
+    END IF;
+
+    v_tenHoSo := p_loaiHoSo || N' - Hồ sơ hạng ' || v_tenHang || N' - ' || v_hoTen;
+
+    INSERT INTO PhieuKhamSucKhoe (
+        hieuLuc,
+        thoiHan,
+        khamMat,
+        huyetAp,
+        chieuCao,
+        canNang,
+        urlAnh
+    )
+    VALUES (
+        p_hieuLuc,
+        p_thoiHan,
+        p_khamMat,
+        p_huyetAp,
+        p_chieuCao,
+        p_canNang,
+        v_avatarUrl
+    )
+    RETURNING khamSucKhoeId INTO p_khamSucKhoeId;
+
+    INSERT INTO HoSoThiSinh (
+        hocVienId,
+        tenHoSo,
+        loaiHoSo,
+        ngayDangKy,
+        trangThai,
+        ghiChu,
+        khamSucKhoeId,
+        hangId
+    )
+    VALUES (
+        v_hocVienId,
+        v_tenHoSo,
+        p_loaiHoSo,
+        SYSDATE,
+        N'Đang xử lý',
+        CASE
+            WHEN p_ghiChu IS NULL OR TRIM(p_ghiChu) = '' THEN NULL
+            ELSE p_ghiChu
+        END,
+        p_khamSucKhoeId,
+        p_hangId
+    )
+    RETURNING hoSoId INTO p_hoSoId;
+
+    p_message := N'Tạo hồ sơ thành công';
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_message := N'Không tìm thấy học viên hoặc hạng GPLX hợp lệ';
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20001, SQLERRM);
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_ADD_ANH_GKSK (
+    p_khamSucKhoeId IN NUMBER,
+    p_urlAnh        IN NVARCHAR2,
+    p_message       OUT NVARCHAR2
+)
+AS
+BEGIN
+    INSERT INTO AnhGksk (
+        khamSucKhoeId,
+        urlAnh
+    )
+    VALUES (
+        p_khamSucKhoeId,
+        p_urlAnh
+    );
+
+    p_message := N'Thêm ảnh thành công';
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002, SQLERRM);
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_GET_HANG_GPLX (
+    p_cursor OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+    SELECT hangId, maHang, tenHang
+    FROM HangGplx
+    ORDER BY tenHang;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE SP_GET_HOCVIEN_NAME_BY_USER (
+    p_userId IN NUMBER,
+    p_hoTen OUT NVARCHAR2
+)
+AS
+BEGIN
+    SELECT hv.hoTen
+    INTO p_hoTen
+    FROM HocVien hv
+    WHERE hv.userId = p_userId;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_hoTen := NULL;
+END;
+/
+CREATE OR REPLACE PROCEDURE SP_CHECK_CREATE_HOSO_CONDITION (
+    p_userId IN NUMBER,
+    p_avatarUrl OUT NVARCHAR2,
+    p_canCreate OUT NUMBER,
+    p_missingFields OUT NVARCHAR2
+)
+AS
+    v_hoTen NVARCHAR2(100);
+    v_cccd NVARCHAR2(20);
+    v_sdt NVARCHAR2(15);
+    v_email NVARCHAR2(50);
+    v_gioiTinh NVARCHAR2(10);
+    v_avatar NVARCHAR2(500);
+    v_missing NVARCHAR2(2000) := N'';
+BEGIN
+    SELECT hoTen, soCmndCccd, sdt, email, gioiTinh, avatarUrl
+    INTO v_hoTen, v_cccd, v_sdt, v_email, v_gioiTinh, v_avatar
+    FROM HocVien
+    WHERE userId = p_userId;
+
+    IF v_hoTen IS NULL OR TRIM(v_hoTen) = '' THEN
+        v_missing := v_missing || N'Họ tên|';
+    END IF;
+
+    IF v_cccd IS NULL OR TRIM(v_cccd) = '' THEN
+        v_missing := v_missing || N'CCCD|';
+    END IF;
+
+    IF v_sdt IS NULL OR TRIM(v_sdt) = '' THEN
+        v_missing := v_missing || N'Số điện thoại|';
+    END IF;
+
+    IF v_email IS NULL OR TRIM(v_email) = '' THEN
+        v_missing := v_missing || N'Email|';
+    END IF;
+
+    IF v_gioiTinh IS NULL OR TRIM(v_gioiTinh) = '' THEN
+        v_missing := v_missing || N'Giới tính|';
+    END IF;
+
+    IF v_avatar IS NULL OR TRIM(v_avatar) = '' THEN
+        v_missing := v_missing || N'Ảnh thẻ|';
+    END IF;
+
+    p_avatarUrl := v_avatar;
+
+    IF v_missing IS NULL OR v_missing = '' THEN
+        p_canCreate := 1;
+        p_missingFields := NULL;
+    ELSE
+        p_canCreate := 0;
+        p_missingFields := RTRIM(v_missing, '|');
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_avatarUrl := NULL;
+        p_canCreate := 0;
+        p_missingFields := N'Học viên';
+END;
+/
+
+
 
 
 
