@@ -1,0 +1,112 @@
+﻿@model List<driving_school_management.ViewModels.KhoaHocVM>
+
+@{
+    ViewData["Title"] = "Danh sách khóa học";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold m-0">Danh sách khóa học</h4>
+
+            <a asp-action="Create" class="btn btn-primary shadow-sm">
+                <i class="fa fa-plus me-1"></i> Thêm khóa học
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                <!-- FILTER -->
+                <form id="filterForm" class="row g-3 mb-3">
+
+                    <div class="col-md-4">
+                        <input id="searchBox" name="keyword" class="form-control"
+                               placeholder="Tìm theo tên..." />
+                    </div>
+
+                    <div class="col-md-3">
+                        <select id="hangSelect" name="hangId" class="form-select">
+                            <option value="">-- Tất cả hạng --</option>
+                            @foreach (var h in ViewBag.Hangs)
+                            {
+                                <option value="@h.hangId">@h.tenHang</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <select id="statusSelect" name="trangThai" class="form-select">
+                            <option value="">-- Trạng thái --</option>
+                            <option value="Sắp khai giảng">Sắp khai giảng</option>
+                            <option value="Đang học">Đang học</option>
+                            <option value="Đã kết thúc">Đã kết thúc</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="fa fa-filter me-1"></i> Lọc
+                        </button>
+                    </div>
+
+                </form>
+
+                <!-- TABLE -->
+                <div id="coursesTable">
+                    @await Html.PartialAsync("_CoursesTable", Model)
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function loadData(page = 1) {
+        $.ajax({
+        url: '@Url.Action("Index")',
+        type: 'GET',
+        data: {
+        keyword: $("#searchBox").val(),
+        hangId: $("#hangSelect").val(),
+        trangThai: $("#statusSelect").val(),
+        page: page
+        },
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        success: function (result) {
+        $("#coursesTable").html(result);
+
+        $(".page-item").removeClass("active");
+        $('.page-btn[data-page="' + page + '"]').closest(".page-item").addClass("active");
+
+        bindPagination();
+        }
+        });
+        }
+
+        $("#filterForm").on("submit", function (e) {
+        e.preventDefault();
+        loadData();
+        });
+
+        $("#searchBox").on("keyup", function () {
+        loadData();
+        });
+
+        function bindPagination() {
+        $(".page-btn").on("click", function () {
+        let page = $(this).data("page");
+        loadData(page);
+        });
+        }
+
+        bindPagination();
+    </script>
+}

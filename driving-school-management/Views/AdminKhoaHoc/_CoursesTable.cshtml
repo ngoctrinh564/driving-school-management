@@ -1,0 +1,107 @@
+﻿@model List<driving_school_management.ViewModels.KhoaHocVM>
+
+@{
+    int currentPage = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:5%">STT</th>
+                <th style="width:30%">Tên khóa học</th>
+                <th style="width:15%">Hạng</th>
+                <th style="width:15%">Ngày bắt đầu</th>
+                <th style="width:15%">Ngày kết thúc</th>
+                <th style="width:10%">Trạng thái</th>
+                <th style="width:10%">Hành động</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var k in Model)
+                {
+                    <tr>
+                        <td><strong>@k.STT</strong></td>
+
+                        <td>@k.TenKhoaHoc</td>
+
+                        <td>@k.TenHang</td>
+
+                        <td>@k.NgayBatDau.ToString("dd/MM/yyyy")</td>
+
+                        <td>@k.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+
+                        <td>
+                            @if (k.TrangThai == "Sắp khai giảng")
+                            {
+                                <span class="badge bg-warning text-dark">@k.TrangThai</span>
+                            }
+                            else if (k.TrangThai == "Đang học")
+                            {
+                                <span class="badge bg-success">@k.TrangThai</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@k.TrangThai</span>
+                            }
+                        </td>
+
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="Details" asp-route-id="@k.KhoaHocId"
+                                       class="btn btn-info text-white">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@k.KhoaHocId"
+                                       class="btn btn-warning text-dark">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        Không có dữ liệu
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link page-btn" data-page="@(currentPage - 1)">
+                    <i class="fa fa-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link page-btn" data-page="@i">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link page-btn" data-page="@(currentPage + 1)">
+                    <i class="fa fa-chevron-right"></i>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+}

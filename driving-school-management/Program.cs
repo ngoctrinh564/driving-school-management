@@ -12,9 +12,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
-//thêm services
+//thêm services Admin
 builder.Services.AddScoped<AdminDashboardService>();
 builder.Services.AddScoped<AdminExamService>();
+builder.Services.AddScoped<AdminKhoaHocService>();
+//thêm services
 builder.Services.AddScoped<KhoaHocService>();
 builder.Services.AddScoped<HocService>();
 builder.Services.AddScoped<LyThuyetService>();

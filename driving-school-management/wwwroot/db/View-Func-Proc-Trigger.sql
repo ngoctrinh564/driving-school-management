@@ -4258,6 +4258,106 @@ AS
     END SP_CHECK_DANGKY;
 END PKG_KHOAHOC;
 /
+-- ==================================================
+-- ADMIN QUẢN LÝ
+-- ==================================================
+
+-- KHÓA HỌC
+CREATE OR REPLACE VIEW VW_KHOAHOC AS
+SELECT 
+    kh.khoaHocId,
+    kh.tenKhoaHoc,
+    hg.tenHang,
+    kh.hangId,
+    kh.ngayBatDau,
+    kh.ngayKetThuc,
+    CASE 
+        WHEN kh.ngayBatDau > SYSDATE THEN N'Sắp khai giảng'
+        WHEN SYSDATE BETWEEN kh.ngayBatDau AND kh.ngayKetThuc THEN N'Đang học'
+        WHEN SYSDATE > kh.ngayKetThuc THEN N'Đã kết thúc'
+    END AS trangThai
+FROM KhoaHoc kh
+JOIN HangGplx hg ON kh.hangId = hg.hangId;
+/
+CREATE OR REPLACE PACKAGE PKG_KHOAHOC AS
+    TYPE REF_CURSOR IS REF CURSOR;
+
+    PROCEDURE GET_LIST_KHOAHOC(
+        p_keyword NVARCHAR2,
+        p_hangId NUMBER,
+        p_trangThai NVARCHAR2,
+        p_page NUMBER,
+        p_pageSize NUMBER,
+        p_total OUT NUMBER,
+        p_cursor OUT REF_CURSOR
+    );
+END PKG_KHOAHOC;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_KHOAHOC AS
+
+PROCEDURE GET_LIST_KHOAHOC(
+    p_keyword NVARCHAR2,
+    p_hangId NUMBER,
+    p_trangThai NVARCHAR2,
+    p_page NUMBER,
+    p_pageSize NUMBER,
+    p_total OUT NUMBER,
+    p_cursor OUT REF_CURSOR
+)
+AS
+    v_sql CLOB;
+BEGIN
+
+    v_sql := '
+        SELECT * FROM (
+            SELECT 
+                ROW_NUMBER() OVER (ORDER BY ngayBatDau DESC) AS STT,
+                a.*
+            FROM VW_KHOAHOC a
+            WHERE 1=1
+    ';
+
+    IF p_keyword IS NOT NULL THEN
+        v_sql := v_sql || ' AND LOWER(tenKhoaHoc) LIKE LOWER(''%' || p_keyword || '%'')';
+    END IF;
+
+    IF p_hangId IS NOT NULL THEN
+        v_sql := v_sql || ' AND hangId = ' || p_hangId;
+    END IF;
+
+    IF p_trangThai IS NOT NULL THEN
+        v_sql := v_sql || ' AND trangThai = N''' || p_trangThai || '''';
+    END IF;
+
+    v_sql := v_sql || '
+        )
+        WHERE STT BETWEEN ' || ((p_page - 1) * p_pageSize + 1) || '
+        AND ' || (p_page * p_pageSize);
+
+    -- TOTAL
+    EXECUTE IMMEDIATE '
+        SELECT COUNT(*) FROM VW_KHOAHOC
+        WHERE (LOWER(tenKhoaHoc) LIKE LOWER(''%' || NVL(p_keyword,'') || '%'')) 
+        AND (hangId = NVL(' || NVL(p_hangId, 'hangId') || ', hangId))
+        AND (trangThai = NVL(N''' || NVL(p_trangThai,'') || ''', trangThai))
+    ' INTO p_total;
+
+    -- DATA
+    OPEN p_cursor FOR v_sql;
+
+END;
+
+END PKG_KHOAHOC;
+/
+
+
+
+
+
+
+
+
+
 
 
 
