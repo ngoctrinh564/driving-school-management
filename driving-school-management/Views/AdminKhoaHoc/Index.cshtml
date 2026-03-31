@@ -2,33 +2,44 @@
 
 @{
     ViewData["Title"] = "Danh sách khóa học";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
 <section class="content">
-    <div class="container-fluid">
+    <div class="container-fluid admin-khoahoc-page">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold m-0">Danh sách khóa học</h4>
+        <div class="page-header-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="page-caption">Quản lý khóa học</div>
+                    <h3 class="page-title mb-1">Danh sách khóa học</h3>
+                    <div class="page-subtitle">Theo dõi, tìm kiếm và quản lý các khóa học theo hạng và trạng thái.</div>
+                </div>
 
-            <a asp-action="Create" class="btn btn-primary shadow-sm">
-                <i class="fa fa-plus me-1"></i> Thêm khóa học
-            </a>
+                <a asp-action="Create" class="btn btn-primary btn-admin-action">
+                    <i class="fa fa-plus"></i>
+                    <span>Thêm khóa học</span>
+                </a>
+            </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
+        <div class="card admin-card border-0">
+            <div class="card-body p-3 p-lg-4">
 
-                <!-- FILTER -->
-                <form id="filterForm" class="row g-3 mb-3">
-
-                    <div class="col-md-4">
-                        <input id="searchBox" name="keyword" class="form-control"
-                               placeholder="Tìm theo tên..." />
+                <form id="filterForm" class="row g-3 align-items-end mb-3">
+                    <div class="col-lg-5 col-md-6">
+                        <label for="searchBox" class="form-label admin-label">Tìm kiếm</label>
+                        <div class="search-box-wrap">
+                            <i class="fa fa-search search-icon"></i>
+                            <input id="searchBox"
+                                   name="keyword"
+                                   class="form-control admin-input search-input"
+                                   placeholder="Nhập tên khóa học..." />
+                        </div>
                     </div>
 
-                    <div class="col-md-3">
-                        <select id="hangSelect" name="hangId" class="form-select">
+                    <div class="col-lg-3 col-md-3">
+                        <label for="hangSelect" class="form-label admin-label">Hạng GPLX</label>
+                        <select id="hangSelect" name="hangId" class="form-select admin-select">
                             <option value="">-- Tất cả hạng --</option>
                             @foreach (var h in ViewBag.Hangs)
                             {
@@ -37,24 +48,24 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <select id="statusSelect" name="trangThai" class="form-select">
-                            <option value="">-- Trạng thái --</option>
+                    <div class="col-lg-2 col-md-3">
+                        <label for="statusSelect" class="form-label admin-label">Trạng thái</label>
+                        <select id="statusSelect" name="trangThai" class="form-select admin-select">
+                            <option value="">-- Tất cả --</option>
                             <option value="Sắp khai giảng">Sắp khai giảng</option>
                             <option value="Đang học">Đang học</option>
                             <option value="Đã kết thúc">Đã kết thúc</option>
                         </select>
                     </div>
 
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-secondary w-100">
-                            <i class="fa fa-filter me-1"></i> Lọc
+                    <div class="col-lg-2 col-md-6">
+                        <button type="button" id="btnReset" class="btn btn-light btn-admin-reset w-100">
+                            <i class="fa fa-rotate-left"></i>
+                            <span>Xóa lọc</span>
                         </button>
                     </div>
-
                 </form>
 
-                <!-- TABLE -->
                 <div id="coursesTable">
                     @await Html.PartialAsync("_CoursesTable", Model)
                 </div>
@@ -64,6 +75,141 @@
 
     </div>
 </section>
+
+@section Styles {
+    <style>
+        .admin-khoahoc-page {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            color: #0f172a;
+        }
+
+        .page-header-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        }
+
+        .page-caption {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+            border: 1px solid rgba(15,23,42,0.08);
+        }
+
+        .admin-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .search-box-wrap {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .admin-input,
+        .admin-select {
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            transition: all .2s ease;
+            box-shadow: none;
+        }
+
+        .search-input {
+            padding-left: 40px;
+        }
+
+        .admin-input:focus,
+        .admin-select:focus {
+            border-color: rgba(37,99,235,0.35);
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+
+        .btn-admin-action,
+        .btn-admin-filter {
+            height: 44px;
+            border-radius: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s ease;
+            box-shadow: 0 8px 18px rgba(37,99,235,0.14);
+        }
+
+            .btn-admin-action:hover,
+            .btn-admin-filter:hover {
+                transform: translateY(-1px);
+            }
+
+        @@media (max-width: 991.98px) {
+            .page-header-card {
+                padding: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+        }
+        .btn-admin-reset {
+        height: 44px;
+        border-radius: 14px;
+        font-weight: 600;
+        background: #f1f5f9;
+        border: 1px solid rgba(15,23,42,0.08);
+        color: #334155;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all .2s ease;
+    }
+
+    .btn-admin-reset:hover {
+        background: #e2e8f0;
+        transform: translateY(-1px);
+    }
+    </style>
+}
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -82,10 +228,6 @@
         headers: { "X-Requested-With": "XMLHttpRequest" },
         success: function (result) {
         $("#coursesTable").html(result);
-
-        $(".page-item").removeClass("active");
-        $('.page-btn[data-page="' + page + '"]').closest(".page-item").addClass("active");
-
         bindPagination();
         }
         });
@@ -93,20 +235,31 @@
 
         $("#filterForm").on("submit", function (e) {
         e.preventDefault();
-        loadData();
+        loadData(1);
         });
 
         $("#searchBox").on("keyup", function () {
-        loadData();
+        loadData(1);
+        });
+
+        $("#hangSelect, #statusSelect").on("change", function () {
+        loadData(1);
         });
 
         function bindPagination() {
-        $(".page-btn").on("click", function () {
-        let page = $(this).data("page");
+        $(".page-btn").off("click").on("click", function () {
+        const page = $(this).data("page");
+        if (page) {
         loadData(page);
+        }
         });
         }
-
+        $("#btnReset").on("click", function () {
+        $("#searchBox").val("");
+        $("#hangSelect").val("");
+        $("#statusSelect").val("");
+        loadData(1);
+        });
         bindPagination();
     </script>
 }

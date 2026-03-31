@@ -5,94 +5,147 @@
     int totalPages = ViewBag.TotalPages ?? 1;
 }
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th style="width:5%">STT</th>
-                <th style="width:30%">Tên khóa học</th>
-                <th style="width:15%">Hạng</th>
-                <th style="width:15%">Ngày bắt đầu</th>
-                <th style="width:15%">Ngày kết thúc</th>
-                <th style="width:10%">Trạng thái</th>
-                <th style="width:10%">Hành động</th>
-            </tr>
-        </thead>
+<div class="admin-table-wrap">
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 8%">STT</th>
+                    <th style="width: 32%">Tên khóa học</th>
+                    <th style="width: 12%">Hạng</th>
+                    <th style="width: 14%">Ngày bắt đầu</th>
+                    <th style="width: 14%">Ngày kết thúc</th>
+                    <th style="width: 12%">Trạng thái</th>
+                    <th style="width: 8%" class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var k in Model)
+                    {
+                        var statusClass = "status-ended";
+                        if (k.TrangThai == "Sắp khai giảng")
+                        {
+                            statusClass = "status-upcoming";
+                        }
+                        else if (k.TrangThai == "Đang học")
+                        {
+                            statusClass = "status-learning";
+                        }
 
-        <tbody>
-            @if (Model != null && Model.Any())
-            {
-                foreach (var k in Model)
+                        <tr>
+                            <td>
+                                <span class="stt-badge">@k.STT</span>
+                            </td>
+
+                            <td>
+                                <div class="course-name">@k.TenKhoaHoc</div>
+                            </td>
+
+                            <td>
+                                <span class="hang-badge">@k.TenHang</span>
+                            </td>
+
+                            <td>
+                                <span class="date-text">@k.NgayBatDau.ToString("dd/MM/yyyy")</span>
+                            </td>
+
+                            <td>
+                                <span class="date-text">@k.NgayKetThuc.ToString("dd/MM/yyyy")</span>
+                            </td>
+
+                            <td>
+                                <span class="status-badge @statusClass">@k.TrangThai</span>
+                            </td>
+
+                            <td class="text-center">
+                                <div class="action-group">
+                                    <a asp-action="Details"
+                                           asp-route-id="@k.KhoaHocId"
+                                           class="btn action-btn action-view"
+                                           title="Xem chi tiết">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+
+                                    <a asp-action="Edit"
+                                           asp-route-id="@k.KhoaHocId"
+                                           class="btn action-btn action-edit"
+                                           title="Chỉnh sửa">
+                                        <i class="fa fa-pen"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td><strong>@k.STT</strong></td>
-
-                        <td>@k.TenKhoaHoc</td>
-
-                        <td>@k.TenHang</td>
-
-                        <td>@k.NgayBatDau.ToString("dd/MM/yyyy")</td>
-
-                        <td>@k.NgayKetThuc.ToString("dd/MM/yyyy")</td>
-
-                        <td>
-                            @if (k.TrangThai == "Sắp khai giảng")
-                            {
-                                <span class="badge bg-warning text-dark">@k.TrangThai</span>
-                            }
-                            else if (k.TrangThai == "Đang học")
-                            {
-                                <span class="badge bg-success">@k.TrangThai</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">@k.TrangThai</span>
-                            }
-                        </td>
-
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a asp-action="Details" asp-route-id="@k.KhoaHocId"
-                                       class="btn btn-info text-white">
-                                    <i class="fa fa-eye"></i>
-                                </a>
-
-                                <a asp-action="Edit" asp-route-id="@k.KhoaHocId"
-                                       class="btn btn-warning text-dark">
-                                    <i class="fa fa-edit"></i>
-                                </a>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fa fa-folder-open"></i>
+                                </div>
+                                <div class="empty-title">Không có dữ liệu</div>
+                                <div class="empty-text">Không tìm thấy khóa học phù hợp với điều kiện lọc hiện tại.</div>
                             </div>
                         </td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="7" class="text-center py-5">
-                        Không có dữ liệu
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @if (totalPages > 1)
 {
-    <nav class="mt-3">
-        <ul class="pagination justify-content-center">
-
+    <nav class="admin-pagination-nav mt-4">
+        <ul class="pagination admin-pagination justify-content-center mb-0">
             <li class="page-item @(currentPage == 1 ? "disabled" : "")">
                 <a class="page-link page-btn" data-page="@(currentPage - 1)">
                     <i class="fa fa-chevron-left"></i>
                 </a>
             </li>
 
-            @for (int i = 1; i <= totalPages; i++)
+            @{
+                int range = 2;
+                int start = Math.Max(1, currentPage - range);
+                int end = Math.Min(totalPages, currentPage + range);
+            }
+
+            @if (start > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link page-btn" data-page="1">1</a>
+                </li>
+
+                @if (start > 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            @for (int i = start; i <= end; i++)
             {
                 <li class="page-item @(i == currentPage ? "active" : "")">
                     <a class="page-link page-btn" data-page="@i">@i</a>
+                </li>
+            }
+
+            @if (end < totalPages)
+            {
+                @if (end < totalPages - 1)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+
+                <li class="page-item">
+                    <a class="page-link page-btn" data-page="@totalPages">@totalPages</a>
                 </li>
             }
 
@@ -101,7 +154,228 @@
                     <i class="fa fa-chevron-right"></i>
                 </a>
             </li>
-
         </ul>
     </nav>
 }
+
+<style>
+    .admin-table-wrap {
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .admin-table thead th {
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+        white-space: nowrap;
+    }
+
+    .admin-table tbody td {
+        padding: 16px;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+        vertical-align: middle;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .admin-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .admin-table tbody tr {
+        transition: all .2s ease;
+    }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+    .stt-badge {
+        min-width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37,99,235,0.1);
+        color: #2563eb;
+        font-weight: 700;
+    }
+
+    .course-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.5;
+    }
+
+    .hang-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 72px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(124,58,237,0.1);
+        color: #7c3aed;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .date-text {
+        color: #334155;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-upcoming {
+        background: rgba(245,158,11,0.14);
+        color: #b45309;
+    }
+
+    .status-learning {
+        background: rgba(34,197,94,0.14);
+        color: #15803d;
+    }
+
+    .status-ended {
+        background: rgba(100,116,139,0.14);
+        color: #475569;
+    }
+
+    .action-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(15,23,42,0.08);
+        transition: all .2s ease;
+        padding: 0;
+    }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .action-view {
+        background: rgba(37,99,235,0.1);
+        color: #2563eb;
+    }
+
+        .action-view:hover {
+            background: rgba(37,99,235,0.16);
+            color: #1d4ed8;
+        }
+
+    .action-edit {
+        background: rgba(245,158,11,0.14);
+        color: #b45309;
+    }
+
+        .action-edit:hover {
+            background: rgba(245,158,11,0.2);
+            color: #92400e;
+        }
+
+    .empty-state {
+        padding: 48px 16px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 14px;
+        border-radius: 20px;
+        background: #f8fafc;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+
+    .empty-text {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .admin-pagination .page-link {
+        min-width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        margin: 0 4px;
+        border: 1px solid rgba(15,23,42,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #334155;
+        font-weight: 600;
+        background: #fff;
+        transition: all .2s ease;
+        box-shadow: none;
+    }
+
+    .admin-pagination .page-item.active .page-link {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .admin-pagination .page-link:hover {
+        transform: translateY(-1px);
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .admin-pagination .page-item.disabled .page-link {
+        background: #f8fafc;
+        color: #94a3b8;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-table thead th,
+        .admin-table tbody td {
+            padding: 14px 12px;
+        }
+
+        .hang-badge,
+        .status-badge {
+            padding: 7px 12px;
+        }
+    }
+</style>
