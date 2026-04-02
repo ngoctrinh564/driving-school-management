@@ -4258,6 +4258,198 @@ AS
     END SP_CHECK_DANGKY;
 END PKG_KHOAHOC;
 /
+-- ==================================================
+-- ADMIN QUẢN LÝ
+-- ==================================================
+
+-- KHÓA HỌC
+CREATE SEQUENCE SEQ_KHOAHOC
+START WITH 1
+INCREMENT BY 1
+NOCACHE;
+/
+CREATE OR REPLACE VIEW VW_KHOAHOC AS
+SELECT 
+    kh.khoaHocId,
+    kh.tenKhoaHoc,
+    kh.hangId,
+    hg.tenHang,
+    kh.ngayBatDau,
+    kh.ngayKetThuc,
+    kh.diaDiem,
+    kh.trangThai
+FROM KhoaHoc kh
+JOIN HangGplx hg ON kh.hangId = hg.hangId;
+/
+CREATE OR REPLACE PACKAGE PKG_ADMINKHOAHOC AS
+    TYPE REF_CURSOR IS REF CURSOR;
+
+    PROCEDURE GET_LIST_KHOAHOC(
+        p_keyword   IN NVARCHAR2,
+        p_hangId    IN NUMBER,
+        p_trangThai IN NVARCHAR2,
+        p_page      IN NUMBER,
+        p_pageSize  IN NUMBER,
+        p_total     OUT NUMBER,
+        p_cursor    OUT REF_CURSOR
+    );
+
+    PROCEDURE GET_DETAIL_KHOAHOC(
+        p_khoaHocId IN NUMBER,
+        p_cursor    OUT REF_CURSOR
+    );
+
+    PROCEDURE INSERT_KHOAHOC(
+        p_hangId       IN NUMBER,
+        p_tenKhoaHoc   IN NVARCHAR2,
+        p_ngayBatDau   IN DATE,
+        p_ngayKetThuc  IN DATE,
+        p_diaDiem      IN NVARCHAR2,
+        p_khoaHocId    OUT NUMBER
+    );
+
+    PROCEDURE UPDATE_KHOAHOC(
+        p_khoaHocId    IN NUMBER,
+        p_hangId       IN NUMBER,
+        p_tenKhoaHoc   IN NVARCHAR2,
+        p_ngayBatDau   IN DATE,
+        p_ngayKetThuc  IN DATE,
+        p_diaDiem      IN NVARCHAR2
+    );
+END PKG_ADMINKHOAHOC;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_ADMINKHOAHOC AS
+
+PROCEDURE GET_LIST_KHOAHOC(
+    p_keyword   IN NVARCHAR2,
+    p_hangId    IN NUMBER,
+    p_trangThai IN NVARCHAR2,
+    p_page      IN NUMBER,
+    p_pageSize  IN NUMBER,
+    p_total     OUT NUMBER,
+    p_cursor    OUT REF_CURSOR
+)
+AS
+    v_start_row NUMBER;
+    v_end_row   NUMBER;
+BEGIN
+    v_start_row := ((p_page - 1) * p_pageSize) + 1;
+    v_end_row   := p_page * p_pageSize;
+
+    SELECT COUNT(*)
+    INTO p_total
+    FROM VW_KHOAHOC
+    WHERE (p_keyword IS NULL OR LOWER(tenKhoaHoc) LIKE LOWER('%' || p_keyword || '%'))
+      AND (p_hangId IS NULL OR hangId = p_hangId)
+      AND (p_trangThai IS NULL OR trangThai = p_trangThai);
+
+    OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT ROWNUM AS STT, x.*
+            FROM
+            (
+                SELECT 
+                    khoaHocId,
+                    tenKhoaHoc,
+                    hangId,
+                    tenHang,
+                    ngayBatDau,
+                    ngayKetThuc,
+                    diaDiem,
+                    trangThai
+                FROM VW_KHOAHOC
+                WHERE (p_keyword IS NULL OR LOWER(tenKhoaHoc) LIKE LOWER('%' || p_keyword || '%'))
+                  AND (p_hangId IS NULL OR hangId = p_hangId)
+                  AND (p_trangThai IS NULL OR trangThai = p_trangThai)
+                ORDER BY ngayBatDau DESC, khoaHocId DESC
+            ) x
+            WHERE ROWNUM <= v_end_row
+        )
+        WHERE STT >= v_start_row;
+END GET_LIST_KHOAHOC;
+
+PROCEDURE GET_DETAIL_KHOAHOC(
+    p_khoaHocId IN NUMBER,
+    p_cursor    OUT REF_CURSOR
+)
+AS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT 
+            khoaHocId,
+            tenKhoaHoc,
+            hangId,
+            tenHang,
+            ngayBatDau,
+            ngayKetThuc,
+            diaDiem,
+            trangThai
+        FROM VW_KHOAHOC
+        WHERE khoaHocId = p_khoaHocId;
+END GET_DETAIL_KHOAHOC;
+
+PROCEDURE INSERT_KHOAHOC(
+    p_hangId       IN NUMBER,
+    p_tenKhoaHoc   IN NVARCHAR2,
+    p_ngayBatDau   IN DATE,
+    p_ngayKetThuc  IN DATE,
+    p_diaDiem      IN NVARCHAR2,
+    p_khoaHocId    OUT NUMBER
+)
+AS
+BEGIN
+    p_khoaHocId := SEQ_KHOAHOC.NEXTVAL;
+
+    INSERT INTO KhoaHoc(
+        khoaHocId,
+        hangId,
+        tenKhoaHoc,
+        ngayBatDau,
+        ngayKetThuc,
+        diaDiem
+    )
+    VALUES(
+        p_khoaHocId,
+        p_hangId,
+        p_tenKhoaHoc,
+        p_ngayBatDau,
+        p_ngayKetThuc,
+        p_diaDiem
+    );
+END INSERT_KHOAHOC;
+
+PROCEDURE UPDATE_KHOAHOC(
+    p_khoaHocId    IN NUMBER,
+    p_hangId       IN NUMBER,
+    p_tenKhoaHoc   IN NVARCHAR2,
+    p_ngayBatDau   IN DATE,
+    p_ngayKetThuc  IN DATE,
+    p_diaDiem      IN NVARCHAR2
+)
+AS
+BEGIN
+    UPDATE KhoaHoc
+    SET hangId      = p_hangId,
+        tenKhoaHoc  = p_tenKhoaHoc,
+        ngayBatDau  = p_ngayBatDau,
+        ngayKetThuc = p_ngayKetThuc,
+        diaDiem     = p_diaDiem
+    WHERE khoaHocId = p_khoaHocId;
+END UPDATE_KHOAHOC;
+
+END PKG_ADMINKHOAHOC;
+/
+
+
+
+
+
+
+
+
+
 
 
 

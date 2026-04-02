@@ -1,0 +1,264 @@
+﻿@model driving_school_management.ViewModels.KhoaHocFormVM
+
+@{
+    var statusClass = "detail-status-ended";
+
+    if (Model.TrangThai == "Sắp khai giảng")
+    {
+        statusClass = "detail-status-upcoming";
+    }
+    else if (Model.TrangThai == "Đang học")
+    {
+        statusClass = "detail-status-learning";
+    }
+}
+
+<div class="modal fade" id="courseDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content admin-modal-content border-0">
+            <div class="modal-header admin-modal-header border-0">
+                <div>
+                    <div class="admin-modal-caption">Thông tin chi tiết</div>
+                    <h5 class="modal-title admin-modal-title mb-0">Chi tiết khóa học</h5>
+                </div>
+
+                <button type="button" class="btn-close admin-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body admin-modal-body">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="detail-card detail-card-primary">
+                            <div class="detail-card-label">Tên khóa học</div>
+                            <div class="detail-card-value detail-course-name">@Model.TenKhoaHoc</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-card-label">Hạng GPLX</div>
+                            <div class="detail-card-value">
+                                <span class="detail-hang-badge">@Model.TenHang</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-card-label">Trạng thái</div>
+                            <div class="detail-card-value">
+                                <span class="detail-status-badge @statusClass">@Model.TrangThai</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-card-label">Ngày bắt đầu</div>
+                            <div class="detail-card-value">@Model.NgayBatDau.ToString("dd/MM/yyyy")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <div class="detail-card-label">Ngày kết thúc</div>
+                            <div class="detail-card-value">@Model.NgayKetThuc.ToString("dd/MM/yyyy")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="detail-card">
+                            <div class="detail-card-label">Địa điểm</div>
+                            <div class="detail-card-value">
+                                @(string.IsNullOrWhiteSpace(Model.DiaDiem) ? "Chưa cập nhật" : Model.DiaDiem)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer admin-modal-footer border-0">
+                <button type="button" class="btn btn-light admin-btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa fa-times"></i>
+                    <span>Đóng</span>
+                </button>
+
+                <a asp-action="Edit" asp-route-id="@Model.KhoaHocId" class="btn btn-primary admin-btn-primary">
+                    <i class="fa fa-pen"></i>
+                    <span>Chỉnh sửa</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-modal-content {
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 20px 40px rgba(15,23,42,0.10);
+        overflow: hidden;
+    }
+
+    .admin-modal-header {
+        padding: 20px 24px 8px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94));
+    }
+
+    .admin-modal-caption {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #2563eb;
+        margin-bottom: 6px;
+    }
+
+    .admin-modal-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .admin-modal-close {
+        box-shadow: none;
+    }
+
+    .admin-modal-body {
+        padding: 16px 24px 8px;
+    }
+
+    .admin-modal-footer {
+        padding: 8px 24px 24px;
+        gap: 10px;
+    }
+
+    .detail-card {
+        height: 100%;
+        background: #ffffff;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        padding: 16px 18px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+    }
+
+    .detail-card-primary {
+        background: linear-gradient(135deg, rgba(239,246,255,0.9), rgba(255,255,255,1));
+        border-color: rgba(37,99,235,0.10);
+    }
+
+    .detail-card-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .detail-card-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    .detail-course-name {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .detail-hang-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 78px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(124,58,237,0.10);
+        color: #7c3aed;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .detail-status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .detail-status-upcoming {
+        background: rgba(245,158,11,0.14);
+        color: #b45309;
+    }
+
+    .detail-status-learning {
+        background: rgba(34,197,94,0.14);
+        color: #15803d;
+    }
+
+    .detail-status-ended {
+        background: rgba(100,116,139,0.14);
+        color: #475569;
+    }
+
+    .admin-btn-primary,
+    .admin-btn-secondary {
+        height: 44px;
+        border-radius: 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 16px;
+        transition: all .2s ease;
+    }
+
+        .admin-btn-primary:hover,
+        .admin-btn-secondary:hover {
+            transform: translateY(-1px);
+        }
+
+    .admin-btn-secondary {
+        background: #f1f5f9;
+        border: 1px solid rgba(15,23,42,0.08);
+        color: #334155;
+    }
+
+        .admin-btn-secondary:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+    @@media (max-width: 767.98px) {
+        .admin-modal-header,
+        .admin-modal-body,
+        .admin-modal-footer {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .admin-modal-title {
+            font-size: 20px;
+        }
+
+        .detail-course-name {
+            font-size: 18px;
+        }
+
+        .admin-modal-footer {
+            flex-direction: column;
+        }
+
+        .admin-btn-primary,
+        .admin-btn-secondary {
+            width: 100%;
+        }
+    }
+</style>
