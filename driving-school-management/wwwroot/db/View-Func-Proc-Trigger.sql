@@ -493,12 +493,12 @@ BEGIN
 END;
 /
 CREATE OR REPLACE PACKAGE pkg_khoahoc AS
-    PROCEDURE cap_nhat_trang_thai;
+    PROCEDURE CAP_NHAT_TRANG_THAI;
 END pkg_khoahoc;
 /
 CREATE OR REPLACE PACKAGE BODY pkg_khoahoc AS
 
-    PROCEDURE cap_nhat_trang_thai IS
+    PROCEDURE CAP_NHAT_TRANG_THAI IS
     BEGIN
         UPDATE KhoaHoc
         SET trangThai =
@@ -512,7 +512,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_khoahoc AS
             END;
 
         COMMIT;
-    END cap_nhat_trang_thai;
+    END CAP_NHAT_TRANG_THAI;
 
 END pkg_khoahoc;
 /
