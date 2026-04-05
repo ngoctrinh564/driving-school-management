@@ -17,7 +17,7 @@ namespace driving_school_management.Services
             {
                 conn.Open();
 
-                using (var cmd = new OracleCommand("pkg_khoahoc.cap_nhat_trang_thai", conn))
+                using (var cmd = new OracleCommand("pkg_khoahoc.CAP_NHAT_TRANG_THAI", conn))
                 {
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
