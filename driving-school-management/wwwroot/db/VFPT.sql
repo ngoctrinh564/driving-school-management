@@ -368,6 +368,33 @@ BEGIN
 END;
 /
 
- 
+ CREATE OR REPLACE PROCEDURE GET_FLASHCARD_DETAIL_BY_SIGN (
+    P_IDBIENBAO IN NUMBER,
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+        SELECT
+            b.IDBIENBAO,
+            b.TENBIENBAO,
+            b.YNGHIA,
+            b.HINHANH,
+            fc.IDFLASHCARD,
+            fc.DANHGIA,
+            fc.USERID,
+            u.USERNAME
+        FROM BIENBAO b
+        INNER JOIN FLASHCARD fc
+            ON b.IDBIENBAO = fc.IDBIENBAO
+        INNER JOIN "User" u
+            ON fc.USERID = u.USERID
+        WHERE b.IDBIENBAO = P_IDBIENBAO
+        ORDER BY fc.IDFLASHCARD DESC;
+END;
+/
+  
+  
+  
   
 COMMIT;
