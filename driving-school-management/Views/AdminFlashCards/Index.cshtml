@@ -1,0 +1,50 @@
+﻿@model List<driving_school_management.ViewModels.FlashCardSignSummaryVM>
+
+@{
+    ViewData["Title"] = "Quản lý Flashcard";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-0 pt-4 pb-3">
+            <h4 class="mb-0 fw-bold">Quản lý Flashcard</h4>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Hình ảnh</th>
+                            <th>Tên biển báo</th>
+                            <th>Ý nghĩa</th>
+                            <th>Số flashcard</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.IdBienBao</td>
+                                <td>
+                                    <img src="@item.HinhAnh" alt="@item.TenBienBao" style="width:80px;height:80px;object-fit:contain;" />
+                                </td>
+                                <td>@item.TenBienBao</td>
+                                <td>@item.Ynghia</td>
+                                <td>@item.SoDanhGia</td>
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.IdBienBao" class="btn btn-primary btn-sm rounded-3">
+                                        Xem chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

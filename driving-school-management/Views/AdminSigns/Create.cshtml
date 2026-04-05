@@ -1,0 +1,358 @@
+﻿@model driving_school_management.ViewModels.SignVM
+
+@{
+    ViewData["Title"] = "Thêm biển báo";
+}
+
+<section class="content">
+    <div class="container-fluid admin-sign-create-page">
+
+        <div class="page-header-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="page-caption">Quản lý biển báo</div>
+                    <h3 class="page-title mb-1">Thêm biển báo</h3>
+                </div>
+
+                <a asp-action="Index" class="btn btn-light btn-admin-back">
+                    <i class="fa fa-arrow-left"></i>
+                    <span>Quay lại</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card admin-card border-0">
+            <div class="card-body p-3 p-lg-4">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-4">
+                        <div class="col-xl-8">
+                            <div class="form-section">
+                                <div class="mb-4">
+                                    <label asp-for="TENBIENBAO" class="form-label admin-label">Tên biển báo</label>
+                                    <input asp-for="TENBIENBAO"
+                                           class="form-control admin-input"
+                                           placeholder="Nhập tên biển báo" />
+                                    <span asp-validation-for="TENBIENBAO" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label asp-for="YNGHIA" class="form-label admin-label">Ý nghĩa</label>
+                                    <textarea asp-for="YNGHIA"
+                                              class="form-control admin-textarea"
+                                              rows="8"
+                                              placeholder="Nhập ý nghĩa của biển báo"></textarea>
+                                    <span asp-validation-for="YNGHIA" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4">
+                            <div class="upload-panel">
+                                <div class="upload-panel-title">
+                                    <i class="fa fa-image me-2"></i>Ảnh biển báo
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ImageFile" class="form-label admin-label">Chọn ảnh</label>
+                                    <input asp-for="ImageFile"
+                                           type="file"
+                                           class="form-control admin-file-input"
+                                           accept=".jpg,.jpeg,.png,.gif,.webp" />
+                                    <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                                </div>
+
+                                <div class="preview-card">
+                                    <div class="preview-label">Xem trước ảnh</div>
+                                    <div class="preview-box">
+                                        <img id="previewImage"
+                                             src="#"
+                                             alt="Xem trước ảnh"
+                                             class="preview-image"
+                                             style="display:none;" />
+                                        <span id="previewText" class="preview-text">Chưa chọn ảnh</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-action-bar mt-4">
+                        <a asp-action="Index" class="btn btn-light btn-admin-secondary">
+                            <i class="fa fa-arrow-left"></i>
+                            <span>Quay lại</span>
+                        </a>
+
+                        <button type="submit" class="btn btn-primary btn-admin-primary">
+                            <i class="fa fa-floppy-disk"></i>
+                            <span>Lưu biển báo</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .admin-sign-create-page {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            color: #0f172a;
+        }
+
+        .page-header-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        }
+
+        .page-caption {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+            border: 1px solid rgba(15,23,42,0.08);
+        }
+
+        .btn-admin-back {
+            height: 44px;
+            border-radius: 14px;
+            font-weight: 600;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            color: #334155;
+            transition: all .2s ease;
+        }
+
+            .btn-admin-back:hover {
+                background: #f8fafc;
+                transform: translateY(-1px);
+            }
+
+        .form-section,
+        .upload-panel {
+            background: #fff;
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 18px;
+            padding: 20px;
+            height: 100%;
+        }
+
+        .upload-panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 18px;
+        }
+
+        .admin-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .admin-input,
+        .admin-file-input {
+            height: 46px;
+            border-radius: 14px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            box-shadow: none;
+            transition: all .2s ease;
+        }
+
+        .admin-textarea {
+            min-height: 210px;
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            box-shadow: none;
+            transition: all .2s ease;
+            padding-top: 12px;
+        }
+
+            .admin-input:focus,
+            .admin-file-input:focus,
+            .admin-textarea:focus {
+                border-color: rgba(37,99,235,0.35);
+                box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+            }
+
+        .form-note {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .preview-card {
+            margin-top: 18px;
+        }
+
+        .preview-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .preview-box {
+            width: 100%;
+            min-height: 240px;
+            border: 1px dashed rgba(15,23,42,0.16);
+            border-radius: 16px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+        }
+
+        .preview-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .form-action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-admin-secondary {
+            height: 44px;
+            border-radius: 14px;
+            font-weight: 600;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            color: #334155;
+            transition: all .2s ease;
+        }
+
+            .btn-admin-secondary:hover {
+                background: #f8fafc;
+                transform: translateY(-1px);
+            }
+
+        .btn-admin-primary {
+            height: 44px;
+            border-radius: 14px;
+            font-weight: 600;
+            padding: 0 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 18px rgba(37,99,235,0.14);
+            transition: all .2s ease;
+        }
+
+            .btn-admin-primary:hover {
+                transform: translateY(-1px);
+            }
+
+        @@media (max-width: 991.98px) {
+            .page-header-card {
+                padding: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .form-section,
+            .upload-panel {
+                padding: 16px;
+            }
+
+            .preview-box {
+                min-height: 200px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("ImageFile");
+            const previewImage = document.getElementById("previewImage");
+            const previewText = document.getElementById("previewText");
+
+            if (input) {
+                input.addEventListener("change", function (e) {
+                    const file = e.target.files[0];
+
+                    if (!file) {
+                        previewImage.style.display = "none";
+                        previewImage.src = "#";
+                        previewText.style.display = "inline";
+                        previewText.textContent = "Chưa chọn ảnh";
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        previewImage.src = event.target.result;
+                        previewImage.style.display = "block";
+                        previewText.style.display = "none";
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+    </script>
+}

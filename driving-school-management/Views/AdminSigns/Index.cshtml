@@ -1,0 +1,320 @@
+﻿@model List<driving_school_management.ViewModels.SignVM>
+
+@{
+    ViewData["Title"] = "Quản lý biển báo";
+    var stt = 1;
+}
+
+<section class="content">
+    <div class="container-fluid admin-sign-page">
+
+        <div class="page-header-card mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="page-caption">Quản lý biển báo</div>
+                    <h3 class="page-title mb-1">Danh sách biển báo</h3>
+                    <div class="page-subtitle">Theo dõi, cập nhật và quản lý toàn bộ biển báo trong hệ thống.</div>
+                </div>
+
+                <a asp-action="Create" class="btn btn-primary btn-admin-action">
+                    <i class="fa fa-plus"></i>
+                    <span>Thêm biển báo</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card admin-card border-0">
+            <div class="card-body p-3 p-lg-4">
+                <div class="table-responsive">
+                    <table class="table admin-sign-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">#</th>
+                                <th style="width: 150px;">Hình ảnh</th>
+                                <th style="width: 260px;">Tên biển báo</th>
+                                <th>Ý nghĩa</th>
+                                <th style="width: 130px;" class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-semibold">@stt</td>
+
+                                        <td class="text-center">
+                                            @if (!string.IsNullOrEmpty(item.HINHANH))
+                                            {
+                                                <div class="sign-image-wrap">
+                                                    <img src="@Url.Content("~/" + item.HINHANH.TrimStart('/'))"
+                                                         alt="@item.TENBIENBAO"
+                                                         class="sign-image" />
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="sign-empty-image">Chưa có ảnh</div>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <div class="sign-name">@item.TENBIENBAO</div>
+                                        </td>
+
+                                        <td>
+                                            <div class="sign-meaning">@item.YNGHIA</div>
+                                        </td>
+
+                                        <td class="text-center">
+                                            <div class="action-group">
+                                                <a asp-action="Edit"
+                                                       asp-route-id="@item.IDBIENBAO"
+                                                       class="action-btn action-btn-edit"
+                                                       title="Sửa">
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                </a>
+
+                                                <form asp-action="Delete"
+                                                      asp-route-id="@item.IDBIENBAO"
+                                                      method="post"
+                                                      class="m-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit"
+                                                            class="action-btn action-btn-delete"
+                                                            title="Xóa"
+                                                            onclick="return confirm('Bạn có chắc muốn xóa biển báo này không?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    stt++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        Chưa có dữ liệu biển báo.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .admin-sign-page {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            color: #0f172a;
+        }
+
+        .page-header-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        }
+
+        .page-caption {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .admin-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+            border: 1px solid rgba(15,23,42,0.08);
+            overflow: hidden;
+        }
+
+        .btn-admin-action {
+            height: 44px;
+            border-radius: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all .2s ease;
+            box-shadow: 0 8px 18px rgba(37,99,235,0.14);
+            padding: 0 18px;
+        }
+
+            .btn-admin-action:hover {
+                transform: translateY(-1px);
+            }
+
+        .admin-sign-table {
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .admin-sign-table thead th {
+                background: #f8fafc;
+                color: #0f172a;
+                font-size: 14px;
+                font-weight: 700;
+                text-align: center;
+                padding: 16px 14px;
+                border-bottom: 1px solid rgba(15,23,42,0.08);
+                white-space: nowrap;
+            }
+
+            .admin-sign-table tbody td {
+                padding: 14px 12px;
+                border-bottom: 1px solid rgba(15,23,42,0.08);
+                vertical-align: middle;
+                background: #fff;
+            }
+
+            .admin-sign-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+            .admin-sign-table tbody tr:hover td {
+                background: #f8fbff;
+            }
+
+        .sign-image-wrap {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(15,23,42,0.08);
+            border-radius: 12px;
+            background: #fff;
+            padding: 6px;
+        }
+
+        .sign-image {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+        }
+
+        .sign-empty-image {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed rgba(15,23,42,0.15);
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .sign-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+
+        .sign-meaning {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all .2s ease;
+            padding: 0;
+        }
+
+            .action-btn i {
+                font-size: 14px;
+            }
+
+            .action-btn:hover {
+                transform: translateY(-1px);
+            }
+
+        .action-btn-edit {
+            background: #f4c542;
+            color: #1f2937;
+        }
+
+            .action-btn-edit:hover {
+                background: #eab308;
+                color: #1f2937;
+            }
+
+        .action-btn-delete {
+            background: #d84c57;
+            color: #fff;
+        }
+
+            .action-btn-delete:hover {
+                background: #c63c47;
+                color: #fff;
+            }
+
+        @@media (max-width: 991.98px) {
+            .page-header-card {
+                padding: 18px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .admin-sign-table thead th,
+            .admin-sign-table tbody td {
+                padding: 12px 10px;
+            }
+        }
+    </style>
+}

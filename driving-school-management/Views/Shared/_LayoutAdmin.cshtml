@@ -926,6 +926,35 @@
                             </a>
                         </li>
 
+                        <li class="nav-item has-treeview theory-tree @(currentController == "AdminSigns" || currentController == "AdminFlashcards" ? "menu-open" : "")">
+                            <a href="#"
+                                   class="nav-link @(currentController == "AdminSigns" || currentController == "AdminFlashcards" ? "active" : "")">
+                                <i class="nav-icon fa fa-traffic-light"></i>
+                                <p>
+                                    Biển báo & Flashcard
+                                    <i class="right fas fa-angle-left theory-arrow"></i>
+                                </p>
+                            </a>
+
+                            <ul class="nav nav-treeview theory-treeview">
+                                <li class="nav-item">
+                                    <a asp-controller="AdminSigns" asp-action="Index"
+                                           class="nav-link @(currentController == "AdminSigns" ? "active" : "")">
+                                        <i class="nav-icon fa fa-sign-hanging"></i>
+                                        <p>Quản lý biển báo</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a asp-controller="AdminFlashcards" asp-action="Index"
+                                           class="nav-link @(currentController == "AdminFlashcards" ? "active" : "")">
+                                        <i class="nav-icon fa fa-clone"></i>
+                                        <p>Quản lý Flashcard</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item mt-3">
                             <a asp-controller="Auth" asp-action="Logout" class="nav-link">
                                 <i class="nav-icon fa fa-right-from-bracket text-danger"></i>

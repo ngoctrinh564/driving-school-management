@@ -11,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseOracle(builder.Configuration.GetConnectionString("OracleDb")));
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<SignOracleHelper>();
 
 //thêm services Admin
 builder.Services.AddScoped<AdminDashboardService>();
