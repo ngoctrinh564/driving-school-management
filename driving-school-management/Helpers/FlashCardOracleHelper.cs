@@ -69,13 +69,16 @@ namespace driving_school_management.Helpers
                     };
                 }
 
-                vm.Items.Add(new FlashCardItemVM
+                if (reader["IDFLASHCARD"] != DBNull.Value)
                 {
-                    IdFlashcard = Convert.ToInt32(reader["IDFLASHCARD"]),
-                    DanhGia = reader["DANHGIA"]?.ToString() ?? "",
-                    UserId = Convert.ToInt32(reader["USERID"]),
-                    UserName = reader["USERNAME"]?.ToString() ?? ""
-                });
+                    vm.Items.Add(new FlashCardItemVM
+                    {
+                        IdFlashcard = Convert.ToInt32(reader["IDFLASHCARD"]),
+                        DanhGia = reader["DANHGIA"]?.ToString() ?? "",
+                        UserId = Convert.ToInt32(reader["USERID"]),
+                        HoTen = reader["HOTEN"]?.ToString() ?? ""
+                    });
+                }
             }
 
             return vm;

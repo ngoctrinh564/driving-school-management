@@ -357,18 +357,20 @@ BEGIN
             fc.IDFLASHCARD,
             fc.DANHGIA,
             fc.USERID,
-            u.USERNAME
+            hv.HOTEN
         FROM BIENBAO b
         LEFT JOIN FLASHCARD fc
             ON b.IDBIENBAO = fc.IDBIENBAO
         LEFT JOIN "User" u
             ON fc.USERID = u.USERID
+        LEFT JOIN HOCVIEN hv
+            ON u.USERID = hv.USERID
         WHERE b.IDBIENBAO = p_idbienbao
         ORDER BY fc.IDFLASHCARD DESC;
 END;
 /
 
- CREATE OR REPLACE PROCEDURE GET_FLASHCARD_DETAIL_BY_SIGN (
+CREATE OR REPLACE PROCEDURE GET_FLASHCARD_DETAIL_BY_SIGN (
     P_IDBIENBAO IN NUMBER,
     P_CURSOR OUT SYS_REFCURSOR
 )
@@ -383,12 +385,14 @@ BEGIN
             fc.IDFLASHCARD,
             fc.DANHGIA,
             fc.USERID,
-            u.USERNAME
+            hv.HOTEN
         FROM BIENBAO b
         INNER JOIN FLASHCARD fc
             ON b.IDBIENBAO = fc.IDBIENBAO
         INNER JOIN "User" u
             ON fc.USERID = u.USERID
+        LEFT JOIN HOCVIEN hv
+            ON u.USERID = hv.USERID
         WHERE b.IDBIENBAO = P_IDBIENBAO
         ORDER BY fc.IDFLASHCARD DESC;
 END;

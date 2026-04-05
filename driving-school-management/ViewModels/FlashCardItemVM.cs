@@ -5,7 +5,7 @@
         public int IdFlashcard { get; set; }
         public string DanhGia { get; set; } = "";
         public int UserId { get; set; }
-        public string UserName { get; set; } = "";
+        public string HoTen { get; set; } = "";
 
         public string TrangThaiGhiNho
         {
