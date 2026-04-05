@@ -5,12 +5,450 @@
     Layout = "_Layout";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h4 class="mb-3 text-center">Xác nhận OTP</h4>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    :root {
+        --otp-bg-1: #071122;
+        --otp-bg-2: #0f1f3a;
+        --otp-card: rgba(255,255,255,.96);
+        --otp-text: #0f172a;
+        --otp-soft: #64748b;
+        --otp-border: #e2e8f0;
+        --otp-primary: #2563eb;
+        --otp-primary-2: #16a34a;
+        --otp-ring: rgba(37,99,235,.14);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 28%), radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 24%), linear-gradient(135deg, var(--otp-bg-1), var(--otp-bg-2));
+    }
+
+    .otp-shell {
+        min-height: calc(100vh - 110px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 16px;
+    }
+
+    .otp-layout {
+        width: 100%;
+        max-width: 1080px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(2,8,23,.42);
+        backdrop-filter: blur(14px);
+    }
+
+    .otp-brand {
+        position: relative;
+        padding: 40px;
+        color: #fff;
+        background: linear-gradient(160deg, rgba(37,99,235,.20), rgba(22,163,74,.08));
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+        .otp-brand::before,
+        .otp-brand::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .otp-brand::before {
+            width: 240px;
+            height: 240px;
+            right: -40px;
+            top: -40px;
+            background: radial-gradient(circle, rgba(96,165,250,.20), transparent 70%);
+        }
+
+        .otp-brand::after {
+            width: 300px;
+            height: 300px;
+            left: -100px;
+            bottom: -100px;
+            background: radial-gradient(circle, rgba(34,197,94,.14), transparent 72%);
+        }
+
+    .brand-logo {
+        width: 74px;
+        height: 74px;
+        border-radius: 20px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+        .brand-logo img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.12);
+        font-size: 13px;
+        color: rgba(255,255,255,.94);
+        margin-bottom: 16px;
+    }
+
+    .brand-title {
+        font-size: clamp(28px, 3vw, 40px);
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        margin: 0 0 14px;
+        max-width: 460px;
+    }
+
+    .brand-desc {
+        font-size: 15px;
+        line-height: 1.8;
+        color: rgba(255,255,255,.78);
+        max-width: 470px;
+        margin: 0;
+    }
+
+    .countdown-card {
+        position: relative;
+        z-index: 1;
+        margin-top: 34px;
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .countdown-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+        .countdown-head strong {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .countdown-head span {
+            font-size: 12px;
+            color: rgba(255,255,255,.72);
+        }
+
+    .countdown-display {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .countdown-ring-wrap {
+        position: relative;
+        width: 132px;
+        height: 132px;
+        flex-shrink: 0;
+    }
+
+    .countdown-svg {
+        width: 132px;
+        height: 132px;
+        transform: rotate(-90deg);
+    }
+
+    .countdown-bg {
+        fill: none;
+        stroke: rgba(255,255,255,.12);
+        stroke-width: 10;
+    }
+
+    .countdown-progress {
+        fill: none;
+        stroke: #7dd3fc;
+        stroke-width: 10;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s linear, stroke .3s ease;
+    }
+
+    .countdown-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .countdown-center strong {
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .countdown-center span {
+            font-size: 12px;
+            color: rgba(255,255,255,.72);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+    .countdown-info {
+        flex: 1;
+        min-width: 220px;
+    }
+
+        .countdown-info p {
+            margin: 0 0 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255,255,255,.78);
+        }
+
+    .countdown-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.10);
+        font-size: 13px;
+        color: rgba(255,255,255,.9);
+    }
+
+    .otp-panel {
+        background: var(--otp-card);
+        padding: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .otp-card {
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .otp-title {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        color: var(--otp-text);
+        margin-bottom: 10px;
+    }
+
+    .otp-subtitle {
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--otp-soft);
+        margin-bottom: 22px;
+    }
+
+    .alert {
+        border-radius: 16px;
+        font-size: 14px;
+        padding: 14px 16px;
+        border-width: 1px;
+    }
+
+    .inline-note {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 14px 16px;
+        border-radius: 16px;
+        margin-bottom: 18px;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .field-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--otp-text);
+    }
+
+    .otp-input-shell {
+        position: relative;
+    }
+
+    .otp-input {
+        height: 60px;
+        border-radius: 18px;
+        border: 1px solid var(--otp-border);
+        font-size: 22px;
+        text-align: center;
+        letter-spacing: .30em;
+        font-weight: 700;
+        box-shadow: none;
+    }
+
+        .otp-input:focus {
+            border-color: var(--otp-primary);
+            box-shadow: 0 0 0 4px var(--otp-ring);
+        }
+
+    .btn-otp {
+        width: 100%;
+        height: 56px;
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--otp-primary), #1d4ed8);
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 18px 40px rgba(37,99,235,.22);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+        .btn-otp:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 22px 46px rgba(37,99,235,.26);
+        }
+
+    .otp-helper {
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--otp-soft);
+    }
+
+    .otp-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .ghost-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 16px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #0f172a;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .ghost-action:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+    @@media (max-width: 991.98px) {
+        .otp-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .otp-shell {
+            padding: 18px 12px;
+        }
+
+        .otp-brand {
+            padding: 24px 18px;
+        }
+
+        .otp-panel {
+            padding: 20px 16px;
+        }
+
+        .otp-title {
+            font-size: 26px;
+        }
+
+        .countdown-display {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="otp-shell">
+    <div class="otp-layout">
+        <aside class="otp-brand">
+            <div>
+                <div class="brand-logo">
+                    <img src="~/images/logo/logo-full.png" alt="GPLX System">
+                    </div>
+
+                    <div class="brand-badge">
+                        <i class="fa-solid fa-envelope-circle-check"></i>
+                        <span>Xác minh email học viên</span>
+                    </div>
+
+                    <h1 class="brand-title">Mã OTP đã được gửi đến email của bạn.</h1>
+                    <p class="brand-desc">
+                        Nhập mã xác minh để hoàn tất bước đăng ký tài khoản học viên. Mã chỉ có hiệu lực trong một khoảng thời gian ngắn.
+                    </p>
+
+                    <div class="countdown-card">
+                        <div class="countdown-head">
+                            <strong>Thời gian hiệu lực OTP</strong>
+                            <span>Tự động đếm ngược</span>
+                        </div>
+
+                        <div class="countdown-display">
+                            <div class="countdown-ring-wrap">
+                                <svg class="countdown-svg" viewBox="0 0 120 120">
+                                    <circle class="countdown-bg" cx="60" cy="60" r="52"></circle>
+                                    <circle id="countdownProgress" class="countdown-progress" cx="60" cy="60" r="52"></circle>
+                                </svg>
+                                <div class="countdown-center">
+                                    <strong id="countdownValue">60</strong>
+                                    <span>giây</span>
+                                </div>
+                            </div>
+
+                            <div class="countdown-info">
+                                <p>Mã OTP được gửi sau bước đăng ký tài khoản học viên. Vui lòng kiểm tra hộp thư đến và cả thư rác nếu chưa thấy email.</p>
+                                <div class="countdown-status" id="countdownStatus">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>Mã xác minh vẫn còn hiệu lực.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="otp-panel">
+                <div class="otp-card">
+                    <h2 class="otp-title">Xác nhận mã OTP</h2>
+                    <div class="otp-subtitle">
+                        Nhập mã OTP đã nhận được qua email để kích hoạt tài khoản học viên.
+                    </div>
 
                     @if (TempData["Success"] != null)
                     {
@@ -22,6 +460,11 @@
                         <div class="alert alert-danger">@TempData["Error"]</div>
                     }
 
+                    <div class="inline-note">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>Vui lòng nhập đúng mã OTP vừa được gửi. Nếu mã hết hạn, cần thực hiện lại quy trình theo logic hệ thống hiện tại.</div>
+                    </div>
+
                     <form asp-action="VerifyOtp" asp-controller="Auth" method="post">
                         <input asp-for="Username" type="hidden" />
                         <input asp-for="Email" type="hidden" />
@@ -29,25 +472,89 @@
                         <input asp-for="RoleId" type="hidden" />
 
                         <div class="mb-3">
-                            <label asp-for="OtpCode" class="form-label">Mã OTP</label>
-                            <input asp-for="OtpCode" class="form-control" />
+                            <label asp-for="OtpCode" class="field-label">Mã OTP</label>
+                            <div class="otp-input-shell">
+                                <input asp-for="OtpCode" class="form-control otp-input" placeholder="------" autocomplete="one-time-code" />
+                            </div>
                             <span asp-validation-for="OtpCode" class="text-danger"></span>
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100">Xác nhận</button>
+                        <button type="submit" class="btn-otp">Xác nhận OTP</button>
                     </form>
 
-                    <div class="mt-3 text-muted text-center">
-                        OTP có hiệu lực trong 60 giây
+                    <div class="otp-helper">
+                        OTP có hiệu lực trong <strong>60 giây</strong> kể từ thời điểm gửi email.
+                    </div>
+
+                    <div class="otp-actions">
+                        <a href="javascript:void(0)" class="ghost-action" onclick="notifyFeature('Chức năng gửi lại OTP hiện chưa được hỗ trợ.')">Gửi lại mã OTP</a>
+                        <a asp-controller="Auth" asp-action="Register" class="ghost-action">Quay lại đăng ký</a>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+
+        <script>
+            function notifyFeature(message) {
+                alert(message);
+            }
+
+            (function () {
+                const totalSeconds = 60;
+                let remaining = totalSeconds;
+
+                const valueEl = document.getElementById("countdownValue");
+                const statusEl = document.getElementById("countdownStatus");
+                const progressEl = document.getElementById("countdownProgress");
+
+                const radius = 52;
+                const circumference = 2 * Math.PI * radius;
+
+                progressEl.style.strokeDasharray = circumference;
+                progressEl.style.strokeDashoffset = 0;
+
+                function render() {
+                    valueEl.textContent = remaining;
+
+                    const progress = remaining / totalSeconds;
+                    const offset = circumference * (1 - progress);
+                    progressEl.style.strokeDashoffset = offset;
+
+                    if (remaining > 20) {
+                        progressEl.style.stroke = "#7dd3fc";
+                    } else if (remaining > 10) {
+                        progressEl.style.stroke = "#f59e0b";
+                    } else {
+                        progressEl.style.stroke = "#ef4444";
+                    }
+
+                    if (remaining > 0) {
+                        statusEl.innerHTML = "<i class='fa-regular fa-clock'></i><span>Mã xác minh vẫn còn hiệu lực.</span>";
+                    } else {
+                        statusEl.innerHTML = "<i class='fa-solid fa-triangle-exclamation'></i><span>Mã OTP đã hết thời gian hiệu lực hiển thị.</span>";
+                    }
+                }
+
+                render();
+
+                const timer = setInterval(function () {
+                    remaining--;
+
+                    if (remaining <= 0) {
+                        remaining = 0;
+                        render();
+                        clearInterval(timer);
+                        return;
+                    }
+
+                    render();
+                }, 1000);
+            })();
+        </script>
     }
-}

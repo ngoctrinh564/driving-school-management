@@ -41,6 +41,13 @@ builder.Services.AddHttpClient();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
+//cap nhat trang thai khi chay project
+using (var scope = app.Services.CreateScope())
+{
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var dbInit = new DbInitializer(config);
+    dbInit.Init();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -3,160 +3,744 @@
     Layout = "_Layout";
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
 <style>
-    .login-container {
-        min-height: calc(100vh - 200px);
+    :root {
+        --auth-bg-1: #071122;
+        --auth-bg-2: #0f1f3a;
+        --auth-card: rgba(255,255,255,.96);
+        --auth-text: #0f172a;
+        --auth-text-soft: #64748b;
+        --auth-border: #e2e8f0;
+        --auth-primary: #2563eb;
+        --auth-primary-hover: #1d4ed8;
+        --auth-ring: rgba(37,99,235,.14);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 28%), radial-gradient(circle at bottom right, rgba(14,165,233,.12), transparent 24%), linear-gradient(135deg, var(--auth-bg-1), var(--auth-bg-2));
+    }
+
+    .auth-shell {
+        min-height: calc(100vh - 110px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+    }
+
+    .auth-layout {
+        width: 100%;
+        max-width: 1180px;
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(2,8,23,.42);
+        backdrop-filter: blur(14px);
+    }
+
+    .auth-brand {
+        position: relative;
+        padding: 44px;
+        min-height: 720px;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: linear-gradient(160deg, rgba(37,99,235,.20), rgba(14,165,233,.06));
+    }
+
+        .auth-brand::before,
+        .auth-brand::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .auth-brand::before {
+            width: 260px;
+            height: 260px;
+            right: -50px;
+            top: -60px;
+            background: radial-gradient(circle, rgba(96,165,250,.22), transparent 70%);
+        }
+
+        .auth-brand::after {
+            width: 340px;
+            height: 340px;
+            left: -110px;
+            bottom: -120px;
+            background: radial-gradient(circle, rgba(59,130,246,.14), transparent 72%);
+        }
+
+    .brand-logo {
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+        .brand-logo img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.12);
+        font-size: 13px;
+        color: rgba(255,255,255,.94);
+        margin-bottom: 18px;
+    }
+
+    .brand-title {
+        font-size: clamp(30px, 3.2vw, 44px);
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        max-width: 540px;
+        margin: 0 0 16px;
+    }
+
+    .brand-desc {
+        max-width: 540px;
+        font-size: 15px;
+        line-height: 1.8;
+        color: rgba(255,255,255,.78);
+        margin: 0;
+    }
+
+    .brand-card {
+        position: relative;
+        z-index: 1;
+        margin-top: 34px;
+        border-radius: 24px;
+        padding: 22px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .brand-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+
+    .brand-card-dots {
+        display: flex;
+        gap: 8px;
+    }
+
+        .brand-card-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.38);
+        }
+
+    .brand-card-label {
+        font-size: 12px;
+        color: rgba(255,255,255,.72);
+    }
+
+    .brand-features {
+        display: grid;
+        gap: 12px;
+    }
+
+    .brand-feature {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        border-radius: 18px;
+        padding: 16px;
+        background: rgba(255,255,255,.07);
+        border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand-feature-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.12);
+        color: #fff;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .brand-feature strong {
+        display: block;
+        font-size: 15px;
+        margin-bottom: 4px;
+    }
+
+    .brand-feature span {
+        display: block;
+        font-size: 13px;
+        line-height: 1.65;
+        color: rgba(255,255,255,.74);
+    }
+
+    .brand-trust {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 26px;
+    }
+
+    .trust-item {
+        min-width: 132px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.10);
+    }
+
+        .trust-item strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .trust-item span {
+            font-size: 12px;
+            color: rgba(255,255,255,.72);
+        }
+
+    .auth-panel {
+        background: var(--auth-card);
+        padding: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    .login-card {
+    .auth-card {
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .auth-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 6px;
+        background: #f1f5f9;
         border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: none;
-        overflow: hidden;
+        margin-bottom: 26px;
     }
 
-    .login-card .card-body {
-        padding: 2.5rem;
-    }
-
-    .login-header {
+    .auth-tab {
+        padding: 12px 14px;
         text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .login-header h4 {
+        text-decoration: none;
+        border-radius: 12px;
+        color: #64748b;
         font-weight: 600;
-        color: #1a73e8;
-        margin-bottom: 0.5rem;
+        transition: all .2s ease;
     }
 
-    .login-header p {
-        color: #5f6368;
-        font-size: 0.9rem;
+        .auth-tab.active {
+            background: #fff;
+            color: #0f172a;
+            box-shadow: 0 8px 22px rgba(15,23,42,.08);
+        }
+
+    .auth-title {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        color: var(--auth-text);
+        margin-bottom: 10px;
     }
 
-    .form-floating > .form-control {
-        border-radius: 8px;
+    .auth-subtitle {
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--auth-text-soft);
+        margin-bottom: 22px;
     }
 
-    .btn-login {
-        padding: 12px;
+    .inline-note {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 14px 16px;
+        border-radius: 16px;
+        margin-bottom: 18px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .field-group {
+        margin-bottom: 18px;
+    }
+
+    .field-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
         font-weight: 600;
-        border-radius: 8px;
+        color: var(--auth-text);
+    }
+
+    .input-shell {
         position: relative;
     }
 
-    .btn-spinner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: none;
-    }
+        .input-shell .form-control {
+            height: 56px;
+            border-radius: 16px;
+            border: 1px solid var(--auth-border);
+            background: #fff;
+            padding-left: 16px;
+            padding-right: 48px;
+            font-size: 15px;
+            box-shadow: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
 
-    .btn-login.loading .btn-text {
-        opacity: 0;
-    }
+            .input-shell .form-control:focus {
+                border-color: var(--auth-primary);
+                box-shadow: 0 0 0 4px var(--auth-ring);
+            }
 
-    .btn-login.loading .btn-spinner {
-        display: block;
-    }
+            .input-shell .form-control::placeholder {
+                color: #94a3b8;
+            }
 
     .toggle-password {
-        border: none;
-        background: transparent;
         position: absolute;
         top: 50%;
-        right: 10px;
+        right: 14px;
         transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 10px;
+        background: transparent;
+        color: #64748b;
+        transition: background-color .2s ease, color .2s ease;
     }
 
-    .login-links {
-        margin-top: 1.5rem;
+        .toggle-password:hover {
+            background: #eff6ff;
+            color: var(--auth-primary);
+        }
+
+        .toggle-password:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--auth-ring);
+        }
+
+    .form-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .remember-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #475569;
+        user-select: none;
+    }
+
+        .remember-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--auth-primary);
+        }
+
+    .meta-link {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--auth-primary);
+        text-decoration: none;
+    }
+
+        .meta-link:hover {
+            color: var(--auth-primary-hover);
+            text-decoration: underline;
+        }
+
+    .btn-submit {
+        position: relative;
+        width: 100%;
+        height: 56px;
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--auth-primary), #1d4ed8);
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 18px 40px rgba(37,99,235,.24);
+        transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 22px 46px rgba(37,99,235,.28);
+        }
+
+        .btn-submit:disabled {
+            opacity: .75;
+            cursor: not-allowed;
+        }
+
+        .btn-submit .btn-spinner {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .btn-submit.loading .btn-text {
+            opacity: 0;
+        }
+
+        .btn-submit.loading .btn-spinner {
+            display: inline-flex;
+        }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 22px 0 18px;
+        color: #94a3b8;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+    .social-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .social-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 52px;
+        padding: 0 16px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #0f172a;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s ease;
+    }
+
+        .social-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+    .switch-auth {
         text-align: center;
+        margin-top: 22px;
+        color: #64748b;
+        font-size: 14px;
     }
 
-    .divider {
-        margin: 1rem 0;
-        font-size: 0.85rem;
+        .switch-auth a {
+            color: var(--auth-primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .switch-auth a:hover {
+                text-decoration: underline;
+            }
+
+    .auth-footer {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 22px;
+        font-size: 13px;
+    }
+
+        .auth-footer a {
+            color: #64748b;
+            text-decoration: none;
+        }
+
+            .auth-footer a:hover {
+                color: var(--auth-primary);
+            }
+
+    @@media (max-width: 991.98px) {
+        .auth-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .auth-brand {
+            min-height: auto;
+            padding: 30px 24px 24px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .auth-shell {
+            padding: 18px 12px;
+        }
+
+        .auth-brand {
+            order: 2;
+            padding: 22px 18px 20px;
+        }
+
+        .auth-panel {
+            order: 1;
+            padding: 20px 16px;
+        }
+
+        .auth-title {
+            font-size: 26px;
+        }
+
+        .social-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .brand-card,
+        .brand-trust {
+            display: none;
+        }
     }
 </style>
 
-<div class="login-container">
-    <div class="col-md-6 col-lg-4 px-3">
-        <div class="card login-card">
-            <div class="card-body">
-
-                <div class="login-header">
-                    <h4><i class="fa fa-right-to-bracket"></i> Đăng nhập</h4>
-                    <p>Nhập thông tin để tiếp tục</p>
-                </div>
-
-                <form id="loginForm" asp-controller="Auth" asp-action="Login" method="post">
-
-                    <!-- Username -->
-                    <div class="form-floating mb-3">
-                        <input name="username" class="form-control" placeholder="Username" required />
-                        <label>Tên đăng nhập</label>
+<div class="auth-shell">
+    <div class="auth-layout">
+        <aside class="auth-brand">
+            <div>
+                <div class="brand-logo">
+                    <img src="~/images/logo/logo-full.png" alt="GPLX System">
                     </div>
 
-                    <!-- Password -->
-                    <div class="form-floating mb-3 position-relative">
-                        <input id="password" name="password" type="password" class="form-control" placeholder="Password" required />
-                        <label>Mật khẩu</label>
-
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            <i id="iconPwd" class="fa fa-eye"></i>
-                        </button>
+                    <div class="brand-badge">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <span>Cổng truy cập dành cho học viên</span>
                     </div>
 
-                    <!-- Button -->
-                    <button id="btnLogin" type="submit" class="btn btn-primary btn-login w-100">
-                        <span class="btn-text">Đăng nhập</span>
-                        <span class="btn-spinner">
-                            <span class="spinner-border spinner-border-sm"></span>
-                        </span>
-                    </button>
-
-                </form>
-
-                <div class="login-links">
-                    <div class="divider">hoặc</div>
-                    <p>
-                        Chưa có tài khoản?
-                        <a asp-action="Register">Đăng ký</a>
+                    <h1 class="brand-title">Đăng nhập để tiếp tục học tập, theo dõi hồ sơ và tiến độ luyện thi lái xe.</h1>
+                    <p class="brand-desc">
+                        Học viên có thể xem hồ sơ đăng ký, lịch học, bài học, thi thử, kết quả và các thông tin liên quan trong cùng một không gian thống nhất.
                     </p>
+
+                    <div class="brand-trust">
+                        <div class="trust-item">
+                            <strong>Hồ sơ</strong>
+                            <span>Theo dõi trạng thái đăng ký</span>
+                        </div>
+                        <div class="trust-item">
+                            <strong>Học tập</strong>
+                            <span>Xem lịch và nội dung học</span>
+                        </div>
+                        <div class="trust-item">
+                            <strong>Kết quả</strong>
+                            <span>Tra cứu kết quả nhanh</span>
+                        </div>
+                    </div>
                 </div>
 
-            </div>
+                <div class="brand-card">
+                    <div class="brand-card-head">
+                        <div class="brand-card-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="brand-card-label">Các tiện ích dành cho học viên</div>
+                    </div>
+
+                    <div class="brand-features">
+                        <div class="brand-feature">
+                            <div class="brand-feature-icon">
+                                <i class="fa-regular fa-folder-open"></i>
+                            </div>
+                            <div>
+                                <strong>Quản lý hồ sơ cá nhân</strong>
+                                <span>Theo dõi thông tin đăng ký, tiến trình xử lý và các cập nhật mới nhất.</span>
+                            </div>
+                        </div>
+
+                        <div class="brand-feature">
+                            <div class="brand-feature-icon">
+                                <i class="fa-regular fa-calendar"></i>
+                            </div>
+                            <div>
+                                <strong>Xem lịch học và ôn luyện</strong>
+                                <span>Truy cập lịch học, nội dung bài học và các phần thi thử ngay trên hệ thống.</span>
+                            </div>
+                        </div>
+
+                        <div class="brand-feature">
+                            <div class="brand-feature-icon">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </div>
+                            <div>
+                                <strong>Tra cứu kết quả thuận tiện</strong>
+                                <span>Theo dõi kết quả học tập, thi thử và trạng thái liên quan một cách trực quan.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="auth-panel">
+                <div class="auth-card">
+                    <div class="auth-tabs">
+                        <a class="auth-tab active" asp-controller="Auth" asp-action="Login">Đăng nhập</a>
+                        <a class="auth-tab" asp-controller="Auth" asp-action="Register">Đăng ký</a>
+                    </div>
+
+                    <h2 class="auth-title">Đăng nhập học viên</h2>
+                    <div class="auth-subtitle">
+                        Nhập thông tin tài khoản để truy cập khu vực học viên của hệ thống GPLX System.
+                    </div>
+
+                    <div class="inline-note">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>Chỉ sử dụng thông tin tài khoản đã đăng ký. Thông báo lỗi được hiển thị theo hướng an toàn, không làm lộ dữ liệu nhạy cảm.</div>
+                    </div>
+
+                    <form id="loginForm" asp-controller="Auth" asp-action="Login" method="post">
+                        <div class="field-group">
+                            <label class="field-label" for="username">Tên đăng nhập</label>
+                            <div class="input-shell">
+                                <input id="username" name="username" class="form-control" placeholder="Nhập tên đăng nhập của bạn" required />
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="password">Mật khẩu</label>
+                            <div class="input-shell">
+                                <input id="password" name="password" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
+                                <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Hiện hoặc ẩn mật khẩu">
+                                    <i id="iconPwd" class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-meta">
+                            <label class="remember-check">
+                                <input type="checkbox" />
+                                <span>Ghi nhớ đăng nhập</span>
+                            </label>
+
+                            <a href="javascript:void(0)" class="meta-link" onclick="notifyFeature('Chức năng quên mật khẩu hiện chưa được hỗ trợ.')">
+                                Quên mật khẩu
+                            </a>
+                        </div>
+
+                        <button id="btnLogin" type="submit" class="btn-submit">
+                            <span class="btn-text">Đăng nhập</span>
+                            <span class="btn-spinner">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </form>
+
+                    <div class="auth-divider">Hoặc tiếp tục với</div>
+
+                    <div class="social-grid">
+                        <a href="javascript:void(0)" class="social-btn" onclick="notifyFeature('Đăng nhập bằng Google hiện chưa được hỗ trợ.')">
+                            <i class="fa-brands fa-google"></i>
+                            <span>Google</span>
+                        </a>
+
+                        <a href="javascript:void(0)" class="social-btn" onclick="notifyFeature('Đăng nhập bằng Facebook hiện chưa được hỗ trợ.')">
+                            <i class="fa-brands fa-facebook-f"></i>
+                            <span>Facebook</span>
+                        </a>
+                    </div>
+
+                    <div class="switch-auth">
+                        Chưa có tài khoản học viên?
+                        <a asp-controller="Auth" asp-action="Register">Đăng ký ngay</a>
+                    </div>
+
+                    <div class="auth-footer">
+                        <a href="javascript:void(0)" onclick="notifyFeature('Trang Điều khoản sử dụng hiện chưa được hỗ trợ.')">Điều khoản sử dụng</a>
+                        <a href="javascript:void(0)" onclick="notifyFeature('Trang Chính sách bảo mật hiện chưa được hỗ trợ.')">Chính sách bảo mật</a>
+                        <a href="javascript:void(0)" onclick="notifyFeature('Kênh hỗ trợ hiện chưa được hỗ trợ.')">Hỗ trợ</a>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <script>
-        function togglePassword() {
-            const input = document.getElementById("password");
-            const icon = document.getElementById("iconPwd");
+    @section Scripts {
+        <script>
+            function togglePassword() {
+                const input = document.getElementById("password");
+                const icon = document.getElementById("iconPwd");
 
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-slash");
-            } else {
-                input.type = "password";
-                icon.classList.replace("fa-eye-slash", "fa-eye");
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.remove("fa-eye");
+                    icon.classList.add("fa-eye-slash");
+                } else {
+                    input.type = "password";
+                    icon.classList.remove("fa-eye-slash");
+                    icon.classList.add("fa-eye");
+                }
             }
-        }
 
-        document.getElementById("loginForm").addEventListener("submit", function () {
-            const btn = document.getElementById("btnLogin");
-            btn.classList.add("loading");
-            btn.disabled = true;
-        });
-    </script>
-}
+            function notifyFeature(message) {
+                alert(message);
+            }
+
+            document.getElementById("loginForm").addEventListener("submit", function () {
+                const btn = document.getElementById("btnLogin");
+                btn.classList.add("loading");
+                btn.disabled = true;
+            });
+        </script>
+    }

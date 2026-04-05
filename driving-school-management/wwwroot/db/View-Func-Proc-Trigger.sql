@@ -492,7 +492,30 @@ BEGIN
         END;
 END;
 /
+CREATE OR REPLACE PACKAGE pkg_khoahoc AS
+    PROCEDURE cap_nhat_trang_thai;
+END pkg_khoahoc;
+/
+CREATE OR REPLACE PACKAGE BODY pkg_khoahoc AS
 
+    PROCEDURE cap_nhat_trang_thai IS
+    BEGIN
+        UPDATE KhoaHoc
+        SET trangThai =
+            CASE
+                WHEN TRUNC(SYSDATE) < TRUNC(ngayBatDau)
+                    THEN N'Sắp khai giảng'
+                WHEN TRUNC(SYSDATE) BETWEEN TRUNC(ngayBatDau) AND TRUNC(ngayKetThuc)
+                    THEN N'Đang học'
+                WHEN TRUNC(SYSDATE) > TRUNC(ngayKetThuc)
+                    THEN N'Đã kết thúc'
+            END;
+
+        COMMIT;
+    END cap_nhat_trang_thai;
+
+END pkg_khoahoc;
+/
 CREATE OR REPLACE PROCEDURE sp_GetKhoaHocDangMo (
     p_cursor OUT SYS_REFCURSOR
 )

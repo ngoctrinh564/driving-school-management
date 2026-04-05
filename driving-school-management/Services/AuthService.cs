@@ -33,23 +33,45 @@ namespace driving_school_management.Services
             await conn.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
 
-            if (cmd.Parameters["o_userId"].Value == DBNull.Value)
+            var userIdValue = cmd.Parameters["o_userId"].Value;
+            if (userIdValue == null || userIdValue == DBNull.Value)
                 return null;
 
-            var dbPassword = cmd.Parameters["o_password"].Value?.ToString();
-
-            if (string.IsNullOrEmpty(dbPassword))
+            var roleIdValue = cmd.Parameters["o_roleId"].Value;
+            if (roleIdValue == null || roleIdValue == DBNull.Value)
                 return null;
 
-            if (!BCrypt.Net.BCrypt.Verify(password, dbPassword))
+            var isActiveValue = cmd.Parameters["o_isActive"].Value;
+            if (isActiveValue == null || isActiveValue == DBNull.Value)
+                return null;
+
+            var dbPasswordValue = cmd.Parameters["o_password"].Value;
+            if (dbPasswordValue == null || dbPasswordValue == DBNull.Value)
+                return null;
+
+            var dbPassword = dbPasswordValue.ToString();
+            if (string.IsNullOrWhiteSpace(dbPassword))
+                return null;
+
+            bool passwordValid;
+            try
+            {
+                passwordValid = BCrypt.Net.BCrypt.Verify(password, dbPassword);
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (!passwordValid)
                 return null;
 
             return new LoginResult
             {
-                UserId = ((OracleDecimal)cmd.Parameters["o_userId"].Value).ToInt32(),
-                RoleId = ((OracleDecimal)cmd.Parameters["o_roleId"].Value).ToInt32(),
+                UserId = ((OracleDecimal)userIdValue).ToInt32(),
+                RoleId = ((OracleDecimal)roleIdValue).ToInt32(),
                 Username = cmd.Parameters["o_username"].Value?.ToString() ?? "",
-                IsActive = ((OracleDecimal)cmd.Parameters["o_isActive"].Value).ToInt32() == 1
+                IsActive = Convert.ToInt32(isActiveValue.ToString()) == 1
             };
         }
 
