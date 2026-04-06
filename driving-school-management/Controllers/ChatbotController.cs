@@ -1,0 +1,60 @@
+﻿using driving_school_management.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace driving_school_management.Controllers
+{
+    public class ChatbotController : Controller
+    {
+        private readonly AiChatService _aiChatService;
+        private readonly AppDbContext _context;
+
+        public ChatbotController(AiChatService aiChatService, AppDbContext context)
+        {
+            _aiChatService = aiChatService;
+            _context = context;
+        }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId != null)
+            {
+                var hocVien = _context.Hocviens.FirstOrDefault(x => x.Userid == userId.Value);
+                ViewBag.AvatarUrl = hocVien?.Avatarurl;
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendMessage([FromBody] ChatRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+            {
+                return BadRequest(new { error = "Câu hỏi không hợp lệ." });
+            }
+
+            try
+            {
+                var reply = await _aiChatService.AskAsync(request.Message);
+                return Ok(new { reply });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Gemini API error",
+                    detail = ex.Message
+                });
+            }
+        }
+    }
+
+    public class ChatRequest
+    {
+        public string Message { get; set; } = string.Empty;
+    }
+}

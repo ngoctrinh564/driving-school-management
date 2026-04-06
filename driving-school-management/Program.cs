@@ -35,6 +35,7 @@ builder.Services.AddScoped<PaymentHistoryService>();
 builder.Services.AddScoped<PaymentInvoiceService>();
 builder.Services.AddScoped<HoSoService>();
 builder.Services.AddScoped<IPhotoValidationService, PhotoValidationService>();
+builder.Services.AddScoped<AiChatService>();
 //
 builder.Services.AddHttpClient();
 //
