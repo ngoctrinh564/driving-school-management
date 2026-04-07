@@ -4,72 +4,45 @@
     ViewData["Title"] = "Quản lý kỳ thi";
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-<div class="container">
-    <div class="header">
-        <h2>Quản lý kỳ thi</h2>
-        <a href="/AdminExam/Create" class="btn-primary">
-            <i class="fa fa-plus"></i> Thêm kỳ thi
-        </a>
-    </div>
-
-    <div class="card">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tên kỳ thi</th>
-                    <th>Loại</th>
-                    <th>Số lượng đăng ký</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.KyThiId</td>
-                        <td>@item.TenKyThi</td>
-                        <td><span class="badge">@item.LoaiKyThi</span></td>
-                        <td>@item.SoLuongDangKy</td>
-                        <td>
-                            <a href="/AdminExam/Details/@item.KyThiId" class="btn-info">Chi tiết</a>
-                            <a href="/AdminExam/Edit/@item.KyThiId" class="btn-warning">Sửa</a>
-                            @* <form method="post" action="/AdminExam/Delete/@item.KyThiId" style="display:inline">
-                                <button class="btn-danger">Xóa</button>
-                            </form> *@
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+<div class="page-header d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold">Danh sách kỳ thi</h3>
+    <a asp-action="Create" class="btn btn-primary btn-custom">
+        <i class="bi bi-plus-circle"></i> Tạo kỳ thi
+    </a>
 </div>
 
-<style>
-    .container { padding:20px; }
-    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    .card {
-        background:#fff;
-        border-radius:16px;
-        padding:20px;
-        box-shadow:0 2px 8px rgba(0,0,0,0.05);
-    }
-    .table { width:100%; border-collapse:collapse; }
-    .table th { text-align:left; padding:12px; color:#6b7280; }
-    .table td { padding:12px; }
-    .table tr:hover { background:#f9fafb; }
-    .btn-primary {
-        background:#2563eb; color:#fff; padding:10px 16px; border-radius:10px;
-        text-decoration:none;
-    }
-    .btn-warning { background:#f59e0b; color:#fff; padding:6px 10px; border-radius:8px; }
-    .btn-danger { background:#ef4444; color:#fff; padding:6px 10px; border-radius:8px; border:none; }
-    .btn-info { background:#0284c7; color:#fff; padding:6px 10px; border-radius:8px; }
-    .badge {
-        padding:4px 10px;
-        background:#e5e7eb;
-        border-radius:999px;
-    }
-</style>
+<div class="card-custom">
+    <table class="table table-custom">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên kỳ thi</th>
+                <th>Loại</th>
+                <th>Hạng</th>
+                <th>Số lượng</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.KyThiId</td>
+                    <td>@item.TenKyThi</td>
+                    <td>@item.LoaiKyThi</td>
+                    <td><span class="badge bg-primary">@item.MaHang</span></td>
+                    <td>@item.SoLuongDangKy</td>
+                    <td class="text-end">
+                        <a asp-action="Schedules" asp-route-kyThiId="@item.KyThiId" class="btn btn-sm btn-outline-primary">Lịch thi</a>
+                        <a asp-action="RegisteredStudents" asp-route-kyThiId="@item.KyThiId" class="btn btn-sm btn-outline-secondary">Học viên</a>
+                        <a asp-action="Edit" asp-route-kyThiId="@item.KyThiId" class="btn btn-sm btn-outline-warning">Sửa</a>
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="kyThiId" value="@item.KyThiId" />
+                            <button class="btn btn-sm btn-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

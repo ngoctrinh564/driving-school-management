@@ -1,0 +1,38 @@
+﻿@model List<driving_school_management.Models.DTOs.LichThiDto>
+
+@{
+    ViewData["Title"] = "Lịch thi";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h4 class="fw-bold">Lịch thi</h4>
+
+    <form asp-action="AutoAssignSchedules" method="post">
+        <input type="hidden" name="kyThiId" value="@ViewBag.KyThiId" />
+        <button class="btn btn-primary btn-custom">
+            <i class="bi bi-magic"></i> Phân công tự động
+        </button>
+    </form>
+</div>
+
+<div class="card-custom">
+    <table class="table table-custom">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Thời gian</th>
+                <th>Địa điểm</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.LichThiId</td>
+                    <td>@item.ThoiGianThi</td>
+                    <td>@item.DiaDiem</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
