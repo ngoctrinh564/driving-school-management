@@ -4344,6 +4344,14 @@ ADD CONSTRAINT fk_ctpttt_kqht
 FOREIGN KEY (ketQuaHocTapId)
 REFERENCES KetQuaHocTap(ketQuaHocTapId);
 /
+-- thêm lịch thi vao chi tiết đăng ký
+ALTER TABLE ChiTietDangKyThi
+ADD lichThiId NUMBER NULL;
+ALTER TABLE ChiTietDangKyThi
+ADD CONSTRAINT fk_ChiTietDangKyThi_LichThi
+FOREIGN KEY (lichThiId)
+REFERENCES LichThi(lichThiId);
+/
 
 
 

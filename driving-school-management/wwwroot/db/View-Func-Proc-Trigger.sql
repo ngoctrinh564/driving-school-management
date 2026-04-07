@@ -277,94 +277,523 @@ END;
 /
 -- Exam: kì thi
 CREATE OR REPLACE VIEW VW_KYTHI_ADMIN AS
-SELECT 
+SELECT
     kt.kyThiId,
     kt.tenKyThi,
     kt.loaiKyThi,
-    COUNT(ct.hoSoId) AS soLuongDangKy
+    REGEXP_SUBSTR(kt.tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1) AS maHang,
+    COUNT(DISTINCT ctdk.hoSoId) AS soLuongDangKy
 FROM KyThi kt
-LEFT JOIN ChiTietDangKyThi ct 
-    ON kt.kyThiId = ct.kyThiId
-GROUP BY 
-    kt.kyThiId, 
-    kt.tenKyThi, 
+LEFT JOIN ChiTietDangKyThi ctdk
+    ON kt.kyThiId = ctdk.kyThiId
+GROUP BY
+    kt.kyThiId,
+    kt.tenKyThi,
     kt.loaiKyThi;
-    
 /
-CREATE OR REPLACE PROCEDURE SP_CREATE_KYTHI
-(
-    p_tenKyThi   KyThi.tenKyThi%TYPE,
-    p_loaiKyThi  KyThi.loaiKyThi%TYPE
-)
-AS
-BEGIN
-    INSERT INTO KyThi (tenKyThi, loaiKyThi)
-    VALUES (p_tenKyThi, p_loaiKyThi);
-END;
+CREATE OR REPLACE VIEW VW_KYTHI_HOCVIEN_DANGKY AS
+SELECT DISTINCT
+    kt.kyThiId,
+    kt.tenKyThi,
+    hs.hoSoId,
+    hv.hocVienId,
+    hv.hoTen,
+    hv.sdt,
+    hv.email,
+    ctdk.lichThiId,
+    ptt.phieuId,
+    ptt.tenPhieu,
+    ptt.ngayLap,
+    ptt.ngayNop,
+    ptt.phuongThuc
+FROM KyThi kt
+JOIN ChiTietDangKyThi ctdk
+    ON kt.kyThiId = ctdk.kyThiId
+JOIN HoSoThiSinh hs
+    ON ctdk.hoSoId = hs.hoSoId
+JOIN HocVien hv
+    ON hs.hocVienId = hv.hocVienId
+JOIN ChiTietPhieuThanhToan ctptt
+    ON ctptt.hoSoId = hs.hoSoId
+   AND ctptt.ketQuaHocTapId IS NULL
+JOIN PhieuThanhToan ptt
+    ON ptt.phieuId = ctptt.phieuId
+WHERE ptt.ngayNop IS NOT NULL
+  AND INSTR(ptt.tenPhieu, '_') > 0
+  AND SUBSTR(ptt.tenPhieu, 1, INSTR(ptt.tenPhieu, '_') - 1) = kt.tenKyThi;
 /
+CREATE OR REPLACE PACKAGE PKG_KYTHI AS
 
-CREATE OR REPLACE PROCEDURE SP_UPDATE_KYTHI
-(
-    p_kyThiId NUMBER,
-    p_tenKyThi NVARCHAR2,
-    p_loaiKyThi NVARCHAR2
-)
-AS
-BEGIN
-    UPDATE KyThi
-    SET 
-        tenKyThi = p_tenKyThi,
-        loaiKyThi = p_loaiKyThi
-    WHERE kyThiId = p_kyThiId;
-END;
+    PROCEDURE GET_HANG_GPLX(
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE CREATE_KYTHI(
+        p_hangId NUMBER,
+        p_dot NUMBER,
+        p_nam NUMBER
+    );
+
+    PROCEDURE GET_KYTHI(
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE DELETE_KYTHI(
+        p_kyThiId NUMBER
+    );
+
+    PROCEDURE GET_LICHTHI_BY_KYTHI(
+        p_kyThiId NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE AUTO_PHANCONG_LICHTHI(
+        p_kyThiId NUMBER
+    );
+
+    PROCEDURE GET_HOCVIEN_DANGKY(
+        p_kyThiId NUMBER,
+        p_keyword NVARCHAR2,
+        p_page NUMBER,
+        p_pageSize NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_HOCVIEN_DANGKY_COUNT(
+        p_kyThiId NUMBER,
+        p_keyword NVARCHAR2,
+        p_total OUT NUMBER
+    );
+    
+    PROCEDURE GET_KYTHI_EDIT_INFO(
+        p_kyThiId NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    );
+    
+    PROCEDURE UPDATE_CAP_KYTHI(
+        p_kyThiId NUMBER,
+        p_hangId NUMBER,
+        p_dot NUMBER,
+        p_nam NUMBER
+    );
+
+END PKG_KYTHI;
 /
-CREATE OR REPLACE PROCEDURE SP_DELETE_KYTHI
-(
-    p_kyThiId NUMBER
-)
-AS
-BEGIN
-    DELETE FROM KyThi
-    WHERE kyThiId = p_kyThiId;
-END;
+CREATE OR REPLACE PACKAGE BODY PKG_KYTHI AS
+
+    TYPE T_NUMBER_TAB IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+
+    PROCEDURE GET_HANG_GPLX(
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+        SELECT
+            hangId,
+            maHang,
+            tenHang
+        FROM HangGplx
+        ORDER BY hangId;
+    END;
+
+    PROCEDURE CREATE_KYTHI(
+        p_hangId NUMBER,
+        p_dot NUMBER,
+        p_nam NUMBER
+    )
+    IS
+        v_tenHang HangGplx.tenHang%TYPE;
+        v_maHang HangGplx.maHang%TYPE;
+        v_tenTotNghiep NVARCHAR2(255);
+        v_tenSatHach NVARCHAR2(255);
+        v_count NUMBER;
+    BEGIN
+        SELECT tenHang, maHang
+        INTO v_tenHang, v_maHang
+        FROM HangGplx
+        WHERE hangId = p_hangId;
+
+        v_tenTotNghiep := 'Kỳ thi hạng ' || v_tenHang || ' - Tốt nghiệp - đợt ' || p_dot || ' năm ' || p_nam || ' (' || v_maHang || ')';
+        v_tenSatHach := 'Kỳ thi hạng ' || v_tenHang || ' - Sát hạch - đợt ' || p_dot || ' năm ' || p_nam || ' (' || v_maHang || ')';
+
+        SELECT COUNT(*)
+        INTO v_count
+        FROM KyThi
+        WHERE tenKyThi IN (v_tenTotNghiep, v_tenSatHach);
+
+        IF v_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Ky thi da ton tai');
+        END IF;
+
+        INSERT INTO KyThi (tenKyThi, loaiKyThi)
+        VALUES (v_tenTotNghiep, N'Tốt nghiệp');
+
+        INSERT INTO KyThi (tenKyThi, loaiKyThi)
+        VALUES (v_tenSatHach, N'Sát hạch');
+    END;
+
+    PROCEDURE GET_KYTHI(
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+        SELECT
+            kyThiId,
+            tenKyThi,
+            loaiKyThi,
+            maHang,
+            soLuongDangKy
+        FROM VW_KYTHI_ADMIN
+        ORDER BY kyThiId DESC;
+    END;
+
+    PROCEDURE DELETE_KYTHI(
+        p_kyThiId NUMBER
+    )
+    IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM ChiTietDangKyThi
+        WHERE kyThiId = p_kyThiId;
+
+        IF v_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20002, 'Ky thi da co hoc vien dang ky');
+        END IF;
+
+        SELECT COUNT(*)
+        INTO v_count
+        FROM LichThi
+        WHERE kyThiId = p_kyThiId;
+
+        IF v_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20003, 'Ky thi da co lich thi');
+        END IF;
+
+        DELETE FROM KyThi
+        WHERE kyThiId = p_kyThiId;
+    END;
+
+    PROCEDURE GET_LICHTHI_BY_KYTHI(
+        p_kyThiId NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+        SELECT
+            lichThiId,
+            thoiGianThi,
+            diaDiem,
+            kyThiId
+        FROM LichThi
+        WHERE kyThiId = p_kyThiId
+        ORDER BY lichThiId;
+    END;
+
+    PROCEDURE AUTO_PHANCONG_LICHTHI(
+        p_kyThiId NUMBER
+    )
+    IS
+        v_total NUMBER := 0;
+        v_scheduleCount NUMBER := 0;
+        v_base NUMBER := 0;
+        v_extra NUMBER := 0;
+        v_currentSchedule NUMBER := 1;
+        v_currentLimit NUMBER := 0;
+        v_currentCount NUMBER := 0;
+        v_scheduleIds T_NUMBER_TAB;
+        v_existLichThi NUMBER := 0;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_existLichThi
+        FROM LichThi
+        WHERE kyThiId = p_kyThiId;
+
+        IF v_existLichThi > 0 THEN
+            RAISE_APPLICATION_ERROR(-20004, 'Ky thi da duoc phan cong lich thi');
+        END IF;
+
+        SELECT COUNT(*)
+        INTO v_total
+        FROM VW_KYTHI_HOCVIEN_DANGKY
+        WHERE kyThiId = p_kyThiId;
+
+        IF v_total = 0 THEN
+            RAISE_APPLICATION_ERROR(-20005, 'Khong co hoc vien hop le de phan cong');
+        END IF;
+
+        v_scheduleCount := CEIL(v_total / 50);
+        v_base := FLOOR(v_total / v_scheduleCount);
+        v_extra := MOD(v_total, v_scheduleCount);
+
+        FOR i IN 1 .. v_scheduleCount LOOP
+            INSERT INTO LichThi (thoiGianThi, diaDiem, kyThiId)
+            VALUES (NULL, NULL, p_kyThiId)
+            RETURNING lichThiId INTO v_scheduleIds(i);
+        END LOOP;
+
+        v_currentSchedule := 1;
+        v_currentLimit := v_base + CASE WHEN v_currentSchedule <= v_extra THEN 1 ELSE 0 END;
+        v_currentCount := 0;
+
+        FOR rec IN (
+            SELECT hoSoId
+            FROM VW_KYTHI_HOCVIEN_DANGKY
+            WHERE kyThiId = p_kyThiId
+            ORDER BY hoSoId
+        ) LOOP
+
+            IF v_currentCount >= v_currentLimit THEN
+                v_currentSchedule := v_currentSchedule + 1;
+                v_currentCount := 0;
+                v_currentLimit := v_base + CASE WHEN v_currentSchedule <= v_extra THEN 1 ELSE 0 END;
+            END IF;
+
+            UPDATE ChiTietDangKyThi
+            SET lichThiId = v_scheduleIds(v_currentSchedule)
+            WHERE kyThiId = p_kyThiId
+              AND hoSoId = rec.hoSoId;
+
+            v_currentCount := v_currentCount + 1;
+        END LOOP;
+    END;
+
+    PROCEDURE GET_HOCVIEN_DANGKY(
+        p_kyThiId NUMBER,
+        p_keyword NVARCHAR2,
+        p_page NUMBER,
+        p_pageSize NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+        v_start NUMBER;
+        v_end NUMBER;
+    BEGIN
+        v_start := ((p_page - 1) * p_pageSize) + 1;
+        v_end := p_page * p_pageSize;
+
+        OPEN p_cursor FOR
+        SELECT *
+        FROM
+        (
+            SELECT x.*, ROWNUM rn
+            FROM
+            (
+                SELECT
+                    kyThiId,
+                    tenKyThi,
+                    hoSoId,
+                    hocVienId,
+                    hoTen,
+                    sdt,
+                    email,
+                    lichThiId,
+                    phieuId,
+                    tenPhieu,
+                    ngayLap,
+                    ngayNop,
+                    phuongThuc
+                FROM VW_KYTHI_HOCVIEN_DANGKY
+                WHERE kyThiId = p_kyThiId
+                  AND (
+                        p_keyword IS NULL
+                        OR UPPER(hoTen) LIKE '%' || UPPER(p_keyword) || '%'
+                        OR UPPER(sdt) LIKE '%' || UPPER(p_keyword) || '%'
+                        OR UPPER(email) LIKE '%' || UPPER(p_keyword) || '%'
+                      )
+                ORDER BY hoTen, hoSoId
+            ) x
+            WHERE ROWNUM <= v_end
+        )
+        WHERE rn >= v_start;
+    END;
+
+    PROCEDURE GET_HOCVIEN_DANGKY_COUNT(
+        p_kyThiId NUMBER,
+        p_keyword NVARCHAR2,
+        p_total OUT NUMBER
+    )
+    IS
+    BEGIN
+        SELECT COUNT(*)
+        INTO p_total
+        FROM VW_KYTHI_HOCVIEN_DANGKY
+        WHERE kyThiId = p_kyThiId
+          AND (
+                p_keyword IS NULL
+                OR UPPER(hoTen) LIKE '%' || UPPER(p_keyword) || '%'
+                OR UPPER(sdt) LIKE '%' || UPPER(p_keyword) || '%'
+                OR UPPER(email) LIKE '%' || UPPER(p_keyword) || '%'
+              );
+    END;
+    
+    PROCEDURE GET_KYTHI_EDIT_INFO(
+        p_kyThiId NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+        SELECT
+            kt.kyThiId,
+            hg.hangId,
+            hg.maHang,
+            hg.tenHang,
+            TO_NUMBER(REGEXP_SUBSTR(kt.tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)) AS dot,
+            TO_NUMBER(REGEXP_SUBSTR(kt.tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1)) AS nam
+        FROM KyThi kt
+        JOIN HangGplx hg
+            ON hg.maHang = REGEXP_SUBSTR(kt.tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1)
+        WHERE kt.kyThiId = p_kyThiId;
+    END;
+    
+    PROCEDURE UPDATE_CAP_KYTHI(
+        p_kyThiId NUMBER,
+        p_hangId NUMBER,
+        p_dot NUMBER,
+        p_nam NUMBER
+    )
+    IS
+        v_oldTenKyThi KyThi.tenKyThi%TYPE;
+        v_oldMaHang HangGplx.maHang%TYPE;
+        v_oldDot NUMBER;
+        v_oldNam NUMBER;
+    
+        v_newTenHang HangGplx.tenHang%TYPE;
+        v_newMaHang HangGplx.maHang%TYPE;
+    
+        v_tenTotNghiep NVARCHAR2(255);
+        v_tenSatHach NVARCHAR2(255);
+    
+        v_count NUMBER;
+    BEGIN
+        SELECT tenKyThi
+        INTO v_oldTenKyThi
+        FROM KyThi
+        WHERE kyThiId = p_kyThiId;
+    
+        v_oldMaHang := REGEXP_SUBSTR(v_oldTenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1);
+        v_oldDot := TO_NUMBER(REGEXP_SUBSTR(v_oldTenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1));
+        v_oldNam := TO_NUMBER(REGEXP_SUBSTR(v_oldTenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1));
+    
+        SELECT tenHang, maHang
+        INTO v_newTenHang, v_newMaHang
+        FROM HangGplx
+        WHERE hangId = p_hangId;
+    
+        v_tenTotNghiep := 'Kỳ thi hạng ' || v_newTenHang || ' - Tốt nghiệp - đợt ' || p_dot || ' năm ' || p_nam || ' (' || v_newMaHang || ')';
+        v_tenSatHach := 'Kỳ thi hạng ' || v_newTenHang || ' - Sát hạch - đợt ' || p_dot || ' năm ' || p_nam || ' (' || v_newMaHang || ')';
+    
+        SELECT COUNT(*)
+        INTO v_count
+        FROM KyThi
+        WHERE tenKyThi IN (v_tenTotNghiep, v_tenSatHach)
+          AND NOT (
+                REGEXP_SUBSTR(tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1) = v_oldMaHang
+            AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)) = v_oldDot
+            AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1)) = v_oldNam
+          );
+    
+        IF v_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20006, 'Cap ky thi moi da ton tai');
+        END IF;
+    
+        UPDATE KyThi
+        SET tenKyThi =
+            CASE
+                WHEN loaiKyThi = N'Tốt nghiệp' THEN v_tenTotNghiep
+                WHEN loaiKyThi = N'Sát hạch' THEN v_tenSatHach
+                ELSE tenKyThi
+            END
+        WHERE REGEXP_SUBSTR(tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1) = v_oldMaHang
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)) = v_oldDot
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1)) = v_oldNam
+          AND loaiKyThi IN (N'Tốt nghiệp', N'Sát hạch');
+    
+        IF SQL%ROWCOUNT = 0 THEN
+            RAISE_APPLICATION_ERROR(-20007, 'Khong tim thay cap ky thi can sua');
+        END IF;
+    END;
+END PKG_KYTHI;
 /
-CREATE OR REPLACE PROCEDURE SP_GET_KYTHI
-(
-    p_cursor OUT SYS_REFCURSOR
-)
-AS
-BEGIN
-    OPEN p_cursor FOR
-    SELECT * FROM VW_KYTHI_ADMIN
-    ORDER BY kyThiId DESC;
-END;
-/
-CREATE OR REPLACE PROCEDURE SP_CREATE_LICHTHI
-(
-    p_kyThiId NUMBER,
-    p_thoiGianThi TIMESTAMP,
-    p_diaDiem NVARCHAR2
-)
-AS
-BEGIN
-    INSERT INTO LichThi (kyThiId, thoiGianThi, diaDiem)
-    VALUES (p_kyThiId, p_thoiGianThi, p_diaDiem);
-END;
-/
-CREATE OR REPLACE PROCEDURE SP_GET_LICHTHI_BY_KYTHI
-(
-    p_kyThiId NUMBER,
-    p_cursor OUT SYS_REFCURSOR
-)
-AS
-BEGIN
-    OPEN p_cursor FOR
-    SELECT *
-    FROM LichThi
-    WHERE kyThiId = p_kyThiId
-    ORDER BY thoiGianThi;
-END;
-/
+--CREATE OR REPLACE PROCEDURE SP_CREATE_KYTHI
+--(
+--    p_tenKyThi   KyThi.tenKyThi%TYPE,
+--    p_loaiKyThi  KyThi.loaiKyThi%TYPE
+--)
+--AS
+--BEGIN
+--    INSERT INTO KyThi (tenKyThi, loaiKyThi)
+--    VALUES (p_tenKyThi, p_loaiKyThi);
+--END;
+--/
+--
+--CREATE OR REPLACE PROCEDURE SP_UPDATE_KYTHI
+--(
+--    p_kyThiId NUMBER,
+--    p_tenKyThi NVARCHAR2,
+--    p_loaiKyThi NVARCHAR2
+--)
+--AS
+--BEGIN
+--    UPDATE KyThi
+--    SET 
+--        tenKyThi = p_tenKyThi,
+--        loaiKyThi = p_loaiKyThi
+--    WHERE kyThiId = p_kyThiId;
+--END;
+--/
+--CREATE OR REPLACE PROCEDURE SP_DELETE_KYTHI
+--(
+--    p_kyThiId NUMBER
+--)
+--AS
+--BEGIN
+--    DELETE FROM KyThi
+--    WHERE kyThiId = p_kyThiId;
+--END;
+--/
+--CREATE OR REPLACE PROCEDURE SP_GET_KYTHI
+--(
+--    p_cursor OUT SYS_REFCURSOR
+--)
+--AS
+--BEGIN
+--    OPEN p_cursor FOR
+--    SELECT * FROM VW_KYTHI_ADMIN
+--    ORDER BY kyThiId DESC;
+--END;
+--/
+--CREATE OR REPLACE PROCEDURE SP_CREATE_LICHTHI
+--(
+--    p_kyThiId NUMBER,
+--    p_thoiGianThi TIMESTAMP,
+--    p_diaDiem NVARCHAR2
+--)
+--AS
+--BEGIN
+--    INSERT INTO LichThi (kyThiId, thoiGianThi, diaDiem)
+--    VALUES (p_kyThiId, p_thoiGianThi, p_diaDiem);
+--END;
+--/
+--CREATE OR REPLACE PROCEDURE SP_GET_LICHTHI_BY_KYTHI
+--(
+--    p_kyThiId NUMBER,
+--    p_cursor OUT SYS_REFCURSOR
+--)
+--AS
+--BEGIN
+--    OPEN p_cursor FOR
+--    SELECT *
+--    FROM LichThi
+--    WHERE kyThiId = p_kyThiId
+--    ORDER BY thoiGianThi;
+--END;
+--/
 
 
 
@@ -2348,7 +2777,11 @@ BEGIN
         nhanXet,
         soBuoiHoc,
         soBuoiVang,
-        soKmHoanThanh
+        soKmHoanThanh,
+        DU_DK_THITOTNGHIEP,
+        DAUTOTNGHIEP,
+        DU_DK_THISATHACH,
+        THOIGIANCAPNHAT
     )
     VALUES
     (
@@ -2356,7 +2789,11 @@ BEGIN
         NULL,
         NULL,
         NULL,
-        NULL
+        NULL,
+        0,
+        0,
+        0,
+        SYSDATE
     )
     RETURNING ketQuaHocTapId INTO v_ketQuaHocTapId;
 
@@ -3196,6 +3633,10 @@ BEGIN
                 kq.soBuoiHoc,
                 kq.soBuoiVang,
                 NVL(kq.soKmHoanThanh, N'') AS soKmHoanThanh,
+                NVL(kq.DU_DK_THITOTNGHIEP, 0) AS DU_DK_THITOTNGHIEP,
+                NVL(kq.DAUTOTNGHIEP, 0) AS DAUTOTNGHIEP,
+                NVL(kq.DU_DK_THISATHACH, 0) AS DU_DK_THISATHACH,
+                kq.THOIGIANCAPNHAT,
 
                 ct_kq.lyThuyetKq,
                 ct_kq.saHinhKq,
@@ -4286,11 +4727,6 @@ END PKG_KHOAHOC;
 -- ==================================================
 
 -- KHÓA HỌC
-CREATE SEQUENCE SEQ_KHOAHOC
-START WITH 1
-INCREMENT BY 1
-NOCACHE;
-/
 CREATE OR REPLACE VIEW VW_KHOAHOC AS
 SELECT 
     kh.khoaHocId,
@@ -4464,8 +4900,204 @@ END UPDATE_KHOAHOC;
 
 END PKG_ADMINKHOAHOC;
 /
+-- KỲ THI
+CREATE OR REPLACE VIEW VW_USER_KYTHI AS
+WITH HV AS (
+    SELECT hocVienId, hoTen
+    FROM HocVien
+),
+HS AS (
+    SELECT hs.hoSoId, hs.hocVienId, hs.hangId, hg.maHang, hg.hocPhi
+    FROM HoSoThiSinh hs
+    JOIN HangGplx hg ON hg.hangId = hs.hangId
+),
+KQHT AS (
+    SELECT kq.*
+    FROM KetQuaHocTap kq
+),
+CTKQHT AS (
+    SELECT 
+        ctkq.ketQuaHocTapId,
+        CASE 
+            WHEN NVL(lyThuyetKq,0)=1 
+             AND NVL(saHinhKq,0)=1 
+             AND NVL(duongTruongKq,0)=1 
+             AND NVL(moPhongKq,0)=1
+            THEN 1 ELSE 0 END AS DAT_FULL
+    FROM ChiTietKetQuaHocTap ctkq
+)
+SELECT
+    kt.kyThiId,
+    kt.tenKyThi,
+    kt.loaiKyThi,
+    hs.hoSoId,
+    hs.hocVienId,
+    hs.maHang,
+    hs.hocPhi,
 
+    NVL(kq.DU_DK_THITOTNGHIEP,0) AS duDKTotNghiep,
+    NVL(kq.DU_DK_THISATHACH,0) AS duDKSatHach,
+    NVL(kq.DAUTOTNGHIEP,0) AS dauTotNghiep,
 
+    NVL(ct.DAT_FULL,0) AS daHoanThanhTatCa,
+
+    CASE
+        WHEN NVL(ct.DAT_FULL,0)=1 THEN 0
+        WHEN NVL(kq.DU_DK_THISATHACH,0)=1 THEN 1
+        WHEN NVL(kq.DU_DK_THITOTNGHIEP,0)=1 THEN 1
+        ELSE 0
+    END AS coTheDangKy
+
+FROM KyThi kt
+JOIN HS 
+    ON HS.maHang = REGEXP_SUBSTR(kt.tenKyThi, '\(([^)]+)\)$',1,1,NULL,1)
+LEFT JOIN KQHT kq ON kq.hoSoId = hs.hoSoId
+LEFT JOIN CTKQHT ct ON ct.ketQuaHocTapId = kq.ketQuaHocTapId;
+/
+CREATE OR REPLACE PROCEDURE GET_KYTHI_FOR_USER(
+    p_userId NUMBER,
+    p_cursor OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN p_cursor FOR
+    SELECT *
+    FROM VW_USER_KYTHI v
+    JOIN HocVien hv ON hv.hocVienId = v.hocVienId
+    WHERE hv.userId = p_userId
+    ORDER BY v.kyThiId DESC;
+END;
+/
+CREATE OR REPLACE PROCEDURE DANGKY_KYTHI_USER(
+    p_userId NUMBER,
+    p_kyThiId NUMBER
+)
+IS
+    v_hocVienId NUMBER;
+    v_hoTen NVARCHAR2(100);
+    v_hoSoId NUMBER;
+    v_maHang NVARCHAR2(20);
+    v_hocPhi NUMBER;
+
+    v_duDKTot NUMBER;
+    v_duDKSat NUMBER;
+    v_dauTN NUMBER;
+    v_full NUMBER;
+
+    v_kyThiTot NUMBER;
+    v_kyThiSat NUMBER;
+
+    v_tenTot NVARCHAR2(255);
+    v_tenSat NVARCHAR2(255);
+
+    v_phi NUMBER;
+
+    v_phieuId NUMBER;
+BEGIN
+    -- Lấy học viên
+    SELECT hocVienId, hoTen INTO v_hocVienId, v_hoTen
+    FROM HocVien WHERE userId = p_userId;
+
+    -- Lấy thông tin kỳ thi
+    SELECT 
+        REGEXP_SUBSTR(tenKyThi,'\(([^)]+)\)$',1,1,NULL,1)
+    INTO v_maHang
+    FROM KyThi WHERE kyThiId = p_kyThiId;
+
+    -- Lấy hồ sơ + học phí
+    SELECT hs.hoSoId, hg.hocPhi
+    INTO v_hoSoId, v_hocPhi
+    FROM HoSoThiSinh hs
+    JOIN HangGplx hg ON hg.hangId = hs.hangId
+    WHERE hs.hocVienId = v_hocVienId
+      AND hg.maHang = v_maHang
+      AND ROWNUM = 1;
+
+    -- Lấy kết quả học tập
+    SELECT 
+        NVL(DU_DK_THITOTNGHIEP,0),
+        NVL(DU_DK_THISATHACH,0),
+        NVL(DAUTOTNGHIEP,0)
+    INTO v_duDKTot, v_duDKSat, v_dauTN
+    FROM KetQuaHocTap
+    WHERE hoSoId = v_hoSoId;
+
+    -- Check full pass
+    SELECT CASE 
+        WHEN NVL(lyThuyetKq,0)=1 AND NVL(saHinhKq,0)=1 
+         AND NVL(duongTruongKq,0)=1 AND NVL(moPhongKq,0)=1
+        THEN 1 ELSE 0 END
+    INTO v_full
+    FROM ChiTietKetQuaHocTap
+    WHERE ketQuaHocTapId = (
+        SELECT ketQuaHocTapId FROM KetQuaHocTap WHERE hoSoId = v_hoSoId
+    );
+
+    -- Nếu đã hoàn thành → chặn
+    IF v_full = 1 THEN
+        RAISE_APPLICATION_ERROR(-20020, 'Da hoan thanh ky thi');
+    END IF;
+
+    -- Nếu chưa đủ điều kiện tốt nghiệp → chặn
+    IF v_duDKTot = 0 THEN
+        RAISE_APPLICATION_ERROR(-20021, 'Chua du dieu kien thi tot nghiep');
+    END IF;
+
+    -- Tìm 2 kỳ thi
+    SELECT kyThiId, tenKyThi INTO v_kyThiTot, v_tenTot
+    FROM KyThi
+    WHERE REGEXP_SUBSTR(tenKyThi,'\(([^)]+)\)$',1,1,NULL,1)=v_maHang
+      AND loaiKyThi = N'Tốt nghiệp'
+      AND ROWNUM=1;
+
+    SELECT kyThiId, tenKyThi INTO v_kyThiSat, v_tenSat
+    FROM KyThi
+    WHERE REGEXP_SUBSTR(tenKyThi,'\(([^)]+)\)$',1,1,NULL,1)=v_maHang
+      AND loaiKyThi = N'Sát hạch'
+      AND ROWNUM=1;
+
+    v_phi := v_hocPhi / 3;
+
+    -- CASE 1: đủ sát hạch → chỉ đăng ký 1
+    IF v_duDKSat = 1 THEN
+
+        INSERT INTO ChiTietDangKyThi
+        VALUES (v_kyThiSat, v_hoSoId, SYSTIMESTAMP, NULL);
+
+        INSERT INTO PhieuThanhToan(tenPhieu, ngayLap, tongTien)
+        VALUES (v_tenSat || ' _ ' || v_hoTen, SYSTIMESTAMP, v_phi)
+        RETURNING phieuId INTO v_phieuId;
+
+        INSERT INTO ChiTietPhieuThanhToan
+        VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+
+    ELSE
+    -- CASE 2: chỉ đủ tốt nghiệp → đăng ký cả 2
+
+        INSERT INTO ChiTietDangKyThi
+        VALUES (v_kyThiTot, v_hoSoId, SYSTIMESTAMP, NULL);
+
+        INSERT INTO ChiTietDangKyThi
+        VALUES (v_kyThiSat, v_hoSoId, SYSTIMESTAMP, NULL);
+
+        INSERT INTO PhieuThanhToan(tenPhieu, ngayLap, tongTien)
+        VALUES (v_tenTot || ' _ ' || v_hoTen, SYSTIMESTAMP, v_phi)
+        RETURNING phieuId INTO v_phieuId;
+
+        INSERT INTO ChiTietPhieuThanhToan
+        VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+
+        INSERT INTO PhieuThanhToan(tenPhieu, ngayLap, tongTien)
+        VALUES (v_tenSat || ' _ ' || v_hoTen, SYSTIMESTAMP, v_phi)
+        RETURNING phieuId INTO v_phieuId;
+
+        INSERT INTO ChiTietPhieuThanhToan
+        VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+
+    END IF;
+
+END;
+/
 
 
 

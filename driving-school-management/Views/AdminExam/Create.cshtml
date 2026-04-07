@@ -1,31 +1,34 @@
 ﻿@{
-    ViewData["Title"] = "Thêm kỳ thi";
+    ViewData["Title"] = "Tạo kỳ thi";
+    var hangList = ViewBag.HangList as List<driving_school_management.Models.DTOs.HangGplxDto>;
 }
 
-<div class="container">
-    <div class="card">
-        <h2>Thêm kỳ thi</h2>
+<div class="card-custom">
+    <h4 class="fw-bold mb-3">Tạo kỳ thi</h4>
 
-        <form method="post">
-            <div class="form-group">
-                <label>Tên kỳ thi</label>
-                <input name="tenKyThi" class="input" />
-            </div>
+    <form asp-action="Create" method="post">
+        <div class="form-group">
+            <label>Chọn hạng</label>
+            <select name="hangId" class="form-control input-custom">
+                @foreach (var h in hangList)
+                {
+                    <option value="@h.HangId">@h.TenHang (@h.MaHang)</option>
+                }
+            </select>
+        </div>
 
-            <div class="form-group">
-                <label>Loại kỳ thi</label>
-                <input name="loaiKyThi" class="input" />
-            </div>
+        <div class="form-group">
+            <label>Đợt</label>
+            <input name="dot" class="form-control input-custom" />
+        </div>
 
-            <button class="btn-primary">Lưu</button>
-        </form>
-    </div>
+        <div class="form-group">
+            <label>Năm</label>
+            <input name="nam" class="form-control input-custom" />
+        </div>
+
+        <button class="btn btn-primary btn-custom mt-3">
+            <i class="bi bi-check"></i> Tạo
+        </button>
+    </form>
 </div>
-
-<style>
-.container { padding:20px; }
-.card { background:#fff; padding:20px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-.input { width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:8px; margin-top:6px; }
-.form-group { margin-bottom:16px; }
-.btn-primary { background:#2563eb; color:#fff; padding:10px 16px; border:none; border-radius:10px; }
-</style>

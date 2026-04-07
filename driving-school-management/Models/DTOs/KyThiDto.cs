@@ -5,6 +5,7 @@
         public int KyThiId { get; set; }
         public string TenKyThi { get; set; }
         public string LoaiKyThi { get; set; }
+        public string? MaHang { get; set; }
         public int SoLuongDangKy { get; set; }
     }
 }

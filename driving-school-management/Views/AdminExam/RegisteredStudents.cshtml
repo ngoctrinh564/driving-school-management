@@ -1,0 +1,55 @@
+﻿@model List<driving_school_management.Models.DTOs.HocVienDangKyThiDto>
+
+@{
+    ViewData["Title"] = "Học viên đăng ký";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold">Học viên đăng ký</h4>
+
+    <form method="get" class="search-box">
+        <input type="hidden" name="kyThiId" value="@ViewBag.KyThiId" />
+        <input name="keyword" value="@ViewBag.Keyword" placeholder="Tìm kiếm..." class="input-custom" />
+    </form>
+</div>
+
+<div class="card-custom">
+    <table class="table table-custom">
+        <thead>
+            <tr>
+                <th>Họ tên</th>
+                <th>SĐT</th>
+                <th>Email</th>
+                <th>Phiếu</th>
+                <th>Lịch</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.HoTen</td>
+                    <td>@item.Sdt</td>
+                    <td>@item.Email</td>
+                    <td>@item.TenPhieu</td>
+                    <td>@item.LichThiId</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination mt-3">
+    @{
+        int totalPages = ViewBag.TotalPages;
+        int page = ViewBag.Page;
+    }
+
+    @for (int i = 1; i <= totalPages; i++)
+    {
+        <a class="page-item @(i == page ? "active" : "")"
+               href="?kyThiId=@ViewBag.KyThiId&page=@i&keyword=@ViewBag.Keyword">
+            @i
+        </a>
+    }
+</div>
