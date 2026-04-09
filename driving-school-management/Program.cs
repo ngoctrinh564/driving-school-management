@@ -17,6 +17,7 @@ builder.Services.AddScoped<SignOracleHelper>();
 builder.Services.AddScoped<AdminDashboardService>();
 builder.Services.AddScoped<AdminExamService>();
 builder.Services.AddScoped<AdminKhoaHocService>();
+builder.Services.AddScoped<IAdminKetQuaHocTapService, AdminKetQuaHocTapService>();
 //thêm services
 builder.Services.AddScoped<KhoaHocService>();
 builder.Services.AddScoped<HocService>();

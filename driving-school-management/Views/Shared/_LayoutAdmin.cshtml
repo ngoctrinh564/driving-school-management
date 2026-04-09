@@ -881,6 +881,14 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a asp-controller="AdminKetQuaHocTap" asp-action="Index"
+                                   class="nav-link @(currentController == "AdminKetQuaHocTap" ? "active" : "")">
+                                <i class="nav-icon fa fa-chart-line"></i>
+                                <p>Kết quả học tập</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item has-treeview theory-tree @(currentController == "AdminTheoryQuestions" || currentController == "AdminExamSets" || currentController == "AdminResults" ? "menu-open" : "")">
                             <a href="#"
                                    class="nav-link @(currentController == "AdminTheoryQuestions" || currentController == "AdminExamSets" || currentController == "AdminResults" ? "active" : "")">

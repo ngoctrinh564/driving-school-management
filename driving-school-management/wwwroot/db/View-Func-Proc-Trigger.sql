@@ -1439,7 +1439,94 @@ BEGIN
 
 END;
 /
+-- SET SOBUOITOITHIEU trong kết quả học tập
+CREATE OR REPLACE TRIGGER trg_set_soBuoiToiThieu
+BEFORE INSERT ON KetQuaHocTap
+FOR EACH ROW
+DECLARE
+    v_maHang HangGplx.maHang%TYPE;
+BEGIN
+    /* Lấy mã hạng từ HoSo -> HangGPLX */
+    SELECT hg.maHang
+    INTO v_maHang
+    FROM HoSoThiSinh hs
+    JOIN HangGplx hg ON hs.hangId = hg.hangId
+    WHERE hs.hoSoId = :NEW.hoSoId;
 
+    /* Set giá trị theo mã hạng */
+    :NEW.soBuoiToiThieu :=
+        CASE v_maHang
+            WHEN 'A1'  THEN 5
+            WHEN 'A'   THEN 6
+            WHEN 'B1'  THEN 20
+            WHEN 'B'   THEN 30
+            WHEN 'C1'  THEN 35
+            WHEN 'C'   THEN 40
+            WHEN 'D2'  THEN 45
+            WHEN 'D1'  THEN 40
+            WHEN 'D'   THEN 50
+            WHEN 'BE'  THEN 10
+            WHEN 'C1E' THEN 15
+            WHEN 'CE'  THEN 20
+            WHEN 'D1E' THEN 20
+            WHEN 'D2E' THEN 25
+            WHEN 'DE'  THEN 25
+            ELSE NULL
+        END;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        :NEW.soBuoiToiThieu := NULL;
+END;
+/
+-- SET KMTOITHIEU trong kết quả học tập
+CREATE OR REPLACE TRIGGER trg_set_KmToiThieu
+BEFORE INSERT ON KetQuaHocTap
+FOR EACH ROW
+DECLARE
+    v_maHang HangGplx.maHang%TYPE;
+BEGIN
+    /* Lấy mã hạng từ hồ sơ */
+    SELECT hg.maHang
+    INTO v_maHang
+    FROM HoSoThiSinh hs
+    JOIN HangGplx hg ON hs.hangId = hg.hangId
+    WHERE hs.hoSoId = :NEW.hoSoId;
+
+    /* Set Km tối thiểu theo hạng */
+    :NEW.KmToiThieu :=
+        CASE v_maHang
+            WHEN 'A1'  THEN 100
+            WHEN 'A'   THEN 120
+            WHEN 'B1'  THEN 810
+            WHEN 'B'   THEN 900
+            WHEN 'C1'  THEN 1200
+            WHEN 'C'   THEN 1500
+            WHEN 'D1'  THEN 1800
+            WHEN 'D2'  THEN 2000
+            WHEN 'D'   THEN 2200
+            WHEN 'BE'  THEN 1200
+            WHEN 'C1E' THEN 1400
+            WHEN 'CE'  THEN 2400
+            WHEN 'D1E' THEN 1600
+            WHEN 'D2E' THEN 1800
+            WHEN 'DE'  THEN 2600
+            ELSE NULL
+        END;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        :NEW.KmToiThieu := NULL;
+END;
+/
+-- THOI GIAN CAP NHAT CUA KET QUA HOC TAP
+CREATE OR REPLACE TRIGGER TRG_KQHT_CAPNHAT_THOIGIAN
+BEFORE UPDATE ON KETQUAHOCTAP
+FOR EACH ROW
+BEGIN
+    :NEW.THOIGIANCAPNHAT := SYSDATE;
+END;
+/
 -- KHÓA HỌC
 CREATE OR REPLACE TRIGGER trg_khoahoc_trangthai
 BEFORE INSERT OR UPDATE ON KhoaHoc
@@ -3288,7 +3375,8 @@ BEGIN
         hoSoId,
         nhanXet,
         soBuoiHoc,
-        soBuoiVang,
+        soBuoiToiThieu,
+        KmToiThieu,
         soKmHoanThanh,
         DU_DK_THITOTNGHIEP,
         DAUTOTNGHIEP,
@@ -3302,6 +3390,7 @@ BEGIN
         NULL,
         NULL,
         NULL,
+        0,
         0,
         0,
         0,
@@ -4143,8 +4232,8 @@ BEGIN
                 kq.ketQuaHocTapId,
                 NVL(kq.nhanXet, N'') AS nhanXet,
                 kq.soBuoiHoc,
-                kq.soBuoiVang,
-                NVL(kq.soKmHoanThanh, N'') AS soKmHoanThanh,
+                kq.KmToiThieu,
+                NVL(kq.soKmHoanThanh, 0) AS soKmHoanThanh,
                 NVL(kq.DU_DK_THITOTNGHIEP, 0) AS DU_DK_THITOTNGHIEP,
                 NVL(kq.DAUTOTNGHIEP, 0) AS DAUTOTNGHIEP,
                 NVL(kq.DU_DK_THISATHACH, 0) AS DU_DK_THISATHACH,
@@ -5485,6 +5574,184 @@ JOIN HS
 LEFT JOIN KQHT kq ON kq.hoSoId = hs.hoSoId
 LEFT JOIN CTKQHT ct ON ct.ketQuaHocTapId = kq.ketQuaHocTapId;
 /
+
+-- KẾT QUẢ HỌC TẬP - ADMIN 
+CREATE OR REPLACE VIEW VW_ADMIN_KETQUAHOCTAP AS
+SELECT
+    kqht.KETQUAHOCTAPID,
+    hv.HOTEN AS HOTENHOCVIEN,
+    hs.TENHOSO,
+    kqht.SOBUOIHOC,
+    kqht.SOBUOITOITHIEU,
+    kqht.SOKMHOANTHANH,
+    kqht.KMTOITHIEU,
+    kqht.NHANXET,
+    kqht.DU_DK_THITOTNGHIEP,
+    kqht.DAUTOTNGHIEP,
+    kqht.DU_DK_THISATHACH,
+    ct.LYTHUYETKQ,
+    ct.SAHINHKQ,
+    ct.DUONGTRUONGKQ,
+    ct.MOPHONGKQ
+FROM KETQUAHOCTAP kqht
+JOIN HOSOTHISINH hs
+    ON hs.HOSOID = kqht.HOSOID
+JOIN HOCVIEN hv
+    ON hv.HOCVIENID = hs.HOCVIENID
+LEFT JOIN CHITIETKETQUAHOCTAP ct
+    ON ct.KETQUAHOCTAPID = kqht.KETQUAHOCTAPID;
+/
+CREATE OR REPLACE PACKAGE PKG_KETQUAHOCTAP_ADMIN AS
+    PROCEDURE PRC_CAPNHAT_KETQUAHOCTAP (
+        P_KETQUAHOCTAPID IN KETQUAHOCTAP.KETQUAHOCTAPID%TYPE,
+        P_SOBUOIHOC      IN KETQUAHOCTAP.SOBUOIHOC%TYPE,
+        P_SOKMHOANTHANH  IN KETQUAHOCTAP.SOKMHOANTHANH%TYPE,
+        P_NHANXET        IN KETQUAHOCTAP.NHANXET%TYPE
+    );
+
+    PROCEDURE PRC_CAPNHAT_CHITIET_KQHT (
+        P_KETQUAHOCTAPID IN CHITIETKETQUAHOCTAP.KETQUAHOCTAPID%TYPE,
+        P_LYTHUYETKQ     IN CHITIETKETQUAHOCTAP.LYTHUYETKQ%TYPE,
+        P_SAHINHKQ       IN CHITIETKETQUAHOCTAP.SAHINHKQ%TYPE,
+        P_DUONGTRUONGKQ  IN CHITIETKETQUAHOCTAP.DUONGTRUONGKQ%TYPE,
+        P_MOPHONGKQ      IN CHITIETKETQUAHOCTAP.MOPHONGKQ%TYPE
+    );
+END PKG_KETQUAHOCTAP_ADMIN;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_KETQUAHOCTAP_ADMIN AS
+
+    PROCEDURE PRC_CAPNHAT_KETQUAHOCTAP (
+        P_KETQUAHOCTAPID IN KETQUAHOCTAP.KETQUAHOCTAPID%TYPE,
+        P_SOBUOIHOC      IN KETQUAHOCTAP.SOBUOIHOC%TYPE,
+        P_SOKMHOANTHANH  IN KETQUAHOCTAP.SOKMHOANTHANH%TYPE,
+        P_NHANXET        IN KETQUAHOCTAP.NHANXET%TYPE
+    ) AS
+        V_SOBUOITOITHIEU KETQUAHOCTAP.SOBUOITOITHIEU%TYPE;
+        V_KMTOITHIEU     KETQUAHOCTAP.KMTOITHIEU%TYPE;
+        V_COUNT          NUMBER;
+        V_DU_DK          NUMBER(1);
+    BEGIN
+        SELECT COUNT(*)
+        INTO V_COUNT
+        FROM KETQUAHOCTAP
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+        IF V_COUNT = 0 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'KETQUAHOCTAPID khong ton tai');
+        END IF;
+
+        SELECT SOBUOITOITHIEU, KMTOITHIEU
+        INTO V_SOBUOITOITHIEU, V_KMTOITHIEU
+        FROM KETQUAHOCTAP
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID
+        FOR UPDATE;
+
+        IF NVL(P_SOBUOIHOC, 0) >= NVL(V_SOBUOITOITHIEU, 0)
+           AND NVL(P_SOKMHOANTHANH, 0) >= NVL(V_KMTOITHIEU, 0) THEN
+            V_DU_DK := 1;
+        ELSE
+            V_DU_DK := 0;
+        END IF;
+
+        UPDATE KETQUAHOCTAP
+        SET SOBUOIHOC          = P_SOBUOIHOC,
+            SOKMHOANTHANH      = P_SOKMHOANTHANH,
+            NHANXET            = P_NHANXET,
+            DU_DK_THITOTNGHIEP = V_DU_DK,
+            THOIGIANCAPNHAT    = SYSDATE
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+        IF V_DU_DK = 0 THEN
+            UPDATE KETQUAHOCTAP
+            SET DAUTOTNGHIEP     = 0,
+                DU_DK_THISATHACH = 0,
+                THOIGIANCAPNHAT  = SYSDATE
+            WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+            UPDATE CHITIETKETQUAHOCTAP
+            SET LYTHUYETKQ    = 0,
+                SAHINHKQ      = 0,
+                DUONGTRUONGKQ = 0,
+                MOPHONGKQ     = 0
+            WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+        END IF;
+    END PRC_CAPNHAT_KETQUAHOCTAP;
+
+
+    PROCEDURE PRC_CAPNHAT_CHITIET_KQHT (
+        P_KETQUAHOCTAPID IN CHITIETKETQUAHOCTAP.KETQUAHOCTAPID%TYPE,
+        P_LYTHUYETKQ     IN CHITIETKETQUAHOCTAP.LYTHUYETKQ%TYPE,
+        P_SAHINHKQ       IN CHITIETKETQUAHOCTAP.SAHINHKQ%TYPE,
+        P_DUONGTRUONGKQ  IN CHITIETKETQUAHOCTAP.DUONGTRUONGKQ%TYPE,
+        P_MOPHONGKQ      IN CHITIETKETQUAHOCTAP.MOPHONGKQ%TYPE
+    ) AS
+        V_DU_DK_THITN      KETQUAHOCTAP.DU_DK_THITOTNGHIEP%TYPE;
+        V_DAUTOTNGHIEP     KETQUAHOCTAP.DAUTOTNGHIEP%TYPE;
+        V_DU_DK_THISATHACH KETQUAHOCTAP.DU_DK_THISATHACH%TYPE;
+        V_COUNT            NUMBER;
+    BEGIN
+        IF P_LYTHUYETKQ NOT IN (0,1) OR
+           P_SAHINHKQ NOT IN (0,1) OR
+           P_DUONGTRUONGKQ NOT IN (0,1) OR
+           P_MOPHONGKQ NOT IN (0,1) THEN
+            RAISE_APPLICATION_ERROR(-20002, '4 ket qua chi nhan gia tri 0 hoac 1');
+        END IF;
+
+        SELECT COUNT(*)
+        INTO V_COUNT
+        FROM CHITIETKETQUAHOCTAP
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+        IF V_COUNT = 0 THEN
+            RAISE_APPLICATION_ERROR(-20003, 'ChiTietKetQuaHocTap khong ton tai');
+        END IF;
+
+        SELECT DU_DK_THITOTNGHIEP,
+               NVL(DAUTOTNGHIEP,0),
+               NVL(DU_DK_THISATHACH,0)
+        INTO V_DU_DK_THITN,
+             V_DAUTOTNGHIEP,
+             V_DU_DK_THISATHACH
+        FROM KETQUAHOCTAP
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID
+        FOR UPDATE;
+
+        IF NVL(V_DU_DK_THITN,0) <> 1 THEN
+            RAISE_APPLICATION_ERROR(-20004, 'Hoc vien chua du dieu kien thi tot nghiep, khong duoc sua 4 ket qua');
+        END IF;
+
+        UPDATE CHITIETKETQUAHOCTAP
+        SET LYTHUYETKQ    = P_LYTHUYETKQ,
+            SAHINHKQ      = P_SAHINHKQ,
+            DUONGTRUONGKQ = P_DUONGTRUONGKQ,
+            MOPHONGKQ     = P_MOPHONGKQ
+        WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+        IF V_DAUTOTNGHIEP = 0 AND V_DU_DK_THISATHACH = 0 THEN
+            IF P_LYTHUYETKQ = 1
+               AND P_SAHINHKQ = 1
+               AND P_DUONGTRUONGKQ = 1
+               AND P_MOPHONGKQ = 1 THEN
+
+                UPDATE KETQUAHOCTAP
+                SET DAUTOTNGHIEP      = 1,
+                    DU_DK_THISATHACH  = 1,
+                    THOIGIANCAPNHAT   = SYSDATE
+                WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+
+                UPDATE CHITIETKETQUAHOCTAP
+                SET LYTHUYETKQ    = 0,
+                    SAHINHKQ      = 0,
+                    DUONGTRUONGKQ = 0,
+                    MOPHONGKQ     = 0
+                WHERE KETQUAHOCTAPID = P_KETQUAHOCTAPID;
+            END IF;
+        END IF;
+    END PRC_CAPNHAT_CHITIET_KQHT;
+
+END PKG_KETQUAHOCTAP_ADMIN;
+/
+
 
 
 

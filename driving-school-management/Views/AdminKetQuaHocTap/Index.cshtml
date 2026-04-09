@@ -1,0 +1,1102 @@
+﻿@model IEnumerable<driving_school_management.ViewModels.AdminKetQuaHocTapViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý kết quả học tập";
+}
+
+<style>
+    :root {
+        --primary: #2563eb;
+        --accent: #7c3aed;
+        --bg: #f4f7fb;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: rgba(15, 23, 42, 0.08);
+        --success-bg: #dcfce7;
+        --success-text: #166534;
+        --danger-bg: #fee2e2;
+        --danger-text: #991b1b;
+        --neutral-bg: #e2e8f0;
+        --neutral-text: #475569;
+        --warning-bg: #fef3c7;
+        --warning-text: #92400e;
+        --card-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+        --focus-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+    }
+
+    .admin-kqht-page {
+        background: var(--bg);
+        min-height: 100vh;
+        padding: 20px;
+        color: var(--text);
+        font-family: "Segoe UI", Roboto, sans-serif;
+    }
+
+    .page-header-card,
+    .filter-card,
+    .table-card,
+    .modal-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .page-header-card {
+        padding: 20px 24px;
+        margin-bottom: 18px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .page-subtitle {
+        margin: 6px 0 0;
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .filter-card {
+        padding: 16px 18px;
+        margin-bottom: 18px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .form-control,
+    .form-select {
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 14px;
+        color: var(--text);
+        padding: 0 14px;
+        transition: all 0.2s ease;
+        box-shadow: none;
+    }
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+            border-color: var(--primary);
+            box-shadow: var(--focus-shadow);
+            outline: none;
+        }
+
+    .search-input-wrap {
+        position: relative;
+    }
+
+        .search-input-wrap i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .search-input-wrap .form-control {
+            padding-left: 40px;
+        }
+
+    .btn-modern {
+        height: 42px;
+        border: none;
+        border-radius: 12px;
+        padding: 0 16px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        box-shadow: var(--card-shadow);
+    }
+
+        .btn-modern:hover {
+            transform: translateY(-1px);
+        }
+
+    .btn-primary-modern {
+        background: var(--primary);
+        color: #fff;
+    }
+
+        .btn-primary-modern:hover {
+            color: #fff;
+            background: #1d4ed8;
+        }
+
+    .btn-success-modern {
+        background: #16a34a;
+        color: #fff;
+    }
+
+        .btn-success-modern:hover {
+            color: #fff;
+            background: #15803d;
+        }
+
+    .btn-danger-modern {
+        background: #dc2626;
+        color: #fff;
+    }
+
+        .btn-danger-modern:hover {
+            color: #fff;
+            background: #b91c1c;
+        }
+
+    .btn-outline-modern {
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--border);
+    }
+
+        .btn-outline-modern:hover {
+            color: var(--text);
+            background: #f8fafc;
+        }
+
+    .table-card {
+        padding: 10px 14px 16px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 0;
+    }
+
+        .modern-table thead th {
+            background: #f1f5f9;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .modern-table tbody td {
+            font-size: 14px;
+            color: var(--text);
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            vertical-align: middle;
+        }
+
+        .modern-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+            .modern-table tbody tr:hover {
+                background: #f8fbff;
+            }
+
+    .student-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .student-name {
+        font-weight: 700;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .student-meta {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .badge-success {
+        background: var(--success-bg);
+        color: var(--success-text);
+    }
+
+    .badge-danger {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+    }
+
+    .badge-neutral {
+        background: var(--neutral-bg);
+        color: var(--neutral-text);
+    }
+
+    .badge-warning {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+    }
+
+    .result-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .result-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .result-chip.true {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: rgba(37, 99, 235, 0.14);
+        }
+
+        .result-chip.false {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+    .action-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            background: #f8fafc;
+            color: var(--primary);
+            border-color: rgba(37, 99, 235, 0.15);
+        }
+
+    .empty-state {
+        padding: 28px 12px 12px;
+        text-align: center;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .modal-content {
+        background: transparent;
+        border: none;
+    }
+
+    .modal-card {
+        padding: 18px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border);
+        padding: 0 0 14px;
+        margin-bottom: 16px;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .modal-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .modal-body {
+        padding: 0;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border);
+        padding: 16px 0 0;
+        margin-top: 16px;
+        display: flex;
+        justify-content: end;
+        gap: 10px;
+    }
+
+    .info-panel {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .info-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: var(--text);
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .edit-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .result-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .form-check-modern {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 52px;
+        padding: 0 14px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #fff;
+    }
+
+        .form-check-modern .form-check-label {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+    .form-check-input {
+        width: 44px;
+        height: 24px;
+        cursor: pointer;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text);
+    }
+
+    @@media (max-width: 1200px) {
+        .filter-grid,
+        .info-grid,
+        .edit-form-grid,
+        .result-form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .admin-kqht-page {
+            padding: 14px;
+        }
+
+        .filter-grid,
+        .info-grid,
+        .edit-form-grid,
+        .result-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 22px;
+        }
+
+        .modern-table thead th,
+        .modern-table tbody td {
+            padding: 12px 10px;
+        }
+    }
+
+    .status-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .status-highlight {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        border: 1px solid transparent;
+        width: fit-content;
+    }
+
+        .status-highlight.waiting-license {
+            background: linear-gradient(180deg, #ecfeff 0%, #dbeafe 100%);
+            color: #1d4ed8;
+            border-color: rgba(37, 99, 235, 0.14);
+        }
+
+        .status-highlight.exam-phase {
+            background: #f8fafc;
+            color: #334155;
+            border-color: rgba(15, 23, 42, 0.08);
+        }
+
+        .status-highlight.learning-phase {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: rgba(194, 65, 12, 0.12);
+        }
+
+    .status-complete-note {
+        font-size: 12px;
+        color: #475569;
+        font-weight: 600;
+        line-height: 1.5;
+        max-width: 260px;
+    }
+
+    .result-editor-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .result-editor-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #fff;
+        padding: 14px;
+    }
+
+    .result-editor-header {
+        margin-bottom: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .result-choice-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .result-radio {
+        display: none;
+    }
+
+    .result-choice {
+        min-width: 120px;
+        height: 42px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        color: #334155;
+    }
+
+        .result-choice:hover {
+            transform: translateY(-1px);
+        }
+
+    .result-radio:checked + .result-choice.success {
+        background: #dcfce7;
+        color: #166534;
+        border-color: rgba(22, 101, 52, 0.18);
+    }
+
+    .result-radio:checked + .result-choice.neutral {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: rgba(153, 27, 27, 0.16);
+    }
+</style>
+
+<div class="admin-kqht-page">
+    <div class="page-header-card">
+        <h1 class="page-title">Quản lý kết quả học tập</h1>
+        <p class="page-subtitle">Quản lý số buổi học, nhận xét và kết quả các phần thi của học viên</p>
+    </div>
+
+    <div class="filter-card">
+        <form method="get" asp-action="Index" asp-controller="AdminKetQuaHocTap">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Tìm kiếm</label>
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="keyword" value="@Context.Request.Query["keyword"]" class="form-control" placeholder="Nhập tên học viên, hồ sơ hoặc mã..." />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Đủ điều kiện thi tốt nghiệp</label>
+                    <select name="duDieuKien" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="1">Đủ điều kiện</option>
+                        <option value="0">Chưa đủ điều kiện</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Đậu tốt nghiệp</label>
+                    <select name="dauTotNghiep" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="1">Đã đậu</option>
+                        <option value="0">Chưa đậu</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn-modern btn-primary-modern">
+                        <i class="fa-solid fa-filter"></i>
+                        Lọc dữ liệu
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Học viên</th>
+                        <th>Số buổi học</th>
+                        <th>Km hoàn thành</th>
+                        <th>Điều kiện</th>
+                        <th>Kết quả hiện tại</th>
+                        <th>Nhận xét</th>
+                        <th style="width:120px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="student-block">
+                                        <p class="student-name">@item.HoTenHocVien</p>
+                                        <p class="student-meta">Hồ sơ: @item.TenHoSo</p>
+                                        <p class="student-meta">KQHT ID: @item.KetQuaHocTapId</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="student-block">
+                                        <p class="student-name">@item.SoBuoiHoc / @item.SoBuoiToiThieu</p>
+                                        <p class="student-meta">Tối thiểu</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="student-block">
+                                        <p class="student-name">@item.SoKmHoanThanh / @item.KmToiThieu</p>
+                                        <p class="student-meta">Km tối thiểu</p>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-stack">
+                                        @if (item.DaHoanThanhSatHach)
+                                        {
+                                            <span class="status-highlight waiting-license">
+                                                <i class="fa-solid fa-id-card"></i>
+                                                Chờ cấp bằng
+                                            </span>
+                                            <div class="status-complete-note">
+                                                Học viên đã hoàn thành cả kỳ thi tốt nghiệp và sát hạch
+                                            </div>
+                                        }
+                                        else if (item.DauTotNghiep && item.DuDieuKienThiSatHach)
+                                        {
+                                            <span class="status-highlight exam-phase">
+                                                <i class="fa-solid fa-road"></i>
+                                                Đang thi sát hạch
+                                            </span>
+                                        }
+                                        else if (item.DuDieuKienThiTotNghiep)
+                                        {
+                                            <span class="status-highlight exam-phase">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                                Đang thi tốt nghiệp
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-highlight learning-phase">
+                                                <i class="fa-solid fa-book-open-reader"></i>
+                                                Đang học
+                                            </span>
+                                        }
+
+                                        <span class="pill-badge @(item.DuDieuKienThiTotNghiep ? "badge-success" : "badge-danger")">
+                                            @(item.DuDieuKienThiTotNghiep ? "Đủ điều kiện thi TN" : "Chưa đủ điều kiện")
+                                        </span>
+
+                                        <span class="pill-badge @(item.DauTotNghiep ? "badge-success" : "badge-neutral")">
+                                            @(item.DauTotNghiep ? "Đậu tốt nghiệp" : "Chưa đậu tốt nghiệp")
+                                        </span>
+
+                                        <span class="pill-badge @(item.DuDieuKienThiSatHach ? "badge-warning" : "badge-neutral")">
+                                            @(item.DuDieuKienThiSatHach ? "Đủ điều kiện thi sát hạch" : "Chưa đủ điều kiện sát hạch")
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.DaHoanThanhSatHach)
+                                    {
+                                        <div class="result-list">
+                                            <span class="status-highlight waiting-license">
+                                                <i class="fa-solid fa-circle-check"></i>
+                                                Đã hoàn thành tốt nghiệp và sát hạch
+                                            </span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="result-list">
+                                            <span class="result-chip @(item.LyThuyetKq ? "true" : "false")">Lý thuyết: @(item.LyThuyetKq ? "Đạt" : "Chưa đạt")</span>
+                                            <span class="result-chip @(item.SaHinhKq ? "true" : "false")">Sa hình: @(item.SaHinhKq ? "Đạt" : "Chưa đạt")</span>
+                                            <span class="result-chip @(item.DuongTruongKq ? "true" : "false")">Đường trường: @(item.DuongTruongKq ? "Đạt" : "Chưa đạt")</span>
+                                            <span class="result-chip @(item.MoPhongKq ? "true" : "false")">Mô phỏng: @(item.MoPhongKq ? "Đạt" : "Chưa đạt")</span>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <span>@(string.IsNullOrWhiteSpace(item.NhanXet) ? "—" : item.NhanXet)</span>
+                                </td>
+                                <td>
+                                    <div class="action-group">
+                                        <button type="button"
+                                                class="action-btn btn-open-kqht"
+                                                title="Sửa kết quả học tập"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalCapNhatKqht"
+                                                data-id="@item.KetQuaHocTapId"
+                                                data-hoten="@item.HoTenHocVien"
+                                                data-hoso="@item.TenHoSo"
+                                                data-sobuoihoc="@item.SoBuoiHoc"
+                                                data-sobuoi-toithieu="@item.SoBuoiToiThieu"
+                                                data-sokm="@item.SoKmHoanThanh"
+                                                data-kmtoithieu="@item.KmToiThieu"
+                                                data-nhanxet="@item.NhanXet">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+
+                                        <button type="button"
+                                                class="action-btn btn-open-ctkqht"
+                                                title="Sửa 4 kết quả"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalCapNhatChiTiet"
+                                                data-id="@item.KetQuaHocTapId"
+                                                data-hoten="@item.HoTenHocVien"
+                                                data-hoso="@item.TenHoSo"
+                                                data-dudk="@item.DuDieuKienThiTotNghiep.ToString().ToLower()"
+                                                data-dautn="@item.DauTotNghiep.ToString().ToLower()"
+                                                data-dksh="@item.DuDieuKienThiSatHach.ToString().ToLower()"
+                                                data-lythuyet="@item.LyThuyetKq.ToString().ToLower()"
+                                                data-sahinh="@item.SaHinhKq.ToString().ToLower()"
+                                                data-duongtruong="@item.DuongTruongKq.ToString().ToLower()"
+                                                data-mophong="@item.MoPhongKq.ToString().ToLower()">
+                                            <i class="fa-solid fa-list-check"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    Không có dữ liệu để hiển thị
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCapNhatKqht" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-card">
+                <form asp-controller="AdminKetQuaHocTap" asp-action="CapNhatKetQuaHocTap" method="post">
+                    <div class="modal-header">
+                        <div>
+                            <div class="modal-title">Cập nhật kết quả học tập</div>
+                            <div class="modal-subtitle">Cập nhật số buổi học, số km hoàn thành và nhận xét</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="KetQuaHocTapId" id="kqhtId" />
+
+                        <div class="info-panel">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Học viên</div>
+                                    <p class="info-value" id="kqhtHoTen"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Hồ sơ</div>
+                                    <p class="info-value" id="kqhtHoSo"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Số buổi tối thiểu</div>
+                                    <p class="info-value" id="kqhtSoBuoiToiThieu"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Km tối thiểu</div>
+                                    <p class="info-value" id="kqhtKmToiThieu"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="edit-form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Số buổi đã học</label>
+                                <input type="number" min="0" step="1" class="form-control" name="SoBuoiHoc" id="kqhtSoBuoiHoc" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Số km hoàn thành</label>
+                                <input type="number" min="0" step="0.01" class="form-control" name="SoKmHoanThanh" id="kqhtSoKmHoanThanh" required />
+                            </div>
+
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="form-label">Nhận xét</label>
+                                <textarea class="form-control" name="NhanXet" id="kqhtNhanXet" rows="4" style="height:auto; padding:12px 14px; resize:none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-modern btn-outline-modern" data-bs-dismiss="modal">
+                            <i class="fa-solid fa-xmark"></i>
+                            Đóng
+                        </button>
+                        <button type="submit" class="btn-modern btn-primary-modern">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Lưu cập nhật
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCapNhatChiTiet" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-card">
+                <form asp-controller="AdminKetQuaHocTap" asp-action="CapNhatChiTietKetQuaHocTap" method="post">
+                    <div class="modal-header">
+                        <div>
+                            <div class="modal-title">Cập nhật 4 kết quả</div>
+                            <div class="modal-subtitle">Chỉ được chỉnh khi học viên đã đủ điều kiện thi tốt nghiệp</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <input type="hidden" name="KetQuaHocTapId" id="ctkqhtId" />
+
+                        <div class="info-panel">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Học viên</div>
+                                    <p class="info-value" id="ctkqhtHoTen"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Hồ sơ</div>
+                                    <p class="info-value" id="ctkqhtHoSo"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Đủ điều kiện thi TN</div>
+                                    <p class="info-value" id="ctkqhtDuDk"></p>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Giai đoạn hiện tại</div>
+                                    <p class="info-value" id="ctkqhtGiaiDoan"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">Kết quả các phần thi</div>
+
+                        <div class="result-editor-grid">
+                            <div class="result-editor-card">
+                                <div class="result-editor-header">
+                                    <span>Lý thuyết</span>
+                                </div>
+                                <div class="result-choice-group">
+                                    <input type="radio" class="result-radio" name="LyThuyetKq" id="LyThuyetKq_1" value="1">
+                                    <label for="LyThuyetKq_1" class="result-choice success">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Đạt
+                                    </label>
+
+                                    <input type="radio" class="result-radio" name="LyThuyetKq" id="LyThuyetKq_0" value="0">
+                                    <label for="LyThuyetKq_0" class="result-choice neutral">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                        Không đạt
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="result-editor-card">
+                                <div class="result-editor-header">
+                                    <span>Sa hình</span>
+                                </div>
+                                <div class="result-choice-group">
+                                    <input type="radio" class="result-radio" name="SaHinhKq" id="SaHinhKq_1" value="1">
+                                    <label for="SaHinhKq_1" class="result-choice success">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Đạt
+                                    </label>
+
+                                    <input type="radio" class="result-radio" name="SaHinhKq" id="SaHinhKq_0" value="0">
+                                    <label for="SaHinhKq_0" class="result-choice neutral">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                        Không đạt
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="result-editor-card">
+                                <div class="result-editor-header">
+                                    <span>Đường trường</span>
+                                </div>
+                                <div class="result-choice-group">
+                                    <input type="radio" class="result-radio" name="DuongTruongKq" id="DuongTruongKq_1" value="1">
+                                    <label for="DuongTruongKq_1" class="result-choice success">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Đạt
+                                    </label>
+
+                                    <input type="radio" class="result-radio" name="DuongTruongKq" id="DuongTruongKq_0" value="0">
+                                    <label for="DuongTruongKq_0" class="result-choice neutral">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                        Không đạt
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="result-editor-card">
+                                <div class="result-editor-header">
+                                    <span>Mô phỏng</span>
+                                </div>
+                                <div class="result-choice-group">
+                                    <input type="radio" class="result-radio" name="MoPhongKq" id="MoPhongKq_1" value="1">
+                                    <label for="MoPhongKq_1" class="result-choice success">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Đạt
+                                    </label>
+
+                                    <input type="radio" class="result-radio" name="MoPhongKq" id="MoPhongKq_0" value="0">
+                                    <label for="MoPhongKq_0" class="result-choice neutral">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                        Không đạt
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-modern btn-outline-modern" data-bs-dismiss="modal">
+                            <i class="fa-solid fa-xmark"></i>
+                            Đóng
+                        </button>
+                        <button type="submit" class="btn-modern btn-success-modern" id="btnSubmitChiTiet">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Lưu 4 kết quả
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalKqhtButtons = document.querySelectorAll('.btn-open-kqht');
+            const modalCtButtons = document.querySelectorAll('.btn-open-ctkqht');
+
+            modalKqhtButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.getElementById('kqhtId').value = this.dataset.id || '';
+                    document.getElementById('kqhtHoTen').textContent = this.dataset.hoten || '';
+                    document.getElementById('kqhtHoSo').textContent = this.dataset.hoso || '';
+                    document.getElementById('kqhtSoBuoiHoc').value = this.dataset.sobuoihoc || 0;
+                    document.getElementById('kqhtSoBuoiToiThieu').textContent = this.getAttribute('data-sobuoi-toithieu') || '';
+                    document.getElementById('kqhtSoKmHoanThanh').value = this.dataset.sokm || 0;
+                    document.getElementById('kqhtKmToiThieu').textContent = this.dataset.kmtoithieu || '';
+                    document.getElementById('kqhtNhanXet').value = this.dataset.nhanxet || '';
+                });
+            });
+
+            function setRadioValue(groupName, value) {
+                const radioValue = value === 'true' ? '1' : '0';
+                const radio = document.querySelector(`input[name="${groupName}"][value="${radioValue}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
+            }
+
+            function disableRadioGroup(groupName, disabled) {
+                document.querySelectorAll(`input[name="${groupName}"]`).forEach(radio => {
+                    radio.disabled = disabled;
+                });
+            }
+
+            modalCtButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const duDk = this.dataset.dudk === 'true';
+                    const dauTn = this.dataset.dautn === 'true';
+                    const dkSh = this.dataset.dksh === 'true';
+                    const lyThuyet = this.dataset.lythuyet === 'true';
+                    const saHinh = this.dataset.sahinh === 'true';
+                    const duongTruong = this.dataset.duongtruong === 'true';
+                    const moPhong = this.dataset.mophong === 'true';
+
+                    document.getElementById('ctkqhtId').value = this.dataset.id || '';
+                    document.getElementById('ctkqhtHoTen').textContent = this.dataset.hoten || '';
+                    document.getElementById('ctkqhtHoSo').textContent = this.dataset.hoso || '';
+                    document.getElementById('ctkqhtDuDk').textContent = duDk ? 'Đủ điều kiện' : 'Chưa đủ điều kiện';
+
+                    let giaiDoan = 'Thi tốt nghiệp';
+
+                    if (dauTn && dkSh) {
+                        giaiDoan = 'Thi sát hạch';
+                    }
+
+                    if (dauTn && dkSh && lyThuyet && saHinh && duongTruong && moPhong) {
+                        giaiDoan = 'Hoàn thành - chờ cấp bằng';
+                    }
+
+                    document.getElementById('ctkqhtGiaiDoan').textContent = giaiDoan;
+
+                    setRadioValue('LyThuyetKq', this.dataset.lythuyet);
+                    setRadioValue('SaHinhKq', this.dataset.sahinh);
+                    setRadioValue('DuongTruongKq', this.dataset.duongtruong);
+                    setRadioValue('MoPhongKq', this.dataset.mophong);
+
+                    const btnSubmit = document.getElementById('btnSubmitChiTiet');
+
+                    if (!duDk) {
+                        btnSubmit.disabled = true;
+                        btnSubmit.classList.add('disabled');
+
+                        disableRadioGroup('LyThuyetKq', true);
+                        disableRadioGroup('SaHinhKq', true);
+                        disableRadioGroup('DuongTruongKq', true);
+                        disableRadioGroup('MoPhongKq', true);
+                    } else {
+                        btnSubmit.disabled = false;
+                        btnSubmit.classList.remove('disabled');
+
+                        disableRadioGroup('LyThuyetKq', false);
+                        disableRadioGroup('SaHinhKq', false);
+                        disableRadioGroup('DuongTruongKq', false);
+                        disableRadioGroup('MoPhongKq', false);
+                    }
+                });
+            });
+        });
+    </script>
+}
