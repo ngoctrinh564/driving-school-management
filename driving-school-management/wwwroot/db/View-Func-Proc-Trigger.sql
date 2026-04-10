@@ -1154,14 +1154,14 @@ CREATE OR REPLACE PACKAGE BODY PKG_KYTHI AS
             RETURNING phieuId INTO v_phieuId;
     
             INSERT INTO ChiTietPhieuThanhToan(hoSoId, phieuId, loaiPhi, ghiChu, ketQuaHocTapId)
-            VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+            VALUES (v_hoSoId, v_phieuId, N'Kỳ thi', NULL, NULL);
     
             INSERT INTO PhieuThanhToan(tenPhieu, ngayLap, tongTien)
             VALUES (v_tenSat || '_' || v_hoTen, SYSTIMESTAMP, v_phi)
             RETURNING phieuId INTO v_phieuId;
     
             INSERT INTO ChiTietPhieuThanhToan(hoSoId, phieuId, loaiPhi, ghiChu, ketQuaHocTapId)
-            VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+            VALUES (v_hoSoId, v_phieuId, N'Kỳ thi', NULL, NULL);
     
         ELSIF v_dauTN = 1 AND v_duDKSat = 1 THEN
             SELECT COUNT(*)
@@ -1194,7 +1194,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_KYTHI AS
             RETURNING phieuId INTO v_phieuId;
     
             INSERT INTO ChiTietPhieuThanhToan(hoSoId, phieuId, loaiPhi, ghiChu, ketQuaHocTapId)
-            VALUES (v_hoSoId, v_phieuId, N'Lệ phí thi', NULL, NULL);
+            VALUES (v_hoSoId, v_phieuId, N'Kỳ thi', NULL, NULL);
         ELSE
             RAISE_APPLICATION_ERROR(-20024, 'Trang thai hien tai khong hop le de dang ky');
         END IF;
@@ -3678,6 +3678,7 @@ BEGIN
     o_result := 1;
 END;
 /
+-- VNPAY
 CREATE OR REPLACE PROCEDURE SP_PAYMENT_GET_VNPAY_INFO
 (
     p_userId    IN NUMBER,
@@ -4004,6 +4005,761 @@ BEGIN
     o_result := 1;
 END;
 /
+-- THANH TOÁN KỲ THI
+CREATE OR REPLACE PACKAGE PKG_EXAM_PAYMENT AS
+    FUNCTION GET_TEN_KYTHI_FROM_PHIEU(
+        p_tenPhieu IN NVARCHAR2
+    ) RETURN NVARCHAR2;
+
+    PROCEDURE START_PAYMENT_EXAM(
+        p_userId   IN NUMBER,
+        p_kyThiId  IN NUMBER,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_VNPAY_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_PAYPAL_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_MOMO_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_PAYPAL_EXAM_INFO_BY_IDS(
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_MOMO_EXAM_INFO_BY_IDS(
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE MARK_EXAM_PAYMENT_SUCCESS(
+        p_phieuId IN NUMBER,
+        p_method  IN NVARCHAR2,
+        o_result  OUT NUMBER
+    );
+
+    PROCEDURE MARK_EXAM_PAYMENT_FAIL(
+        p_phieuId IN NUMBER,
+        o_result  OUT NUMBER
+    );
+
+    PROCEDURE GET_PAYMENT_HISTORY_BY_USER(
+        p_userId IN NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_PAYMENT_HISTORY_DETAIL(
+        p_userId  IN NUMBER,
+        p_phieuId IN NUMBER,
+        p_cursor  OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE GET_INVOICE_DETAIL(
+        p_userId  IN NUMBER,
+        p_phieuId IN NUMBER,
+        p_cursor  OUT SYS_REFCURSOR
+    );
+END PKG_EXAM_PAYMENT;
+/
+
+CREATE OR REPLACE PACKAGE BODY PKG_EXAM_PAYMENT AS
+
+    FUNCTION GET_TEN_KYTHI_FROM_PHIEU(
+        p_tenPhieu IN NVARCHAR2
+    ) RETURN NVARCHAR2
+    IS
+        v_tenKyThi NVARCHAR2(4000);
+    BEGIN
+        IF p_tenPhieu IS NULL THEN
+            RETURN NULL;
+        END IF;
+
+        v_tenKyThi := REGEXP_SUBSTR(p_tenPhieu, '^(.+)_([^_]+)$', 1, 1, NULL, 1);
+
+        IF v_tenKyThi IS NULL THEN
+            v_tenKyThi := p_tenPhieu;
+        END IF;
+
+        RETURN TRIM(v_tenKyThi);
+    END;
+
+    PROCEDURE RESOLVE_EXAM_CONTEXT(
+        p_userId        IN NUMBER,
+        p_kyThiId       IN NUMBER,
+        o_hoTen         OUT NVARCHAR2,
+        o_hoSoId        OUT NUMBER,
+        o_hangId        OUT NUMBER,
+        o_maHang        OUT NVARCHAR2,
+        o_tenHang       OUT NVARCHAR2,
+        o_hocPhi        OUT NUMBER,
+        o_kyThiTotId    OUT NUMBER,
+        o_kyThiSatId    OUT NUMBER,
+        o_tenKyThiTot   OUT NVARCHAR2,
+        o_tenKyThiSat   OUT NVARCHAR2,
+        o_canDangKyTot  OUT NUMBER,
+        o_canDangKySat  OUT NUMBER
+    )
+    IS
+        v_hocVienId NUMBER;
+        v_duDKTot NUMBER := 0;
+        v_duDKSat NUMBER := 0;
+        v_dauTot NUMBER := 0;
+        v_daHoanThanh NUMBER := 0;
+
+        v_lyThuyetKq NUMBER := 0;
+        v_saHinhKq NUMBER := 0;
+        v_duongTruongKq NUMBER := 0;
+        v_moPhongKq NUMBER := 0;
+
+        v_dot NUMBER;
+        v_nam NUMBER;
+    BEGIN
+        SELECT hv.hocVienId, hv.hoTen
+        INTO v_hocVienId, o_hoTen
+        FROM HocVien hv
+        WHERE hv.userId = p_userId;
+
+        SELECT
+            REGEXP_SUBSTR(kt.tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1),
+            TO_NUMBER(REGEXP_SUBSTR(kt.tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)),
+            TO_NUMBER(REGEXP_SUBSTR(kt.tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1))
+        INTO o_maHang, v_dot, v_nam
+        FROM KyThi kt
+        WHERE kt.kyThiId = p_kyThiId;
+
+        SELECT hoSoId, hangId, tenHang, hocPhi
+        INTO o_hoSoId, o_hangId, o_tenHang, o_hocPhi
+        FROM
+        (
+            SELECT
+                hs.hoSoId,
+                hs.hangId,
+                hg.tenHang,
+                hg.hocPhi,
+                ROW_NUMBER() OVER (
+                    ORDER BY NVL(hs.ngayDangKy, DATE '1900-01-01') DESC, hs.hoSoId DESC
+                ) AS rn
+            FROM HoSoThiSinh hs
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE hs.hocVienId = v_hocVienId
+              AND hg.maHang = o_maHang
+        )
+        WHERE rn = 1;
+
+        BEGIN
+            SELECT
+                duDKTotNghiep,
+                duDKSatHach,
+                dauTotNghiep,
+                lyThuyetKq,
+                saHinhKq,
+                duongTruongKq,
+                moPhongKq
+            INTO
+                v_duDKTot,
+                v_duDKSat,
+                v_dauTot,
+                v_lyThuyetKq,
+                v_saHinhKq,
+                v_duongTruongKq,
+                v_moPhongKq
+            FROM
+            (
+                SELECT
+                    NVL(kq.DU_DK_THITOTNGHIEP, 0) AS duDKTotNghiep,
+                    NVL(kq.DU_DK_THISATHACH, 0) AS duDKSatHach,
+                    NVL(kq.DAUTOTNGHIEP, 0) AS dauTotNghiep,
+                    NVL(ct.lyThuyetKq, 0) AS lyThuyetKq,
+                    NVL(ct.saHinhKq, 0) AS saHinhKq,
+                    NVL(ct.duongTruongKq, 0) AS duongTruongKq,
+                    NVL(ct.moPhongKq, 0) AS moPhongKq,
+                    ROW_NUMBER() OVER (
+                        ORDER BY NVL(kq.THOIGIANCAPNHAT, DATE '1900-01-01') DESC, kq.ketQuaHocTapId DESC
+                    ) AS rn
+                FROM KetQuaHocTap kq
+                JOIN ChiTietKetQuaHocTap ct
+                    ON ct.ketQuaHocTapId = kq.ketQuaHocTapId
+                JOIN KhoaHoc kh
+                    ON kh.khoaHocId = ct.khoaHocId
+                   AND kh.hangId = o_hangId
+                WHERE kq.hoSoId = o_hoSoId
+            )
+            WHERE rn = 1;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_duDKTot := 0;
+                v_duDKSat := 0;
+                v_dauTot := 0;
+                v_lyThuyetKq := 0;
+                v_saHinhKq := 0;
+                v_duongTruongKq := 0;
+                v_moPhongKq := 0;
+        END;
+
+        IF v_duDKTot = 1 AND v_dauTot = 1 AND v_duDKSat = 1 THEN
+            IF o_maHang IN (N'A', N'A1') THEN
+                IF v_lyThuyetKq = 1 AND v_saHinhKq = 1 THEN
+                    v_daHoanThanh := 1;
+                END IF;
+            ELSE
+                IF v_lyThuyetKq = 1
+                   AND v_saHinhKq = 1
+                   AND v_duongTruongKq = 1
+                   AND v_moPhongKq = 1 THEN
+                    v_daHoanThanh := 1;
+                END IF;
+            END IF;
+        END IF;
+
+        IF v_daHoanThanh = 1 THEN
+            RAISE_APPLICATION_ERROR(-20080, 'Ban da hoan thanh toan bo ky thi cua hang nay');
+        END IF;
+
+        IF v_duDKTot = 0 THEN
+            RAISE_APPLICATION_ERROR(-20081, 'Ban chua du dieu kien dang ky ky thi');
+        END IF;
+
+        SELECT kyThiId, tenKyThi
+        INTO o_kyThiTotId, o_tenKyThiTot
+        FROM KyThi
+        WHERE REGEXP_SUBSTR(tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1) = o_maHang
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)) = v_dot
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1)) = v_nam
+          AND loaiKyThi = N'Tốt nghiệp'
+          AND ROWNUM = 1;
+
+        SELECT kyThiId, tenKyThi
+        INTO o_kyThiSatId, o_tenKyThiSat
+        FROM KyThi
+        WHERE REGEXP_SUBSTR(tenKyThi, '\(([^)]+)\)$', 1, 1, NULL, 1) = o_maHang
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'đợt ([0-9]+)', 1, 1, NULL, 1)) = v_dot
+          AND TO_NUMBER(REGEXP_SUBSTR(tenKyThi, 'năm ([0-9]+)', 1, 1, NULL, 1)) = v_nam
+          AND loaiKyThi = N'Sát hạch'
+          AND ROWNUM = 1;
+
+        IF v_duDKTot = 1 AND v_dauTot = 0 THEN
+            o_canDangKyTot := 1;
+            o_canDangKySat := 1;
+        ELSIF v_dauTot = 1 AND v_duDKSat = 1 THEN
+            o_canDangKyTot := 0;
+            o_canDangKySat := 1;
+        ELSE
+            RAISE_APPLICATION_ERROR(-20082, 'Trang thai hien tai khong hop le de dang ky');
+        END IF;
+    END;
+
+    PROCEDURE OPEN_GATEWAY_CURSOR_BY_USER(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.tongTien AS TONGTIEN,
+                pt.ngayNop AS NGAYNOP,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.hoSoId AS HOSOID,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                hs.tenHoSo AS TENHOSO,
+                hv.hoTen AS HOTENHOCVIEN,
+                TRIM(PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu)) AS TENKYTHI,
+                hg.tenHang AS TENHANG
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE hv.userId = p_userId
+              AND ct.loaiPhi = N'Kỳ thi'
+              AND pt.phieuId IN (
+                    SELECT TO_NUMBER(TRIM(REGEXP_SUBSTR(p_phieuIds, '[^,]+', 1, LEVEL)))
+                    FROM dual
+                    CONNECT BY REGEXP_SUBSTR(p_phieuIds, '[^,]+', 1, LEVEL) IS NOT NULL
+              )
+            ORDER BY pt.phieuId;
+    END;
+
+    PROCEDURE OPEN_GATEWAY_CURSOR_BY_IDS(
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.tongTien AS TONGTIEN,
+                pt.ngayNop AS NGAYNOP,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.hoSoId AS HOSOID,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                hs.tenHoSo AS TENHOSO,
+                hv.hoTen AS HOTENHOCVIEN,
+                PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu) AS TENKYTHI,
+                hg.tenHang AS TENHANG
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE ct.loaiPhi = N'Kỳ thi'
+              AND pt.phieuId IN (
+                    SELECT TO_NUMBER(TRIM(REGEXP_SUBSTR(p_phieuIds, '[^,]+', 1, LEVEL)))
+                    FROM dual
+                    CONNECT BY REGEXP_SUBSTR(p_phieuIds, '[^,]+', 1, LEVEL) IS NOT NULL
+              )
+            ORDER BY pt.phieuId;
+    END;
+
+    PROCEDURE START_PAYMENT_EXAM(
+        p_userId   IN NUMBER,
+        p_kyThiId  IN NUMBER,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+        v_hoTen NVARCHAR2(100);
+        v_hoSoId NUMBER;
+        v_hangId NUMBER;
+        v_maHang NVARCHAR2(20);
+        v_tenHang NVARCHAR2(100);
+        v_hocPhi NUMBER(18,2);
+
+        v_kyThiTotId NUMBER;
+        v_kyThiSatId NUMBER;
+        v_tenKyThiTot NVARCHAR2(255);
+        v_tenKyThiSat NVARCHAR2(255);
+
+        v_canDangKyTot NUMBER;
+        v_canDangKySat NUMBER;
+
+        v_unpaid_count NUMBER := 0;
+        v_paid_count NUMBER := 0;
+        v_registration_count NUMBER := 0;
+    BEGIN
+        RESOLVE_EXAM_CONTEXT(
+            p_userId        => p_userId,
+            p_kyThiId       => p_kyThiId,
+            o_hoTen         => v_hoTen,
+            o_hoSoId        => v_hoSoId,
+            o_hangId        => v_hangId,
+            o_maHang        => v_maHang,
+            o_tenHang       => v_tenHang,
+            o_hocPhi        => v_hocPhi,
+            o_kyThiTotId    => v_kyThiTotId,
+            o_kyThiSatId    => v_kyThiSatId,
+            o_tenKyThiTot   => v_tenKyThiTot,
+            o_tenKyThiSat   => v_tenKyThiSat,
+            o_canDangKyTot  => v_canDangKyTot,
+            o_canDangKySat  => v_canDangKySat
+        );
+
+        SELECT COUNT(*)
+        INTO v_unpaid_count
+        FROM PhieuThanhToan pt
+        JOIN ChiTietPhieuThanhToan ct
+            ON ct.phieuId = pt.phieuId
+        WHERE ct.hoSoId = v_hoSoId
+          AND ct.loaiPhi = N'Kỳ thi'
+          AND ct.ketQuaHocTapId IS NULL
+          AND pt.ngayNop IS NULL
+          AND pt.tenPhieu IN (
+                CASE WHEN v_canDangKyTot = 1 THEN v_tenKyThiTot || '_' || v_hoTen END,
+                CASE WHEN v_canDangKySat = 1 THEN v_tenKyThiSat || '_' || v_hoTen END
+          );
+
+        SELECT COUNT(*)
+        INTO v_paid_count
+        FROM PhieuThanhToan pt
+        JOIN ChiTietPhieuThanhToan ct
+            ON ct.phieuId = pt.phieuId
+        WHERE ct.hoSoId = v_hoSoId
+          AND ct.loaiPhi = N'Kỳ thi'
+          AND ct.ketQuaHocTapId IS NULL
+          AND pt.ngayNop IS NOT NULL
+          AND pt.tenPhieu IN (
+                CASE WHEN v_canDangKyTot = 1 THEN v_tenKyThiTot || '_' || v_hoTen END,
+                CASE WHEN v_canDangKySat = 1 THEN v_tenKyThiSat || '_' || v_hoTen END
+          );
+
+        SELECT COUNT(*)
+        INTO v_registration_count
+        FROM ChiTietDangKyThi
+        WHERE hoSoId = v_hoSoId
+          AND kyThiId IN (
+                CASE WHEN v_canDangKyTot = 1 THEN v_kyThiTotId END,
+                CASE WHEN v_canDangKySat = 1 THEN v_kyThiSatId END
+          );
+
+        IF v_paid_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20083, 'Ban da thanh toan cho dot thi nay');
+        END IF;
+
+        IF v_unpaid_count = (v_canDangKyTot + v_canDangKySat) THEN
+            OPEN p_cursor FOR
+                SELECT
+                    pt.phieuId AS PHIEUID,
+                    pt.tenPhieu AS TENPHIEU,
+                    pt.ngayLap AS NGAYLAP,
+                    pt.tongTien AS TONGTIEN,
+                    pt.ngayNop AS NGAYNOP,
+                    NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                    ct.hoSoId AS HOSOID,
+                    NVL(ct.ghiChu, N'') AS GHICHU,
+                    hs.tenHoSo AS TENHOSO,
+                    hv.hoTen AS HOTENHOCVIEN,
+                    PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu) AS TENKYTHI,
+                    hg.tenHang AS TENHANG
+                FROM PhieuThanhToan pt
+                JOIN ChiTietPhieuThanhToan ct
+                    ON ct.phieuId = pt.phieuId
+                JOIN HoSoThiSinh hs
+                    ON hs.hoSoId = ct.hoSoId
+                JOIN HocVien hv
+                    ON hv.hocVienId = hs.hocVienId
+                JOIN HangGplx hg
+                    ON hg.hangId = hs.hangId
+                WHERE ct.hoSoId = v_hoSoId
+                  AND ct.loaiPhi = N'Kỳ thi'
+                  AND ct.ketQuaHocTapId IS NULL
+                  AND pt.ngayNop IS NULL
+                  AND pt.tenPhieu IN (
+                        CASE WHEN v_canDangKyTot = 1 THEN v_tenKyThiTot || '_' || v_hoTen END,
+                        CASE WHEN v_canDangKySat = 1 THEN v_tenKyThiSat || '_' || v_hoTen END
+                  )
+                ORDER BY pt.phieuId;
+            RETURN;
+        END IF;
+
+        IF v_unpaid_count > 0 OR v_registration_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20084, 'Du lieu dang ky/phiếu thanh toan dang ton tai dang do, khong the tao moi');
+        END IF;
+
+        PKG_KYTHI.DANGKY_KYTHI_USER(p_userId, p_kyThiId);
+
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.tongTien AS TONGTIEN,
+                pt.ngayNop AS NGAYNOP,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.hoSoId AS HOSOID,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                hs.tenHoSo AS TENHOSO,
+                hv.hoTen AS HOTENHOCVIEN,
+                PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu) AS TENKYTHI,
+                hg.tenHang AS TENHANG
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            WHERE ct.hoSoId = v_hoSoId
+              AND ct.loaiPhi = N'Kỳ thi'
+              AND ct.ketQuaHocTapId IS NULL
+              AND pt.tenPhieu IN (
+                    CASE WHEN v_canDangKyTot = 1 THEN v_tenKyThiTot || '_' || v_hoTen END,
+                    CASE WHEN v_canDangKySat = 1 THEN v_tenKyThiSat || '_' || v_hoTen END
+              )
+            ORDER BY pt.phieuId;
+
+    END;
+
+    PROCEDURE GET_VNPAY_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN_GATEWAY_CURSOR_BY_USER(p_userId, p_phieuIds, p_cursor);
+    END;
+
+    PROCEDURE GET_PAYPAL_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN_GATEWAY_CURSOR_BY_USER(p_userId, p_phieuIds, p_cursor);
+    END;
+
+    PROCEDURE GET_MOMO_EXAM_INFO(
+        p_userId   IN NUMBER,
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN_GATEWAY_CURSOR_BY_USER(p_userId, p_phieuIds, p_cursor);
+    END;
+
+    PROCEDURE GET_PAYPAL_EXAM_INFO_BY_IDS(
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN_GATEWAY_CURSOR_BY_IDS(p_phieuIds, p_cursor);
+    END;
+
+    PROCEDURE GET_MOMO_EXAM_INFO_BY_IDS(
+        p_phieuIds IN NVARCHAR2,
+        p_cursor   OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN_GATEWAY_CURSOR_BY_IDS(p_phieuIds, p_cursor);
+    END;
+
+    PROCEDURE MARK_EXAM_PAYMENT_SUCCESS(
+        p_phieuId IN NUMBER,
+        p_method  IN NVARCHAR2,
+        o_result  OUT NUMBER
+    )
+    IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM PhieuThanhToan
+        WHERE phieuId = p_phieuId;
+
+        IF v_count = 0 THEN
+            o_result := -1;
+            RETURN;
+        END IF;
+
+        UPDATE PhieuThanhToan
+        SET ngayNop = SYSTIMESTAMP,
+            phuongThuc = p_method
+        WHERE phieuId = p_phieuId;
+
+        o_result := 1;
+    END;
+
+    PROCEDURE MARK_EXAM_PAYMENT_FAIL(
+        p_phieuId IN NUMBER,
+        o_result  OUT NUMBER
+    )
+    IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_count
+        FROM PhieuThanhToan
+        WHERE phieuId = p_phieuId;
+
+        IF v_count = 0 THEN
+            o_result := -1;
+            RETURN;
+        END IF;
+
+        UPDATE PhieuThanhToan
+        SET ngayNop = NULL
+        WHERE phieuId = p_phieuId;
+
+        o_result := 1;
+    END;
+
+    PROCEDURE GET_PAYMENT_HISTORY_BY_USER(
+        p_userId IN NUMBER,
+        p_cursor OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.ngayNop AS NGAYNOP,
+                pt.tongTien AS TONGTIEN,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.loaiPhi AS LOAIPHI,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                hs.hoSoId AS HOSOID,
+                hs.tenHoSo AS TENHOSO,
+                hv.hoTen AS HOTENHOCVIEN,
+                kt.kyThiId AS KYTHIID,
+                kt.tenKyThi AS TENKYTHI,
+                kt.loaiKyThi AS LOAIKYTHI,
+                hg.tenHang AS TENHANG,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS TRANGTHAITHANHTOAN,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN 1
+                    ELSE 0
+                END AS COTHETAIHOADON
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            LEFT JOIN KyThi kt
+                ON kt.tenKyThi = PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu)
+            WHERE hv.userId = p_userId
+              AND ct.loaiPhi = N'Kỳ thi'
+            ORDER BY pt.phieuId DESC;
+    END;
+
+    PROCEDURE GET_PAYMENT_HISTORY_DETAIL(
+        p_userId  IN NUMBER,
+        p_phieuId IN NUMBER,
+        p_cursor  OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.ngayNop AS NGAYNOP,
+                pt.tongTien AS TONGTIEN,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.loaiPhi AS LOAIPHI,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS TRANGTHAITHANHTOAN,
+                hs.hoSoId AS HOSOID,
+                hs.tenHoSo AS TENHOSO,
+                hs.trangThai AS TRANGTHAIHOSO,
+                hv.hocVienId AS HOCVIENID,
+                hv.hoTen AS HOTENHOCVIEN,
+                hv.sdt AS SDT,
+                hv.email AS EMAIL,
+                kt.kyThiId AS KYTHIID,
+                kt.tenKyThi AS TENKYTHI,
+                kt.loaiKyThi AS LOAIKYTHI,
+                lt.thoiGianThi AS THOIGIANTHI,
+                lt.diaDiem AS DIADIEMTHI,
+                hg.tenHang AS TENHANG,
+                hg.hocPhi AS HOCPHI
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            LEFT JOIN KyThi kt
+                ON kt.tenKyThi = PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu)
+            LEFT JOIN ChiTietDangKyThi dk
+                ON dk.hoSoId = hs.hoSoId
+               AND dk.kyThiId = kt.kyThiId
+            LEFT JOIN LichThi lt
+                ON lt.lichThiId = dk.lichThiId
+            WHERE hv.userId = p_userId
+              AND pt.phieuId = p_phieuId
+              AND ct.loaiPhi = N'Kỳ thi';
+    END;
+
+    PROCEDURE GET_INVOICE_DETAIL(
+        p_userId  IN NUMBER,
+        p_phieuId IN NUMBER,
+        p_cursor  OUT SYS_REFCURSOR
+    )
+    IS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT
+                pt.phieuId AS PHIEUID,
+                pt.tenPhieu AS TENPHIEU,
+                pt.ngayLap AS NGAYLAP,
+                pt.ngayNop AS NGAYNOP,
+                pt.tongTien AS TONGTIEN,
+                NVL(pt.phuongThuc, N'') AS PHUONGTHUC,
+                ct.loaiPhi AS LOAIPHI,
+                NVL(ct.ghiChu, N'') AS GHICHU,
+                CASE
+                    WHEN pt.ngayNop IS NOT NULL THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS TRANGTHAITHANHTOAN,
+                hs.hoSoId AS HOSOID,
+                hs.tenHoSo AS TENHOSO,
+                hs.trangThai AS TRANGTHAIHOSO,
+                hv.hocVienId AS HOCVIENID,
+                hv.hoTen AS HOTENHOCVIEN,
+                hv.sdt AS SDT,
+                hv.email AS EMAIL,
+                kt.kyThiId AS KYTHIID,
+                kt.tenKyThi AS TENKYTHI,
+                kt.loaiKyThi AS LOAIKYTHI,
+                lt.thoiGianThi AS THOIGIANTHI,
+                lt.diaDiem AS DIADIEMTHI,
+                hg.tenHang AS TENHANG,
+                hg.hocPhi AS HOCPHI
+            FROM PhieuThanhToan pt
+            JOIN ChiTietPhieuThanhToan ct
+                ON ct.phieuId = pt.phieuId
+            JOIN HoSoThiSinh hs
+                ON hs.hoSoId = ct.hoSoId
+            JOIN HocVien hv
+                ON hv.hocVienId = hs.hocVienId
+            JOIN HangGplx hg
+                ON hg.hangId = hs.hangId
+            LEFT JOIN KyThi kt
+                ON kt.tenKyThi = PKG_EXAM_PAYMENT.GET_TEN_KYTHI_FROM_PHIEU(pt.tenPhieu)
+            LEFT JOIN ChiTietDangKyThi dk
+                ON dk.hoSoId = hs.hoSoId
+               AND dk.kyThiId = kt.kyThiId
+            LEFT JOIN LichThi lt
+                ON lt.lichThiId = dk.lichThiId
+            WHERE hv.userId = p_userId
+              AND pt.phieuId = p_phieuId
+              AND pt.ngayNop IS NOT NULL
+              AND ct.loaiPhi = N'Kỳ thi';
+    END;
+
+END PKG_EXAM_PAYMENT;
+/
+
 -- Lịch sử thanh toán
 CREATE OR REPLACE PROCEDURE SP_PAYMENT_HISTORY_BY_USER
 (
@@ -4485,6 +5241,7 @@ BEGIN
         WHERE rn = 1;
 END;
 /
+
 -- HỒ SƠ THÍ SINH
 CREATE OR REPLACE VIEW VW_DANH_SACH_HOSO AS
 SELECT 

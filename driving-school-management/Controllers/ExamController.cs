@@ -62,7 +62,7 @@ namespace driving_school_management.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(int kyThiId)
+        public IActionResult Register(int kyThiId)
         {
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
@@ -70,9 +70,7 @@ namespace driving_school_management.Controllers
 
             try
             {
-                await _service.DangKyKyThiUserAsync(userId.Value, kyThiId);
-                TempData["Success"] = "Đăng ký kỳ thi thành công.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Start", "ExamPayment", new { kyThiId });
             }
             catch (Exception ex)
             {

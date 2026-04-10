@@ -1,0 +1,99 @@
+﻿@using driving_school_management.Models.DTOs
+@model ExamPaymentStartDto
+@{
+    ViewData["Title"] = "Thanh toán kỳ thi";
+}
+
+<link rel="stylesheet" href="~/css/payment-premium.css" />
+
+<div class="payment-container">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div>
+            <h1>Thanh toán kỳ thi</h1>
+            <p>Chọn phiếu và phương thức thanh toán phù hợp</p>
+        </div>
+    </div>
+
+    <form asp-action="ChoosePaymentMethod" method="post">
+
+        <div class="grid-main">
+
+            <!-- LEFT: DANH SÁCH PHIẾU -->
+            <div class="card large">
+                <div class="card-header">
+                    <h3>Danh sách phiếu</h3>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Phiếu</th>
+                                <th>Kỳ thi</th>
+                                <th>Số tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.PhieuList)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="phieuIds" value="@item.PhieuId" />
+                                    </td>
+                                    <td>
+                                        <div class="primary">@item.TenPhieu</div>
+                                        <div class="meta">@item.HoTenHocVien</div>
+                                    </td>
+                                    <td>@item.TenKhoaHoc</td>
+                                    <td class="money">@item.TongTien.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT: SUMMARY + METHOD -->
+            <div class="side-panel">
+
+                <div class="card highlight">
+                    <div class="label">Tổng thanh toán</div>
+                    <div class="value">@Model.TongTien.ToString("N0") VNĐ</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Phương thức thanh toán</h4>
+                    </div>
+
+                    <div class="method-list">
+                        <label class="method">
+                            <input type="radio" name="method" value="VNPAY" required />
+                            <span>VNPAY</span>
+                        </label>
+
+                        <label class="method">
+                            <input type="radio" name="method" value="PAYPAL" />
+                            <span>PayPal</span>
+                        </label>
+
+                        <label class="method">
+                            <input type="radio" name="method" value="MOMO" />
+                            <span>MoMo</span>
+                        </label>
+                    </div>
+
+                    <textarea name="noiDung" placeholder="Nội dung thanh toán (tuỳ chọn)"></textarea>
+
+                    <button type="submit" class="btn-primary full">
+                        Tiếp tục thanh toán
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
