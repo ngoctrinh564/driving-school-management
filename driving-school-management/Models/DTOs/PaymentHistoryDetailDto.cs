@@ -32,5 +32,11 @@
         public string TenHang { get; set; } = string.Empty;
         public string LoaiPhuongTien { get; set; } = string.Empty;
         public decimal HocPhi { get; set; }
+
+        public int KyThiId { get; set; }
+        public string TenKyThi { get; set; } = string.Empty;
+        public string LoaiKyThi { get; set; } = string.Empty;
+        public DateTime? ThoiGianThi { get; set; }
+        public string DiaDiemThi { get; set; } = string.Empty;
     }
 }

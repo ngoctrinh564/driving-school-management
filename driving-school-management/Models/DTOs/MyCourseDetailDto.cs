@@ -23,6 +23,10 @@
         public string Sdt { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
 
+        public int UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public int IsActive { get; set; }
+
         public int HoSoId { get; set; }
         public string TenHoSo { get; set; } = string.Empty;
         public DateTime? NgayDangKy { get; set; }
@@ -42,15 +46,19 @@
         public string NhanXet { get; set; } = string.Empty;
         public int? SoBuoiHoc { get; set; }
         public int? SoBuoiVang { get; set; }
-        public string SoKmHoanThanh { get; set; } = string.Empty;
+        public int? SoBuoiToiThieu { get; set; }
+        public int? KmToiThieu { get; set; }
+        public decimal SoKmHoanThanh { get; set; }
+        public int? DuDieuKienThiTotNghiep { get; set; }
+        public int? DauTotNghiep { get; set; }
+        public int? DuDieuKienThiSatHach { get; set; }
+        public DateTime? ThoiGianCapNhat { get; set; }
 
         public int? LyThuyetKq { get; set; }
         public int? SaHinhKq { get; set; }
         public int? DuongTruongKq { get; set; }
         public int? MoPhongKq { get; set; }
-        public int UserId { get; set; }
-        public string UserName { get; set; } = string.Empty;
-        public int IsActive { get; set; }
+
         public string TrangThaiHocTap { get; set; } = string.Empty;
     }
 }

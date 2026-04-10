@@ -1,6 +1,6 @@
 ﻿namespace driving_school_management.Models.DTOs
 {
-    public class PaymentHistoryDto
+    public class ExamPaymentHistoryDetailDto
     {
         public int PhieuId { get; set; }
         public string TenPhieu { get; set; } = string.Empty;
@@ -10,18 +10,24 @@
         public string PhuongThuc { get; set; } = string.Empty;
         public string LoaiPhi { get; set; } = string.Empty;
         public string GhiChu { get; set; } = string.Empty;
+        public string TrangThaiThanhToan { get; set; } = string.Empty;
 
         public int HoSoId { get; set; }
         public string TenHoSo { get; set; } = string.Empty;
+        public string TrangThaiHoSo { get; set; } = string.Empty;
+
+        public int HocVienId { get; set; }
         public string HoTenHocVien { get; set; } = string.Empty;
+        public string Sdt { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
 
-        public int KhoaHocId { get; set; }
-        public string TenKhoaHoc { get; set; } = string.Empty;
-        public string TenHang { get; set; } = string.Empty;
-
-        public string TrangThaiThanhToan { get; set; } = string.Empty;
-        public int CoTheTaiHoaDon { get; set; }
         public int KyThiId { get; set; }
         public string TenKyThi { get; set; } = string.Empty;
+        public string LoaiKyThi { get; set; } = string.Empty;
+        public DateTime? ThoiGianThi { get; set; }
+        public string DiaDiemThi { get; set; } = string.Empty;
+
+        public string TenHang { get; set; } = string.Empty;
+        public decimal HocPhi { get; set; }
     }
 }

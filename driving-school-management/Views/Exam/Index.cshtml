@@ -1,0 +1,369 @@
+﻿@model List<driving_school_management.Models.DTOs.UserExamDto>
+
+@{
+    ViewData["Title"] = "Đăng ký kỳ thi";
+    var examGroups = Model?
+    .GroupBy(x => new { x.HoSoId, x.HangId, x.MaHang, x.TenHang })
+    .Select(g => g.OrderByDescending(x => x.CoTheDangKy)
+                  .ThenByDescending(x => x.SoKyThiDangKy)
+                  .ThenByDescending(x => x.KyThiId)
+                  .First())
+    .ToList() ?? new List<driving_school_management.Models.DTOs.UserExamDto>();
+}
+
+<div class="exam-page">
+    <div class="page-top">
+        <div>
+            <h2 class="page-title">Danh sách kỳ thi</h2>
+            <p class="page-subtitle">Xem điều kiện dự thi và thực hiện đăng ký đúng theo trạng thái hiện tại.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-custom alert-success-custom">
+            <i class="bi bi-check-circle"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger-custom">
+            <i class="bi bi-exclamation-octagon"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table table-exam align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Kỳ thi đại diện</th>
+                        <th>Điều kiện</th>
+                        <th>Số kỳ sẽ đăng ký</th>
+                        <th>Phí dự kiến</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (examGroups.Any())
+                    {
+                        foreach (var item in examGroups)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="hang-wrap">
+                                        <div class="hang-name">@item.TenHang</div>
+                                        <span class="badge-soft badge-neutral">@item.MaHang</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="exam-name">@item.TenKyThi</div>
+                                    <div class="exam-type-line">@item.LoaiKyThi</div>
+                                </td>
+                                <td>
+                                    @if (item.DaHoanThanh)
+                                    {
+                                        <div class="status-box status-done">
+                                            <div class="status-title">Đã hoàn thành</div>
+                                            <div class="status-text">@item.CanhBao</div>
+                                        </div>
+                                    }
+                                    else if (!item.DuDieuKienThiTotNghiep)
+                                    {
+                                        <div class="status-box status-warning">
+                                            <div class="status-title">Chưa đủ điều kiện</div>
+                                            <div class="status-text">@item.CanhBao</div>
+                                        </div>
+                                    }
+                                    else if (item.DauTotNghiep && item.DuDieuKienThiSatHach)
+                                    {
+                                        <div class="status-box status-info">
+                                            <div class="status-title">Đăng ký 1 kỳ sát hạch</div>
+                                            <div class="status-text">@item.CanhBao</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="status-box status-primary">
+                                            <div class="status-title">Đăng ký 2 kỳ</div>
+                                            <div class="status-text">@item.CanhBao</div>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="count-pill">@item.SoKyThiDangKy</span>
+                                </td>
+                                <td>
+                                    <div class="fee-value">@item.TongPhiDuKien.ToString("N0") VNĐ</div>
+                                </td>
+                                <td class="text-end">
+                                    @if (item.CoTheDangKy)
+                                    {
+                                        <a asp-action="ConfirmRegister"
+                                               asp-route-kyThiId="@item.KyThiId"
+                                               class="btn btn-primary btn-custom">
+                                            <i class="bi bi-arrow-right-circle"></i>
+                                            <span>Đăng ký</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-light btn-custom" disabled>
+                                            <i class="bi bi-lock"></i>
+                                            <span>Không khả dụng</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <div>Chưa có dữ liệu kỳ thi.</div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .exam-page {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .page-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .page-subtitle {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .card-custom {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 18px;
+    }
+
+    .table-exam thead th {
+        background: #f1f5f9;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 14px;
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    .table-exam tbody td {
+        padding: 16px;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+        vertical-align: middle;
+    }
+
+    .table-exam tbody tr:hover {
+        background: rgba(37,99,235,0.02);
+    }
+
+    .hang-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .hang-name {
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.4;
+    }
+
+    .exam-name {
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.5;
+    }
+
+    .exam-type-line {
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-soft {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        width: fit-content;
+    }
+
+    .badge-neutral {
+        background: #eef2f7;
+        color: #334155;
+    }
+
+    .status-box {
+        border-radius: 14px;
+        padding: 12px 14px;
+        border: 1px solid rgba(15,23,42,0.06);
+        min-width: 240px;
+    }
+
+    .status-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .status-text {
+        font-size: 13px;
+        color: #475569;
+        line-height: 1.5;
+    }
+
+    .status-warning {
+        background: #fff7ed;
+        border-color: rgba(249,115,22,0.18);
+    }
+
+        .status-warning .status-title {
+            color: #c2410c;
+        }
+
+    .status-primary {
+        background: rgba(37,99,235,0.06);
+        border-color: rgba(37,99,235,0.12);
+    }
+
+        .status-primary .status-title {
+            color: #2563eb;
+        }
+
+    .status-info {
+        background: rgba(124,58,237,0.06);
+        border-color: rgba(124,58,237,0.12);
+    }
+
+        .status-info .status-title {
+            color: #7c3aed;
+        }
+
+    .status-done {
+        background: rgba(22,163,74,0.08);
+        border-color: rgba(22,163,74,0.16);
+    }
+
+        .status-done .status-title {
+            color: #15803d;
+        }
+
+    .count-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 700;
+    }
+
+    .fee-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+    }
+
+    .btn-custom {
+        height: 42px;
+        border-radius: 12px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s ease;
+        font-weight: 600;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-1px);
+        }
+
+    .alert-custom {
+        min-height: 48px;
+        border-radius: 14px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(15,23,42,0.08);
+        font-weight: 600;
+    }
+
+    .alert-success-custom {
+        background: rgba(22,163,74,0.08);
+        color: #166534;
+    }
+
+    .alert-danger-custom {
+        background: rgba(239,68,68,0.08);
+        color: #b91c1c;
+    }
+
+    .empty-state {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+        .empty-state i {
+            font-size: 28px;
+        }
+
+    @@media (max-width: 991.98px) {
+        .table-exam {
+            min-width: 980px;
+        }
+    }
+</style>

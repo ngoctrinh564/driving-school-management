@@ -28,8 +28,15 @@ namespace driving_school_management.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var data = _paymentHistoryService.GetPaymentHistoryByUser(userId.Value);
-            return Json(data);
+            try
+            {
+                var data = _paymentHistoryService.GetPaymentHistoryByUser(userId.Value);
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -39,11 +46,18 @@ namespace driving_school_management.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var data = _paymentHistoryService.GetPaymentHistoryDetail(userId.Value, phieuId);
-            if (data == null)
-                return NotFound();
+            try
+            {
+                var data = _paymentHistoryService.GetPaymentHistoryDetail(userId.Value, phieuId);
+                if (data == null)
+                    return NotFound();
 
-            return Json(data);
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

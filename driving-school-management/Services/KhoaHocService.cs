@@ -221,41 +221,50 @@ public class KhoaHocService
                     result.Add(new MyCourseDto
                     {
                         KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
-                        NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayBatDau"]),
-                        NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayKetThuc"]),
-                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
-                        TrangThaiKhoaHocGoc = reader["trangThaiKhoaHocGoc"] == DBNull.Value ? string.Empty : reader["trangThaiKhoaHocGoc"].ToString()!,
+                        TenKhoaHoc = GetStringValue(reader, "tenKhoaHoc"),
+                        NgayBatDau = GetNullableDateTimeValue(reader, "ngayBatDau"),
+                        NgayKetThuc = GetNullableDateTimeValue(reader, "ngayKetThuc"),
+                        DiaDiem = GetStringValue(reader, "diaDiem"),
+                        TrangThaiKhoaHocGoc = GetStringValue(reader, "trangThaiKhoaHocGoc"),
 
                         HangId = GetInt32Value(reader["hangId"]),
-                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
-                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString()!,
-                        HocPhi = GetDecimalValue(reader["hocPhi"]),
+                        TenHang = GetStringValue(reader, "tenHang"),
+                        LoaiPhuongTien = GetStringValue(reader, "loaiPhuongTien"),
+                        HocPhi = GetDecimalValueSafe(reader, "hocPhi"),
 
                         HoSoId = GetInt32Value(reader["hoSoId"]),
-                        TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
+                        TenHoSo = GetStringValue(reader, "tenHoSo"),
                         HocVienId = GetInt32Value(reader["hocVienId"]),
-                        HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
+                        HoTenHocVien = GetStringValue(reader, "hoTenHocVien"),
 
                         PhieuId = GetInt32Value(reader["phieuId"]),
-                        TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
-                        NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
-                        NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
-                        TongTien = GetDecimalValue(reader["tongTien"]),
-                        PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
-                        LoaiPhi = reader["loaiPhi"] == DBNull.Value ? string.Empty : reader["loaiPhi"].ToString()!,
-                        GhiChu = reader["ghiChu"] == DBNull.Value ? string.Empty : reader["ghiChu"].ToString()!,
+                        TenPhieu = GetStringValue(reader, "tenPhieu"),
+                        NgayLap = GetNullableDateTimeValue(reader, "ngayLap"),
+                        NgayNop = GetNullableDateTimeValue(reader, "ngayNop"),
+                        TongTien = GetDecimalValueSafe(reader, "tongTien"),
+                        PhuongThuc = GetStringValue(reader, "phuongThuc"),
+                        LoaiPhi = GetStringValue(reader, "loaiPhi"),
+                        GhiChu = GetStringValue(reader, "ghiChu"),
 
                         KetQuaHocTapId = GetInt32Value(reader["ketQuaHocTapId"]),
-                        LyThuyetKq = GetNullableInt32Value(reader["lyThuyetKq"]),
-                        SaHinhKq = GetNullableInt32Value(reader["saHinhKq"]),
-                        DuongTruongKq = GetNullableInt32Value(reader["duongTruongKq"]),
-                        MoPhongKq = GetNullableInt32Value(reader["moPhongKq"]),
+                        LyThuyetKq = GetNullableInt32ValueSafe(reader, "lyThuyetKq"),
+                        SaHinhKq = GetNullableInt32ValueSafe(reader, "saHinhKq"),
+                        DuongTruongKq = GetNullableInt32ValueSafe(reader, "duongTruongKq"),
+                        MoPhongKq = GetNullableInt32ValueSafe(reader, "moPhongKq"),
 
-                        TrangThaiHocTap = reader["trangThaiHocTap"] == DBNull.Value ? string.Empty : reader["trangThaiHocTap"].ToString()!,
-                        DaHoanThanh = GetInt32Value(reader["daHoanThanh"]),
-                        DangHoc = GetInt32Value(reader["dangHoc"]),
-                        KhongHoanThanh = GetInt32Value(reader["khongHoanThanh"])
+                        SoBuoiHoc = GetNullableInt32ValueSafe(reader, "soBuoiHoc"),
+                        SoBuoiToiThieu = GetNullableInt32ValueSafe(reader, "soBuoiToiThieu"),
+                        KmToiThieu = GetNullableInt32ValueSafe(reader, "kmToiThieu"),
+                        SoKmHoanThanh = GetDecimalValueSafe(reader, "soKmHoanThanh"),
+                        DuDieuKienThiTotNghiep = GetNullableInt32ValueSafe(reader, "DU_DK_THITOTNGHIEP"),
+                        DauTotNghiep = GetNullableInt32ValueSafe(reader, "DAUTOTNGHIEP"),
+                        DuDieuKienThiSatHach = GetNullableInt32ValueSafe(reader, "DU_DK_THISATHACH"),
+                        ThoiGianCapNhat = GetNullableDateTimeValue(reader, "THOIGIANCAPNHAT"),
+
+                        TrangThaiHocTap = GetStringValue(reader, "trangThaiHocTap"),
+                        DaHoanThanh = GetInt32ValueSafe(reader, "daHoanThanh"),
+                        DangHoc = GetInt32ValueSafe(reader, "dangHoc"),
+                        KhongHoanThanh = GetInt32ValueSafe(reader, "khongHoanThanh")
                     });
                 }
             }
@@ -285,57 +294,63 @@ public class KhoaHocService
                     result = new MyCourseDetailDto
                     {
                         KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                        TenKhoaHoc = reader["tenKhoaHoc"] == DBNull.Value ? string.Empty : reader["tenKhoaHoc"].ToString()!,
-                        NgayBatDau = reader["ngayBatDau"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayBatDau"]),
-                        NgayKetThuc = reader["ngayKetThuc"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayKetThuc"]),
-                        DiaDiem = reader["diaDiem"] == DBNull.Value ? string.Empty : reader["diaDiem"].ToString()!,
-                        TrangThaiKhoaHocGoc = reader["trangThaiKhoaHocGoc"] == DBNull.Value ? string.Empty : reader["trangThaiKhoaHocGoc"].ToString()!,
+                        TenKhoaHoc = GetStringValue(reader, "tenKhoaHoc"),
+                        NgayBatDau = GetNullableDateTimeValue(reader, "ngayBatDau"),
+                        NgayKetThuc = GetNullableDateTimeValue(reader, "ngayKetThuc"),
+                        DiaDiem = GetStringValue(reader, "diaDiem"),
+                        TrangThaiKhoaHocGoc = GetStringValue(reader, "trangThaiKhoaHocGoc"),
 
                         HangId = GetInt32Value(reader["hangId"]),
-                        TenHang = reader["tenHang"] == DBNull.Value ? string.Empty : reader["tenHang"].ToString()!,
-                        MoTa = reader["moTa"] == DBNull.Value ? string.Empty : reader["moTa"].ToString()!,
-                        LoaiPhuongTien = reader["loaiPhuongTien"] == DBNull.Value ? string.Empty : reader["loaiPhuongTien"].ToString()!,
-                        SoCauHoi = GetNullableInt32Value(reader["soCauHoi"]),
-                        DiemDat = GetNullableInt32Value(reader["diemDat"]),
-                        ThoiGianTn = GetNullableInt32Value(reader["thoiGianTn"]),
-                        HocPhi = GetDecimalValue(reader["hocPhi"]),
+                        TenHang = GetStringValue(reader, "tenHang"),
+                        MoTa = GetStringValue(reader, "moTa"),
+                        LoaiPhuongTien = GetStringValue(reader, "loaiPhuongTien"),
+                        SoCauHoi = GetNullableInt32ValueSafe(reader, "soCauHoi"),
+                        DiemDat = GetNullableInt32ValueSafe(reader, "diemDat"),
+                        ThoiGianTn = GetNullableInt32ValueSafe(reader, "thoiGianTn"),
+                        HocPhi = GetDecimalValueSafe(reader, "hocPhi"),
 
                         HocVienId = GetInt32Value(reader["hocVienId"]),
-                        HoTenHocVien = reader["hoTenHocVien"] == DBNull.Value ? string.Empty : reader["hoTenHocVien"].ToString()!,
-                        Sdt = reader["sdt"] == DBNull.Value ? string.Empty : reader["sdt"].ToString()!,
-                        Email = reader["email"] == DBNull.Value ? string.Empty : reader["email"].ToString()!,
+                        HoTenHocVien = GetStringValue(reader, "hoTenHocVien"),
+                        Sdt = GetStringValue(reader, "sdt"),
+                        Email = GetStringValue(reader, "email"),
 
                         UserId = GetInt32Value(reader["userId"]),
-                        UserName = reader["userName"] == DBNull.Value ? string.Empty : reader["userName"].ToString()!,
-                        IsActive = GetInt32Value(reader["isActive"]),
+                        UserName = GetStringValue(reader, "userName"),
+                        IsActive = GetInt32ValueSafe(reader, "isActive"),
 
                         HoSoId = GetInt32Value(reader["hoSoId"]),
-                        TenHoSo = reader["tenHoSo"] == DBNull.Value ? string.Empty : reader["tenHoSo"].ToString()!,
-                        NgayDangKy = reader["ngayDangKy"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayDangKy"]),
-                        TrangThaiHoSo = reader["trangThaiHoSo"] == DBNull.Value ? string.Empty : reader["trangThaiHoSo"].ToString()!,
-                        GhiChuHoSo = reader["ghiChuHoSo"] == DBNull.Value ? string.Empty : reader["ghiChuHoSo"].ToString()!,
+                        TenHoSo = GetStringValue(reader, "tenHoSo"),
+                        NgayDangKy = GetNullableDateTimeValue(reader, "ngayDangKy"),
+                        TrangThaiHoSo = GetStringValue(reader, "trangThaiHoSo"),
+                        GhiChuHoSo = GetStringValue(reader, "ghiChuHoSo"),
 
                         PhieuId = GetInt32Value(reader["phieuId"]),
-                        TenPhieu = reader["tenPhieu"] == DBNull.Value ? string.Empty : reader["tenPhieu"].ToString()!,
-                        NgayLap = reader["ngayLap"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayLap"]),
-                        NgayNop = reader["ngayNop"] == DBNull.Value ? null : Convert.ToDateTime(reader["ngayNop"]),
-                        TongTien = GetDecimalValue(reader["tongTien"]),
-                        PhuongThuc = reader["phuongThuc"] == DBNull.Value ? string.Empty : reader["phuongThuc"].ToString()!,
-                        LoaiPhi = reader["loaiPhi"] == DBNull.Value ? string.Empty : reader["loaiPhi"].ToString()!,
-                        GhiChuThanhToan = reader["ghiChuThanhToan"] == DBNull.Value ? string.Empty : reader["ghiChuThanhToan"].ToString()!,
+                        TenPhieu = GetStringValue(reader, "tenPhieu"),
+                        NgayLap = GetNullableDateTimeValue(reader, "ngayLap"),
+                        NgayNop = GetNullableDateTimeValue(reader, "ngayNop"),
+                        TongTien = GetDecimalValueSafe(reader, "tongTien"),
+                        PhuongThuc = GetStringValue(reader, "phuongThuc"),
+                        LoaiPhi = GetStringValue(reader, "loaiPhi"),
+                        GhiChuThanhToan = GetStringValue(reader, "ghiChuThanhToan"),
 
                         KetQuaHocTapId = GetInt32Value(reader["ketQuaHocTapId"]),
-                        NhanXet = reader["nhanXet"] == DBNull.Value ? string.Empty : reader["nhanXet"].ToString()!,
-                        SoBuoiHoc = GetNullableInt32Value(reader["soBuoiHoc"]),
-                        SoBuoiVang = GetNullableInt32Value(reader["soBuoiVang"]),
-                        SoKmHoanThanh = reader["soKmHoanThanh"] == DBNull.Value ? string.Empty : reader["soKmHoanThanh"].ToString()!,
+                        NhanXet = GetStringValue(reader, "nhanXet"),
+                        SoBuoiHoc = GetNullableInt32ValueSafe(reader, "soBuoiHoc"),
+                        SoBuoiVang = GetNullableInt32ValueSafe(reader, "soBuoiVang"),
+                        SoBuoiToiThieu = GetNullableInt32ValueSafe(reader, "soBuoiToiThieu"),
+                        KmToiThieu = GetNullableInt32ValueSafe(reader, "kmToiThieu"),
+                        SoKmHoanThanh = GetDecimalValueSafe(reader, "soKmHoanThanh"),
+                        DuDieuKienThiTotNghiep = GetNullableInt32ValueSafe(reader, "DU_DK_THITOTNGHIEP"),
+                        DauTotNghiep = GetNullableInt32ValueSafe(reader, "DAUTOTNGHIEP"),
+                        DuDieuKienThiSatHach = GetNullableInt32ValueSafe(reader, "DU_DK_THISATHACH"),
+                        ThoiGianCapNhat = GetNullableDateTimeValue(reader, "THOIGIANCAPNHAT"),
 
-                        LyThuyetKq = GetNullableInt32Value(reader["lyThuyetKq"]),
-                        SaHinhKq = GetNullableInt32Value(reader["saHinhKq"]),
-                        DuongTruongKq = GetNullableInt32Value(reader["duongTruongKq"]),
-                        MoPhongKq = GetNullableInt32Value(reader["moPhongKq"]),
+                        LyThuyetKq = GetNullableInt32ValueSafe(reader, "lyThuyetKq"),
+                        SaHinhKq = GetNullableInt32ValueSafe(reader, "saHinhKq"),
+                        DuongTruongKq = GetNullableInt32ValueSafe(reader, "duongTruongKq"),
+                        MoPhongKq = GetNullableInt32ValueSafe(reader, "moPhongKq"),
 
-                        TrangThaiHocTap = reader["trangThaiHocTap"] == DBNull.Value ? string.Empty : reader["trangThaiHocTap"].ToString()!
+                        TrangThaiHocTap = GetStringValue(reader, "trangThaiHocTap")
                     };
                 }
             }
@@ -392,5 +407,89 @@ public class KhoaHocService
             return decValue;
 
         return decimal.Parse(dbValue.ToString()!);
+    }
+
+    private string GetStringValue(IDataRecord reader, string columnName)
+    {
+        int ordinal = GetOrdinalSafe(reader, columnName);
+        if (reader.IsDBNull(ordinal))
+            return string.Empty;
+
+        return reader.GetValue(ordinal)?.ToString() ?? string.Empty;
+    }
+
+    private DateTime? GetNullableDateTimeValue(IDataRecord reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName))
+            return null;
+
+        int ordinal = GetOrdinalSafe(reader, columnName);
+        if (reader.IsDBNull(ordinal))
+            return null;
+
+        object value = reader.GetValue(ordinal);
+
+        if (value is DateTime dateTimeValue)
+            return dateTimeValue;
+
+        return Convert.ToDateTime(value);
+    }
+
+    private int? GetNullableInt32ValueSafe(IDataRecord reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName))
+            return null;
+
+        int ordinal = GetOrdinalSafe(reader, columnName);
+        if (reader.IsDBNull(ordinal))
+            return null;
+
+        return GetInt32Value(reader.GetValue(ordinal));
+    }
+
+    private int GetInt32ValueSafe(IDataRecord reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName))
+            return 0;
+
+        int ordinal = GetOrdinalSafe(reader, columnName);
+        if (reader.IsDBNull(ordinal))
+            return 0;
+
+        return GetInt32Value(reader.GetValue(ordinal));
+    }
+
+    private decimal GetDecimalValueSafe(IDataRecord reader, string columnName)
+    {
+        if (!HasColumn(reader, columnName))
+            return 0;
+
+        int ordinal = GetOrdinalSafe(reader, columnName);
+        if (reader.IsDBNull(ordinal))
+            return 0;
+
+        return GetDecimalValue(reader.GetValue(ordinal));
+    }
+
+    private bool HasColumn(IDataRecord reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private int GetOrdinalSafe(IDataRecord reader, string columnName)
+    {
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+
+        throw new IndexOutOfRangeException($"Không tìm thấy cột {columnName}");
     }
 }

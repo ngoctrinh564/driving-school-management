@@ -1,0 +1,319 @@
+﻿@using driving_school_management.Models.DTOs
+@model ExamPaymentStartDto
+@{
+    ViewData["Title"] = "Thanh toán kỳ thi";
+}
+
+<style>
+    body {
+        background: #f4f7fb;
+        font-family: "Segoe UI", Roboto, sans-serif;
+    }
+
+    .container-main {
+        padding: 24px;
+    }
+
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+    .grid-main {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 20px;
+    }
+
+    .card-header {
+        margin-bottom: 16px;
+    }
+
+        .card-header h3,
+        .card-header h4 {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+    .table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table-modern thead {
+            background: #f1f5f9;
+        }
+
+        .table-modern th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .table-modern td {
+            padding: 12px;
+            border-top: 1px solid rgba(15,23,42,0.06);
+            font-size: 14px;
+        }
+
+    .row-item {
+        background: rgba(37,99,235,0.04);
+        border-left: 3px solid #2563eb;
+        transition: 0.2s ease;
+    }
+
+        .row-item:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+    .primary {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .meta {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .money {
+        font-weight: 600;
+    }
+
+    .side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .highlight {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+    }
+
+        .highlight .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 6px;
+        }
+
+        .highlight .value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+    .method-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .method-option {
+        position: relative;
+    }
+
+        .method-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .method-option label {
+            display: block;
+            text-align: center;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #fff;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .method-option img {
+            height: 28px;
+            margin-bottom: 6px;
+        }
+
+        .method-option span {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .method-option label:hover {
+            transform: translateY(-1px);
+            border-color: #2563eb;
+        }
+
+        .method-option input:checked + label {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+            .method-option input:checked + label img {
+                filter: brightness(0) invert(1);
+            }
+
+    textarea {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(15,23,42,0.08);
+        padding: 12px;
+        margin-bottom: 14px;
+        font-size: 14px;
+    }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+
+    .btn-primary {
+        height: 44px;
+        border-radius: 12px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .btn-primary.full {
+            width: 100%;
+        }
+
+    @@media (max-width: 992px) {
+        .grid-main {
+            grid-template-columns: 1fr;
+        }
+
+        .method-group {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container-main">
+
+    <div class="page-header">
+        <h1>Thanh toán kỳ thi</h1>
+        <p>Chọn phiếu và phương thức thanh toán phù hợp</p>
+    </div>
+
+    <form asp-action="ChoosePaymentMethod" method="post">
+        <div class="grid-main">
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách phiếu</h3>
+                </div>
+
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Phiếu</th>
+                            <th>Kỳ thi</th>
+                            <th>Số tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PhieuList)
+                        {
+                            <tr class="row-item">
+                                <td>
+                                    <div class="primary">@item.TenPhieu</div>
+                                    <div class="meta">@item.HoTenHocVien</div>
+                                </td>
+                                <td>@item.TenKhoaHoc</td>
+                                <td class="money">@item.TongTien.ToString("N0")</td>
+                            </tr>
+
+                            <input type="hidden" name="phieuIds" value="@item.PhieuId" />
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="side-panel">
+
+                <div class="card highlight">
+                    <div class="label">Tổng thanh toán</div>
+                    <div class="value">@Model.TongTien.ToString("N0") VNĐ</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Phương thức thanh toán</h4>
+                    </div>
+
+                    <div class="method-group">
+
+                        <div class="method-option">
+                            <input type="radio" id="vnpay" name="method" value="VNPAY" required checked />
+                            <label for="vnpay">
+                                <img src="~/images/logo/vnpay-logo.png" />
+                                <span>VNPAY</span>
+                            </label>
+                        </div>
+
+                        <div class="method-option">
+                            <input type="radio" id="paypal" name="method" value="PAYPAL" />
+                            <label for="paypal">
+                                <img src="~/images/logo/paypal-logo.png" />
+                                <span>PayPal</span>
+                            </label>
+                        </div>
+
+                        <div class="method-option">
+                            <input type="radio" id="momo" name="method" value="MOMO" />
+                            <label for="momo">
+                                <img src="~/images/logo/momo-logo.png" />
+                                <span>MoMo</span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                    <textarea name="noiDung" placeholder="Nội dung thanh toán (tuỳ chọn)"></textarea>
+
+                    <button type="submit" class="btn-primary full">
+                        Tiếp tục thanh toán
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

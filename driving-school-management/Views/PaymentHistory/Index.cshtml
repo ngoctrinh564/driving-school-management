@@ -791,9 +791,13 @@
             tableCard.style.display = 'block';
 
             data.forEach(item => {
-                const downloadButton = item.coTheTaiHoaDon === 1
+            const downloadUrl = item.loaiPhi === 'Kỳ thi'
+                ? `/ExamPayment/DownloadInvoicePdf?phieuId=${item.phieuId}`
+                : `/PaymentInvoice/Download?phieuId=${item.phieuId}`;
+
+            const downloadButton = item.coTheTaiHoaDon === 1
                 ? `
-                    <a href="/PaymentInvoice/Download?phieuId=${item.phieuId}"
+                    <a href="${downloadUrl}"
                         class="invoice-download-btn"
                         onclick="event.stopPropagation()">
                         Tải PDF
@@ -802,14 +806,15 @@
                 : `
                     <span class="invoice-download-disabled">Chưa khả dụng</span>
                     `;
-
+            const displayTitle = item.tenKyThi || item.tenKhoaHoc || '';
+            const displaySub = item.tenPhieu || '';
             const row = `
                 <tr onclick="openPaymentDetail(${item.phieuId})">
                     <td class="payment-id">#${item.phieuId}</td>
                     <td>
                         <div class="course-cell">
-                            <div class="course-name">${escapeHtml(item.tenKhoaHoc || '')}</div>
-                            <div class="course-sub">${escapeHtml(item.tenPhieu || '')}</div>
+                            <div class="course-name">${escapeHtml(displayTitle)}</div>
+                            <div class="course-sub">${escapeHtml(displaySub)}</div>
                         </div>
                     </td>
                     <td>${escapeHtml(item.tenHang || '')}</td>
@@ -840,16 +845,20 @@
     }
 
     function buildDialogContent(d) {
+        const isExam = !!(d.tenKyThi && d.tenKyThi.trim());
+        const mainTitle = isExam ? (d.tenKyThi || '') : (d.tenKhoaHoc || '');
+        const summaryThird = isExam ? (d.loaiKyThi || '') : (d.loaiPhuongTien || '');
+        const summaryFourth = isExam ? '' : (d.trangThaiKhoaHoc || '');
         return `
             <div class="dialog-top-summary">
                 <div class="summary-main">
                     <div class="summary-eyebrow">Thông tin quan trọng</div>
-                    <div class="summary-course">${escapeHtml(d.tenKhoaHoc || '')}</div>
+                    <div class="summary-course">${escapeHtml(mainTitle)}</div>
                     <div class="summary-meta-row">
                         <span class="summary-pill">Mã phiếu #${escapeHtml(d.phieuId)}</span>
                         <span class="summary-pill">${escapeHtml(d.tenHang || '')}</span>
-                        <span class="summary-pill">${escapeHtml(d.loaiPhuongTien || '')}</span>
-                        <span class="summary-pill">${escapeHtml(d.trangThaiKhoaHoc || '')}</span>
+                        ${summaryThird ? `<span class="summary-pill">${escapeHtml(summaryThird)}</span>` : ''}
+                        ${summaryFourth ? `<span class="summary-pill">${escapeHtml(summaryFourth)}</span>` : ''}
                     </div>
                 </div>
 
@@ -951,11 +960,11 @@
             </div>
 
             <div class="section-block">
-                <div class="section-title">Thông tin khóa học</div>
+                <div class="section-title">${isExam ? 'Thông tin kỳ thi' : 'Thông tin khóa học'}</div>
                 <div class="detail-grid">
                     <div class="detail-item">
-                        <div class="detail-label">Khóa học</div>
-                        <div class="detail-value soft">${escapeHtml(d.tenKhoaHoc || '')}</div>
+                        <div class="detail-label">${isExam ? 'Kỳ thi' : 'Khóa học'}</div>
+                        <div class="detail-value soft">${escapeHtml(isExam ? (d.tenKyThi || '') : (d.tenKhoaHoc || ''))}</div>
                     </div>
 
                     <div class="detail-item">
@@ -963,35 +972,61 @@
                         <div class="detail-value soft">${escapeHtml(d.tenHang || '')}</div>
                     </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Loại phương tiện</div>
-                        <div class="detail-value soft">${escapeHtml(d.loaiPhuongTien || '')}</div>
-                    </div>
+                    ${
+                        isExam
+                        ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Loại kỳ thi</div>
+                                <div class="detail-value soft">${escapeHtml(d.loaiKyThi || '')}</div>
+                            </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Địa điểm</div>
-                        <div class="detail-value soft">${escapeHtml(d.diaDiem || '')}</div>
-                    </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Địa điểm thi</div>
+                                <div class="detail-value soft">${escapeHtml(d.diaDiemThi || '')}</div>
+                            </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Ngày bắt đầu</div>
-                        <div class="detail-value soft">${formatDateTime(d.ngayBatDau)}</div>
-                    </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Thời gian thi</div>
+                                <div class="detail-value soft">${formatDateTime(d.thoiGianThi)}</div>
+                            </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Ngày kết thúc</div>
-                        <div class="detail-value soft">${formatDateTime(d.ngayKetThuc)}</div>
-                    </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Học phí gốc</div>
+                                <div class="detail-value soft">${formatMoney(d.hocPhi)}</div>
+                            </div>
+                          `
+                        : `
+                            <div class="detail-item">
+                                <div class="detail-label">Loại phương tiện</div>
+                                <div class="detail-value soft">${escapeHtml(d.loaiPhuongTien || '')}</div>
+                            </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Trạng thái khóa học</div>
-                        <div class="detail-value soft">${escapeHtml(d.trangThaiKhoaHoc || '')}</div>
-                    </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Địa điểm</div>
+                                <div class="detail-value soft">${escapeHtml(d.diaDiem || '')}</div>
+                            </div>
 
-                    <div class="detail-item">
-                        <div class="detail-label">Học phí gốc</div>
-                        <div class="detail-value soft">${formatMoney(d.hocPhi)}</div>
-                    </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Ngày bắt đầu</div>
+                                <div class="detail-value soft">${formatDateTime(d.ngayBatDau)}</div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-label">Ngày kết thúc</div>
+                                <div class="detail-value soft">${formatDateTime(d.ngayKetThuc)}</div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-label">Trạng thái khóa học</div>
+                                <div class="detail-value soft">${escapeHtml(d.trangThaiKhoaHoc || '')}</div>
+                            </div>
+
+                            <div class="detail-item">
+                                <div class="detail-label">Học phí gốc</div>
+                                <div class="detail-value soft">${formatMoney(d.hocPhi)}</div>
+                            </div>
+                          `
+                    }
                 </div>
             </div>
         `;

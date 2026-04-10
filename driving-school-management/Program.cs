@@ -17,6 +17,7 @@ builder.Services.AddScoped<SignOracleHelper>();
 builder.Services.AddScoped<AdminDashboardService>();
 builder.Services.AddScoped<AdminExamService>();
 builder.Services.AddScoped<AdminKhoaHocService>();
+builder.Services.AddScoped<IAdminKetQuaHocTapService, AdminKetQuaHocTapService>();
 //thêm services
 builder.Services.AddScoped<KhoaHocService>();
 builder.Services.AddScoped<HocService>();
@@ -37,6 +38,8 @@ builder.Services.AddScoped<HoSoService>();
 builder.Services.AddScoped<IPhotoValidationService, PhotoValidationService>();
 builder.Services.AddScoped<AiChatService>();
 builder.Services.AddScoped<ReportOracleService>();
+builder.Services.AddScoped<ExamService>();
+builder.Services.AddScoped<ExamPaymentService>();
 //
 builder.Services.AddHttpClient();
 //

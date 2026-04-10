@@ -34,6 +34,15 @@
         public int? DuongTruongKq { get; set; }
         public int? MoPhongKq { get; set; }
 
+        public int? SoBuoiHoc { get; set; }
+        public int? SoBuoiToiThieu { get; set; }
+        public int? KmToiThieu { get; set; }
+        public decimal SoKmHoanThanh { get; set; }
+        public int? DuDieuKienThiTotNghiep { get; set; }
+        public int? DauTotNghiep { get; set; }
+        public int? DuDieuKienThiSatHach { get; set; }
+        public DateTime? ThoiGianCapNhat { get; set; }
+
         public string TrangThaiHocTap { get; set; } = string.Empty;
         public int DaHoanThanh { get; set; }
         public int DangHoc { get; set; }

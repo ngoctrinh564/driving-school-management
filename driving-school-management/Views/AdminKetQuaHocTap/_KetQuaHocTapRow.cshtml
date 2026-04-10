@@ -1,0 +1,86 @@
+﻿@model driving_school_management.ViewModels.AdminKetQuaHocTapViewModel
+
+<tr>
+    <td>
+        <div class="student-block">
+            <p class="student-name">@Model.HoTenHocVien</p>
+            <p class="student-meta">Hồ sơ: @Model.TenHoSo</p>
+            <p class="student-meta">KQHT ID: @Model.KetQuaHocTapId</p>
+        </div>
+    </td>
+    <td>
+        <div class="student-block">
+            <p class="student-name">@Model.SoBuoiHoc / @Model.SoBuoiToiThieu</p>
+            <p class="student-meta">Tối thiểu</p>
+        </div>
+    </td>
+    <td>
+        <div class="student-block">
+            <p class="student-name">@Model.SoKmHoanThanh / @Model.KmToiThieu</p>
+            <p class="student-meta">Km tối thiểu</p>
+        </div>
+    </td>
+    <td>
+        <div class="d-flex flex-column gap-2">
+            <span class="pill-badge @(Model.DuDieuKienThiTotNghiep ? "badge-success" : "badge-danger")">
+                @(Model.DuDieuKienThiTotNghiep ? "Đủ điều kiện thi TN" : "Chưa đủ điều kiện")
+            </span>
+
+            <span class="pill-badge @(Model.DauTotNghiep ? "badge-success" : "badge-neutral")">
+                @(Model.DauTotNghiep ? "Đậu tốt nghiệp" : "Chưa đậu tốt nghiệp")
+            </span>
+
+            <span class="pill-badge @(Model.DuDieuKienThiSatHach ? "badge-warning" : "badge-neutral")">
+                @(Model.DuDieuKienThiSatHach ? "Đủ điều kiện thi sát hạch" : "Chưa đủ điều kiện sát hạch")
+            </span>
+        </div>
+    </td>
+    <td>
+        <div class="result-list">
+            <span class="result-chip @(Model.LyThuyetKq ? "true" : "false")">Lý thuyết: @(Model.LyThuyetKq ? "Đạt" : "Chưa đạt")</span>
+            <span class="result-chip @(Model.SaHinhKq ? "true" : "false")">Sa hình: @(Model.SaHinhKq ? "Đạt" : "Chưa đạt")</span>
+            <span class="result-chip @(Model.DuongTruongKq ? "true" : "false")">Đường trường: @(Model.DuongTruongKq ? "Đạt" : "Chưa đạt")</span>
+            <span class="result-chip @(Model.MoPhongKq ? "true" : "false")">Mô phỏng: @(Model.MoPhongKq ? "Đạt" : "Chưa đạt")</span>
+        </div>
+    </td>
+    <td>
+        <span>@(string.IsNullOrWhiteSpace(Model.NhanXet) ? "—" : Model.NhanXet)</span>
+    </td>
+    <td>
+        <div class="action-group">
+            <button type="button"
+                    class="action-btn btn-open-kqht"
+                    title="Sửa kết quả học tập"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalCapNhatKqht"
+                    data-id="@Model.KetQuaHocTapId"
+                    data-hoten="@Model.HoTenHocVien"
+                    data-hoso="@Model.TenHoSo"
+                    data-sobuoihoc="@Model.SoBuoiHoc"
+                    data-sobuoi-toithieu="@Model.SoBuoiToiThieu"
+                    data-sokm="@Model.SoKmHoanThanh"
+                    data-kmtoithieu="@Model.KmToiThieu"
+                    data-nhanxet="@Model.NhanXet">
+                <i class="fa-solid fa-pen"></i>
+            </button>
+
+            <button type="button"
+                    class="action-btn btn-open-ctkqht"
+                    title="Sửa 4 kết quả"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalCapNhatChiTiet"
+                    data-id="@Model.KetQuaHocTapId"
+                    data-hoten="@Model.HoTenHocVien"
+                    data-hoso="@Model.TenHoSo"
+                    data-dudk="@Model.DuDieuKienThiTotNghiep.ToString().ToLower()"
+                    data-dautn="@Model.DauTotNghiep.ToString().ToLower()"
+                    data-dksh="@Model.DuDieuKienThiSatHach.ToString().ToLower()"
+                    data-lythuyet="@Model.LyThuyetKq.ToString().ToLower()"
+                    data-sahinh="@Model.SaHinhKq.ToString().ToLower()"
+                    data-duongtruong="@Model.DuongTruongKq.ToString().ToLower()"
+                    data-mophong="@Model.MoPhongKq.ToString().ToLower()">
+                <i class="fa-solid fa-list-check"></i>
+            </button>
+        </div>
+    </td>
+</tr>

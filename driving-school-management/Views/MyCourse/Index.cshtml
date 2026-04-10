@@ -300,7 +300,7 @@
 
     .my-table {
         width: 100%;
-        min-width: 1360px;
+        min-width: 1600px;
         border-collapse: separate;
         border-spacing: 0;
     }
@@ -946,7 +946,7 @@
         color: #fff;
         box-shadow: 0 16px 36px rgba(15, 23, 42, .20);
         animation: toastIn .22s ease;
-        max-width: 380px;
+        max-width: 420px;
     }
 
     @@keyframes shimmer {
@@ -1070,9 +1070,12 @@
 
             <div class="filter-tabs">
                 <button type="button" class="filter-tab active" data-filter="ALL">Tất cả</button>
-                <button type="button" class="filter-tab" data-filter="Hoàn thành">Hoàn thành</button>
+                <button type="button" class="filter-tab" data-filter="Chờ cấp bằng">Chờ cấp bằng</button>
+                <button type="button" class="filter-tab" data-filter="Đang thi sát hạch">Thi sát hạch</button>
+                <button type="button" class="filter-tab" data-filter="Đang thi tốt nghiệp">Thi tốt nghiệp</button>
                 <button type="button" class="filter-tab" data-filter="Đang học">Đang học</button>
                 <button type="button" class="filter-tab" data-filter="Không hoàn thành">Không hoàn thành</button>
+                <button type="button" class="filter-tab" data-filter="Chưa bắt đầu">Chưa bắt đầu</button>
             </div>
         </div>
 
@@ -1084,21 +1087,21 @@
             </div>
 
             <div class="metric-card">
-                <div class="metric-label">Đã hoàn thành</div>
+                <div class="metric-label">Chờ cấp bằng</div>
                 <p class="metric-value" id="metricCompleted">0</p>
-                <div class="metric-note">Đạt đủ 4 kết quả yêu cầu.</div>
+                <div class="metric-note">Đã hoàn thành tốt nghiệp và sát hạch.</div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-label">Đang học</div>
+                <div class="metric-label">Đang học / thi</div>
                 <p class="metric-value" id="metricActive">0</p>
-                <div class="metric-note">Đang nằm trong thời gian học.</div>
+                <div class="metric-note">Đang học, thi tốt nghiệp hoặc thi sát hạch.</div>
             </div>
 
             <div class="metric-card">
                 <div class="metric-label">Không hoàn thành</div>
                 <p class="metric-value" id="metricFailed">0</p>
-                <div class="metric-note">Đã quá hạn nhưng chưa hoàn tất.</div>
+                <div class="metric-note">Đã kết thúc nhưng chưa đạt điều kiện.</div>
             </div>
         </div>
 
@@ -1127,10 +1130,10 @@
                                 <th>Hạng</th>
                                 <th>Hồ sơ</th>
                                 <th>Thời gian</th>
-                                <th>Kết quả</th>
+                                <th>Điều kiện học tập</th>
+                                <th>Kết quả hiện tại</th>
                                 <th>Trạng thái</th>
                                 <th>Thanh toán</th>
-                                <th>     </th>
                             </tr>
                         </thead>
                         <tbody id="courseTableBody"></tbody>
@@ -1157,13 +1160,13 @@
                     <div class="overview-kicker">Tổng quan học tập</div>
                     <h4 class="overview-title">Toàn cảnh tiến độ khóa học đã đăng ký</h4>
                     <div class="overview-desc">
-                        Theo dõi toàn bộ khóa học đã thanh toán thành công, phân loại nhanh theo trạng thái học tập và xem danh sách chi tiết ngay tại màn hình chính mà không bị khối tổng quan che mất vùng dữ liệu trọng tâm.
+                        Theo dõi toàn bộ khóa học đã thanh toán thành công, phân loại nhanh theo trạng thái học tập và xem danh sách chi tiết ngay tại màn hình chính.
                     </div>
 
                     <div class="overview-pills">
                         <span class="soft-chip chip-neutral">Danh sách chỉ gồm khóa học đã thanh toán</span>
                         <span class="soft-chip chip-neutral">Nhấn từng dòng để xem chi tiết</span>
-                        <span class="soft-chip chip-neutral">Trạng thái dựa trên kết quả hiện tại</span>
+                        <span class="soft-chip chip-neutral">Trạng thái theo mô hình mới</span>
                     </div>
                 </div>
 
@@ -1176,21 +1179,21 @@
 
                     <div class="overview-metrics">
                         <div class="overview-mini">
-                            <div class="overview-mini-label">Hoàn thành</div>
+                            <div class="overview-mini-label">Chờ cấp bằng</div>
                             <div class="overview-mini-value" id="summaryCompleted">0</div>
-                            <div class="overview-mini-note">Đạt đủ 4 kết quả</div>
+                            <div class="overview-mini-note">Hoàn tất cả 2 kỳ</div>
                         </div>
 
                         <div class="overview-mini">
-                            <div class="overview-mini-label">Đang học</div>
+                            <div class="overview-mini-label">Đang học / thi</div>
                             <div class="overview-mini-value" id="summaryActive">0</div>
-                            <div class="overview-mini-note">Trong thời gian học</div>
+                            <div class="overview-mini-note">Đang học hoặc đang thi</div>
                         </div>
 
                         <div class="overview-mini">
                             <div class="overview-mini-label">Không hoàn thành</div>
                             <div class="overview-mini-value" id="summaryFailed">0</div>
-                            <div class="overview-mini-note">Quá hạn nhưng chưa đủ kết quả</div>
+                            <div class="overview-mini-note">Kết thúc nhưng chưa đạt</div>
                         </div>
 
                         <div class="overview-mini">
@@ -1270,13 +1273,32 @@
         toast.style.display = 'block';
         setTimeout(() => {
             toast.style.display = 'none';
-        }, 2500);
+        }, 3000);
+    }
+
+    function normalizeStatus(status) {
+        return (status || '').trim();
+    }
+
+    function isCompleteStatus(status) {
+        return normalizeStatus(status) === 'Chờ cấp bằng';
+    }
+
+    function isActiveTrackStatus(status) {
+        const s = normalizeStatus(status);
+        return s === 'Đang học' || s === 'Đang thi tốt nghiệp' || s === 'Đang thi sát hạch';
+    }
+
+    function isFailedStatus(status) {
+        return normalizeStatus(status) === 'Không hoàn thành';
     }
 
     function getStatusChip(status) {
-        const s = (status || '').trim();
+        const s = normalizeStatus(status);
 
-        if (s === 'Hoàn thành') return `<span class="soft-chip chip-success">${escapeHtml(s)}</span>`;
+        if (s === 'Chờ cấp bằng') return `<span class="soft-chip chip-success">${escapeHtml(s)}</span>`;
+        if (s === 'Đang thi sát hạch') return `<span class="soft-chip chip-warning">${escapeHtml(s)}</span>`;
+        if (s === 'Đang thi tốt nghiệp') return `<span class="soft-chip chip-info">${escapeHtml(s)}</span>`;
         if (s === 'Đang học') return `<span class="soft-chip chip-info">${escapeHtml(s)}</span>`;
         if (s === 'Không hoàn thành') return `<span class="soft-chip chip-danger">${escapeHtml(s)}</span>`;
         return `<span class="soft-chip chip-neutral">${escapeHtml(s || 'Chưa xác định')}</span>`;
@@ -1293,11 +1315,16 @@
         return `<span class="progress-mini ${isDone ? 'done' : 'pending'}" title="${escapeHtml(label)}">${isDone ? 'Đạt' : 'Chưa'}</span>`;
     }
 
+    function getExamEligibilityChip(value, textWhenTrue, textWhenFalse) {
+        const ok = Number(value || 0) === 1;
+        return `<span class="soft-chip ${ok ? 'chip-success' : 'chip-neutral'}">${escapeHtml(ok ? textWhenTrue : textWhenFalse)}</span>`;
+    }
+
     function updateSummaryMetrics(source) {
         const total = source.length;
-        const completed = source.filter(x => (x.trangThaiHocTap || '') === 'Hoàn thành').length;
-        const active = source.filter(x => (x.trangThaiHocTap || '') === 'Đang học').length;
-        const failed = source.filter(x => (x.trangThaiHocTap || '') === 'Không hoàn thành').length;
+        const completed = source.filter(x => isCompleteStatus(x.trangThaiHocTap)).length;
+        const active = source.filter(x => isActiveTrackStatus(x.trangThaiHocTap)).length;
+        const failed = source.filter(x => isFailedStatus(x.trangThaiHocTap)).length;
 
         document.getElementById('summaryTotal').textContent = total;
         document.getElementById('summaryCompleted').textContent = completed;
@@ -1308,9 +1335,9 @@
 
     function updateFilteredMetrics(source) {
         const total = source.length;
-        const completed = source.filter(x => (x.trangThaiHocTap || '') === 'Hoàn thành').length;
-        const active = source.filter(x => (x.trangThaiHocTap || '') === 'Đang học').length;
-        const failed = source.filter(x => (x.trangThaiHocTap || '') === 'Không hoàn thành').length;
+        const completed = source.filter(x => isCompleteStatus(x.trangThaiHocTap)).length;
+        const active = source.filter(x => isActiveTrackStatus(x.trangThaiHocTap)).length;
+        const failed = source.filter(x => isFailedStatus(x.trangThaiHocTap)).length;
 
         document.getElementById('recordCountChip').textContent = `${total} khóa học`;
         document.getElementById('metricMainValue').textContent = total;
@@ -1323,7 +1350,7 @@
         const keyword = (document.getElementById('courseSearchInput').value || '').trim().toLowerCase();
 
         return allCourses.filter(item => {
-            const statusMatch = currentFilter === 'ALL' || (item.trangThaiHocTap || '') === currentFilter;
+            const statusMatch = currentFilter === 'ALL' || normalizeStatus(item.trangThaiHocTap) === currentFilter;
 
             const haystack = [
                 item.tenKhoaHoc,
@@ -1332,7 +1359,8 @@
                 item.hoTenHocVien,
                 item.tenPhieu,
                 item.phuongThuc,
-                item.loaiPhuongTien
+                item.loaiPhuongTien,
+                item.trangThaiHocTap
             ]
             .map(x => (x || '').toString().toLowerCase())
             .join(' | ');
@@ -1387,6 +1415,17 @@
                         </div>
                     </td>
                     <td>
+                        <div class="meta-stack">
+                            <div class="meta-primary">${escapeHtml((item.soBuoiHoc ?? 0) + ' / ' + (item.soBuoiToiThieu ?? 0))} buổi</div>
+                            <div class="meta-secondary">${escapeHtml((item.soKmHoanThanh ?? 0) + ' / ' + (item.kmToiThieu ?? 0))} km</div>
+                            <div class="progress-group">
+                                ${getExamEligibilityChip(item.duDieuKienThiTotNghiep, 'Đủ ĐK thi TN', 'Chưa đủ ĐK TN')}
+                                ${getExamEligibilityChip(item.dauTotNghiep, 'Đã đậu TN', 'Chưa đậu TN')}
+                                ${getExamEligibilityChip(item.duDieuKienThiSatHach, 'Đủ ĐK sát hạch', 'Chưa đủ ĐK SH')}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
                         <div class="progress-group">
                             ${getResultBadge(item.lyThuyetKq, 'Lý thuyết')}
                             ${getResultBadge(item.saHinhKq, 'Sa hình')}
@@ -1401,17 +1440,12 @@
                             <div class="meta-secondary">${getPaymentMethodChip(item.phuongThuc)}</div>
                         </div>
                     </td>
-                    // <td><span class="action-hint">     </span></td>
                 </tr>
             `;
             tbody.insertAdjacentHTML('beforeend', row);
         });
 
         updateFilteredMetrics(source);
-    }
-
-    function applyFilterAndRender() {
-        renderTable(getFilteredCourses());
     }
 
     function bindFilterTabs() {
@@ -1425,10 +1459,15 @@
         });
     }
 
-    function buildDetailDialog(d) {
-        const getState = (v) => Number(v || 0) === 1 ? 'pass' : 'fail';
-        const getStateText = (v) => Number(v || 0) === 1 ? 'Đạt' : 'Chưa đạt';
+    function getStateClass(v) {
+        return Number(v || 0) === 1 ? 'pass' : 'fail';
+    }
 
+    function getStateText(v) {
+        return Number(v || 0) === 1 ? 'Đạt' : 'Chưa đạt';
+    }
+
+    function buildDetailDialog(d) {
         return `
             <div class="detail-top">
                 <div class="detail-hero">
@@ -1477,7 +1516,6 @@
                 </div>
             </div>
 
-            <!-- ===================== KẾT QUẢ HỌC TẬP ===================== -->
             <div class="info-section">
                 <h5 class="info-title">Kết quả học tập</h5>
 
@@ -1489,30 +1527,22 @@
 
                     <div class="result-box">
                         <div class="result-label">Lý thuyết</div>
-                        <div class="result-state ${getState(d.lyThuyetKq)}">
-                            ${getStateText(d.lyThuyetKq)}
-                        </div>
+                        <div class="result-state ${getStateClass(d.lyThuyetKq)}">${getStateText(d.lyThuyetKq)}</div>
                     </div>
 
                     <div class="result-box">
                         <div class="result-label">Sa hình</div>
-                        <div class="result-state ${getState(d.saHinhKq)}">
-                            ${getStateText(d.saHinhKq)}
-                        </div>
+                        <div class="result-state ${getStateClass(d.saHinhKq)}">${getStateText(d.saHinhKq)}</div>
                     </div>
 
                     <div class="result-box">
                         <div class="result-label">Đường trường</div>
-                        <div class="result-state ${getState(d.duongTruongKq)}">
-                            ${getStateText(d.duongTruongKq)}
-                        </div>
+                        <div class="result-state ${getStateClass(d.duongTruongKq)}">${getStateText(d.duongTruongKq)}</div>
                     </div>
 
                     <div class="result-box">
                         <div class="result-label">Mô phỏng</div>
-                        <div class="result-state ${getState(d.moPhongKq)}">
-                            ${getStateText(d.moPhongKq)}
-                        </div>
+                        <div class="result-state ${getStateClass(d.moPhongKq)}">${getStateText(d.moPhongKq)}</div>
                     </div>
                 </div>
 
@@ -1523,13 +1553,38 @@
                     </div>
 
                     <div class="info-card">
-                        <div class="info-label">Số buổi vắng</div>
-                        <div class="info-value soft">${escapeHtml(d.soBuoiVang ?? '—')}</div>
+                        <div class="info-label">Số buổi tối thiểu</div>
+                        <div class="info-value soft">${escapeHtml(d.soBuoiToiThieu ?? '—')}</div>
                     </div>
 
                     <div class="info-card">
                         <div class="info-label">Km hoàn thành</div>
-                        <div class="info-value soft">${escapeHtml(d.soKmHoanThanh || '—')}</div>
+                        <div class="info-value soft">${escapeHtml(d.soKmHoanThanh ?? '—')}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Km tối thiểu</div>
+                        <div class="info-value soft">${escapeHtml(d.kmToiThieu ?? '—')}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Đủ điều kiện thi tốt nghiệp</div>
+                        <div class="info-value">${Number(d.duDieuKienThiTotNghiep || 0) === 1 ? 'Có' : 'Không'}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Đậu tốt nghiệp</div>
+                        <div class="info-value">${Number(d.dauTotNghiep || 0) === 1 ? 'Có' : 'Không'}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Đủ điều kiện thi sát hạch</div>
+                        <div class="info-value">${Number(d.duDieuKienThiSatHach || 0) === 1 ? 'Có' : 'Không'}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Cập nhật lần cuối</div>
+                        <div class="info-value soft">${formatDateTime(d.thoiGianCapNhat)}</div>
                     </div>
 
                     <div class="info-card">
@@ -1544,7 +1599,6 @@
                 </div>
             </div>
 
-            <!-- ===================== KHÓA HỌC ===================== -->
             <div class="info-section">
                 <h5 class="info-title">Thông tin khóa học</h5>
 
@@ -1584,6 +1638,21 @@
                         <div class="info-value">${formatMoney(d.hocPhi)}</div>
                     </div>
 
+                    <div class="info-card">
+                        <div class="info-label">Thời gian thi</div>
+                        <div class="info-value soft">${escapeHtml(d.thoiGianTn ?? '—')} phút</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Số câu hỏi</div>
+                        <div class="info-value soft">${escapeHtml(d.soCauHoi ?? '—')}</div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-label">Điểm đạt</div>
+                        <div class="info-value soft">${escapeHtml(d.diemDat ?? '—')}</div>
+                    </div>
+
                     <div class="info-card wide">
                         <div class="info-label">Mô tả</div>
                         <div class="info-value soft">${escapeHtml(d.moTa || '')}</div>
@@ -1591,7 +1660,6 @@
                 </div>
             </div>
 
-            <!-- ===================== HỌC VIÊN + USER ===================== -->
             <div class="info-section">
                 <h5 class="info-title">Học viên & tài khoản</h5>
 
@@ -1625,7 +1693,6 @@
                 </div>
             </div>
 
-            <!-- ===================== HỒ SƠ ===================== -->
             <div class="info-section">
                 <h5 class="info-title">Hồ sơ</h5>
 
@@ -1652,7 +1719,6 @@
                 </div>
             </div>
 
-            <!-- ===================== THANH TOÁN ===================== -->
             <div class="info-section">
                 <h5 class="info-title">Thanh toán</h5>
 
@@ -1712,13 +1778,14 @@
 
         try {
             const response = await fetch('/MyCourse/GetMyCourseDetail?khoaHocId=' + khoaHocId);
-            if (!response.ok) {
-                throw new Error('Không thể tải chi tiết khóa học.');
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Không thể tải chi tiết khóa học.');
             }
 
-            const data = await response.json();
             loading.style.display = 'none';
-            content.innerHTML = buildDetailDialog(data);
+            content.innerHTML = buildDetailDialog(payload.data);
         } catch (error) {
             loading.style.display = 'none';
             content.innerHTML = '';
@@ -1737,12 +1804,13 @@
 
         try {
             const response = await fetch('/MyCourse/GetMyCourses');
-            if (!response.ok) {
-                throw new Error('Không thể tải danh sách khóa học.');
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Không thể tải danh sách khóa học.');
             }
 
-            const data = await response.json();
-            allCourses = Array.isArray(data) ? data : [];
+            allCourses = Array.isArray(payload.data) ? payload.data : [];
 
             loadingShell.style.display = 'none';
             updateSummaryMetrics(allCourses);

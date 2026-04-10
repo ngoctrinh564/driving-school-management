@@ -1,0 +1,154 @@
+﻿:root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #111827;
+}
+
+body {
+    background: var(--bg);
+    font-family: "Inter", system-ui;
+}
+
+.payment-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 32px;
+}
+
+.page-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.page-header p {
+    color: var(--muted);
+}
+
+.grid-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+    .card.large {
+        padding: 24px;
+    }
+
+    .card.highlight {
+        background: #0f172a;
+        color: white;
+    }
+
+    .card .value {
+        font-size: 26px;
+        font-weight: 600;
+    }
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .table-modern th {
+        text-align: left;
+        font-size: 13px;
+        color: var(--muted);
+        padding: 12px;
+    }
+
+    .table-modern td {
+        padding: 14px 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .table-modern tr:hover {
+        background: #f1f5f9;
+    }
+
+.primary {
+    font-weight: 600;
+}
+
+.meta {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.money {
+    font-weight: 600;
+}
+
+.method-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.method {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+textarea {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 16px;
+    cursor: pointer;
+}
+
+    .btn-primary.full {
+        width: 100%;
+    }
+
+.btn-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.badge.success {
+    background: #ecfdf5;
+    color: #065f46;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.center-state {
+    text-align: center;
+    margin-top: 120px;
+}
+
+    .center-state.success h2 {
+        color: #065f46;
+    }
+
+    .center-state.fail h2 {
+        color: #b91c1c;
+    }

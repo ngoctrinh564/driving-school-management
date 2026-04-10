@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using driving_school_management.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace driving_school_management.Controllers
 {
@@ -12,6 +13,7 @@ namespace driving_school_management.Controllers
             _service = service;
         }
 
+        [HttpGet("")]
         [HttpGet("Index")]
         public IActionResult Index()
         {
@@ -21,26 +23,83 @@ namespace driving_school_management.Controllers
         [HttpGet("GetMyCourses")]
         public IActionResult GetMyCourses()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-                return Unauthorized();
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Phiên đăng nhập không hợp lệ"
+                });
+            }
 
-            var data = _service.GetMyCourses(userId.Value);
-            return Json(data);
+            try
+            {
+                var data = _service.GetMyCourses(userId.Value);
+                return Json(new
+                {
+                    success = true,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet("GetMyCourseDetail")]
         public IActionResult GetMyCourseDetail(int khoaHocId)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-                return Unauthorized();
+            if (khoaHocId <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "khoaHocId không hợp lệ"
+                });
+            }
 
-            var data = _service.GetMyCourseDetail(userId.Value, khoaHocId);
-            if (data == null)
-                return NotFound();
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = "Phiên đăng nhập không hợp lệ"
+                });
+            }
 
-            return Json(data);
+            try
+            {
+                var data = _service.GetMyCourseDetail(userId.Value, khoaHocId);
+                if (data == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Không tìm thấy chi tiết khóa học"
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

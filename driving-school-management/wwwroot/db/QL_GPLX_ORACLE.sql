@@ -194,7 +194,7 @@ CREATE TABLE KetQuaHocTap (
     hoSoId NUMBER NOT NULL,
     nhanXet NVARCHAR2(255),
     soBuoiHoc NUMBER,
-    soBuoiVang NUMBER,
+    soBuoiToiThieu NUMBER,
     soKmHoanThanh NVARCHAR2(100),
 
     CONSTRAINT pk_KetQuaHocTap PRIMARY KEY (ketQuaHocTapId),
@@ -833,40 +833,12 @@ WHERE hs.tenHoSo = N'Hồ sơ nâng hạng GPLX B1 - Phạm Hoàng Nam';
 /* =========================================================
    15. KET QUA HOC TAP
 ========================================================= */
-INSERT INTO KetQuaHocTap (hoSoId, nhanXet, soBuoiHoc, soBuoiVang, soKmHoanThanh)
-SELECT hs.hoSoId, N'Học tốt, đủ điều kiện thi', 40, 1, N'Hoàn thành 100%'
-FROM HoSoThiSinh hs
-WHERE hs.tenHoSo = N'Hồ sơ thi GPLX A1 - Nguyễn Văn Dũng';
-
-INSERT INTO KetQuaHocTap (hoSoId, nhanXet, soBuoiHoc, soBuoiVang, soKmHoanThanh)
-SELECT hs.hoSoId, N'Tiến bộ tốt, chăm chỉ', 42, 0, N'Hoàn thành 100%'
-FROM HoSoThiSinh hs
-WHERE hs.tenHoSo = N'Hồ sơ thi GPLX A - Trần Thị Kim Anh';
-
-INSERT INTO KetQuaHocTap (hoSoId, nhanXet, soBuoiHoc, soBuoiVang, soKmHoanThanh)
-SELECT hs.hoSoId, N'Cần luyện tập thêm thực hành', 40, 4, N'Hoàn thành 60%'
-FROM HoSoThiSinh hs
-WHERE hs.tenHoSo = N'Hồ sơ nâng hạng GPLX B1 - Phạm Hoàng Nam';
+--BỎ
 
 /* =========================================================
    17. CAP NHAT HOC PHI
-UPDATE HangGplx SET hocPhi =   650000 WHERE tenHang = N'Hạng A1';
-UPDATE HangGplx SET hocPhi =  1500000 WHERE tenHang = N'Hạng A';
-UPDATE HangGplx SET hocPhi = 12000000 WHERE tenHang = N'Hạng B1';
-UPDATE HangGplx SET hocPhi = 13000000 WHERE tenHang = N'Hạng B';
-UPDATE HangGplx SET hocPhi = 17000000 WHERE tenHang = N'Hạng C1';
-UPDATE HangGplx SET hocPhi = 18500000 WHERE tenHang = N'Hạng C';
-UPDATE HangGplx SET hocPhi = 25000000 WHERE tenHang = N'Hạng D1';
-UPDATE HangGplx SET hocPhi = 26000000 WHERE tenHang = N'Hạng D2';
-UPDATE HangGplx SET hocPhi = 28500000 WHERE tenHang = N'Hạng D';
-UPDATE HangGplx SET hocPhi = 20000000 WHERE tenHang = N'Hạng BE';
-UPDATE HangGplx SET hocPhi = 22000000 WHERE tenHang = N'Hạng C1E';
-UPDATE HangGplx SET hocPhi = 25000000 WHERE tenHang = N'Hạng CE';
-UPDATE HangGplx SET hocPhi = 30000000 WHERE tenHang = N'Hạng D1E';
-UPDATE HangGplx SET hocPhi = 32000000 WHERE tenHang = N'Hạng D2E';
-UPDATE HangGplx SET hocPhi = 35000000 WHERE tenHang = N'Hạng DE';
-
 ========================================================= */
+-- Bỏ
 
 /* =========================================================
    18. TRIGGER AUTO TEN KHOA HOC

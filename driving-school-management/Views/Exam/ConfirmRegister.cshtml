@@ -1,0 +1,489 @@
+﻿@model driving_school_management.Models.DTOs.UserExamConfirmDto
+
+@{
+    ViewData["Title"] = "Xác nhận đăng ký kỳ thi";
+    var selectedKyThiId = ViewBag.SelectedKyThiId != null ? (int)ViewBag.SelectedKyThiId : 0;
+}
+
+<div class="confirm-page">
+    <div class="page-top">
+        <div>
+            <h2 class="page-title">Xác nhận đăng ký kỳ thi</h2>
+            <p class="page-subtitle">Kiểm tra thông tin trước khi xác nhận tạo đăng ký và phiếu thanh toán.</p>
+        </div>
+
+        <a asp-action="Index" class="btn btn-light btn-custom">
+            <i class="bi bi-arrow-left"></i>
+            <span>Quay lại</span>
+        </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger-custom">
+            <i class="bi bi-exclamation-octagon"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <div class="confirm-grid">
+        <div class="left-column">
+            <div class="card-custom">
+                <div class="section-title">Thông tin học viên</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Học viên</div>
+                        <div class="info-value">@Model.HoTen</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Hồ sơ</div>
+                        <div class="info-value">#@Model.HoSoId</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Hạng</div>
+                        <div class="info-value">@Model.TenHang (@Model.MaHang)</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Học phí</div>
+                        <div class="info-value">@Model.HocPhi.ToString("N0") VNĐ</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-custom">
+                <div class="section-title">Danh sách kỳ thi sẽ đăng ký</div>
+
+                @if (Model.DanhSachKyThi != null && Model.DanhSachKyThi.Any())
+                {
+                    <div class="exam-list">
+                        @foreach (var item in Model.DanhSachKyThi.OrderBy(x => x.ThuTu))
+                        {
+                            <div class="exam-item">
+                                <div class="exam-item-left">
+                                    <div class="order-badge">@item.ThuTu</div>
+                                    <div class="exam-item-content">
+                                        <div class="exam-item-name">@item.TenKyThi</div>
+                                        <div class="exam-item-type">@item.LoaiKyThi</div>
+                                    </div>
+                                </div>
+                                <div class="exam-item-note">
+                                    @item.GhiChu
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state small-empty">
+                        <i class="bi bi-inbox"></i>
+                        <div>Không có dữ liệu xác nhận.</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="card-custom summary-card">
+                <div class="section-title">Tóm tắt đăng ký</div>
+
+                <div class="summary-row">
+                    <span>Lệ phí 1 kỳ thi</span>
+                    <strong>@Model.LePhiMotKy.ToString("N0") VNĐ</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Số kỳ thi đăng ký</span>
+                    <strong>@(Model.DanhSachKyThi?.Count ?? 0)</strong>
+                </div>
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-row total-row">
+                    <span>Tổng phí dự kiến</span>
+                    <strong>@Model.TongPhi.ToString("N0") VNĐ</strong>
+                </div>
+
+                <div class="condition-list">
+                    <div class="condition-item">
+                        <span>Đủ điều kiện tốt nghiệp</span>
+                        @if (Model.DuDieuKienThiTotNghiep)
+                        {
+                            <span class="badge-soft badge-success-soft">Đạt</span>
+                        }
+                        else
+                        {
+                            <span class="badge-soft badge-danger-soft">Chưa đạt</span>
+                        }
+                    </div>
+
+                    <div class="condition-item">
+                        <span>Đủ điều kiện sát hạch</span>
+                        @if (Model.DuDieuKienThiSatHach)
+                        {
+                            <span class="badge-soft badge-success-soft">Đạt</span>
+                        }
+                        else
+                        {
+                            <span class="badge-soft badge-neutral">Chưa đạt</span>
+                        }
+                    </div>
+
+                    <div class="condition-item">
+                        <span>Đã đậu tốt nghiệp</span>
+                        @if (Model.DauTotNghiep)
+                        {
+                            <span class="badge-soft badge-success-soft">Đã đậu</span>
+                        }
+                        else
+                        {
+                            <span class="badge-soft badge-neutral">Chưa</span>
+                        }
+                    </div>
+
+                    <div class="condition-item">
+                        <span>Đã hoàn thành toàn bộ</span>
+                        @if (Model.DaHoanThanh)
+                        {
+                            <span class="badge-soft badge-success-soft">Hoàn thành</span>
+                        }
+                        else
+                        {
+                            <span class="badge-soft badge-neutral">Chưa</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="note-box">
+                    Khi xác nhận, hệ thống sẽ tạo đăng ký thi và phiếu thanh toán tương ứng theo đúng trạng thái hiện tại.
+                </div>
+
+                <div class="action-group">
+                    <form asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="kyThiId" value="@selectedKyThiId" />
+                        <button type="submit" class="btn btn-primary btn-custom btn-full">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Xác nhận đăng ký</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .confirm-page {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .page-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .page-subtitle {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .confirm-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+        gap: 18px;
+    }
+
+    .left-column,
+    .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .card-custom {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 16px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .info-item {
+        border: 1px solid rgba(15,23,42,0.06);
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 14px;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #0f172a;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .exam-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .exam-item {
+        border: 1px solid rgba(15,23,42,0.06);
+        border-radius: 16px;
+        padding: 16px;
+        background: #ffffff;
+    }
+
+    .exam-item-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .exam-item-content {
+        min-width: 0;
+    }
+
+    .order-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: rgba(37,99,235,0.10);
+        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .exam-item-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.5;
+    }
+
+    .exam-item-type {
+        font-size: 13px;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .exam-item-note {
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.55;
+        padding-left: 46px;
+    }
+
+    .summary-card {
+        position: sticky;
+        top: 20px;
+    }
+
+    .summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        color: #334155;
+        font-size: 14px;
+    }
+
+        .summary-row strong {
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+    .summary-divider {
+        height: 1px;
+        background: rgba(15,23,42,0.08);
+        margin: 8px 0 10px;
+    }
+
+    .total-row span,
+    .total-row strong {
+        font-size: 17px;
+        color: #0f172a;
+    }
+
+    .condition-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 18px;
+        margin-bottom: 16px;
+    }
+
+    .condition-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid rgba(15,23,42,0.06);
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .badge-soft {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .badge-success-soft {
+        background: rgba(22,163,74,0.10);
+        color: #15803d;
+    }
+
+    .badge-danger-soft {
+        background: rgba(239,68,68,0.10);
+        color: #dc2626;
+    }
+
+    .badge-neutral {
+        background: #eef2f7;
+        color: #475569;
+    }
+
+    .note-box {
+        margin-top: 6px;
+        border-radius: 14px;
+        background: rgba(37,99,235,0.06);
+        border: 1px solid rgba(37,99,235,0.10);
+        color: #1e40af;
+        padding: 14px;
+        font-size: 13px;
+        line-height: 1.55;
+        font-weight: 600;
+    }
+
+    .action-group {
+        margin-top: 18px;
+    }
+
+    .btn-custom {
+        height: 42px;
+        border-radius: 12px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: 0.2s ease;
+        font-weight: 600;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-1px);
+        }
+
+    .btn-full {
+        width: 100%;
+    }
+
+    .alert-custom {
+        min-height: 48px;
+        border-radius: 14px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(15,23,42,0.08);
+        font-weight: 600;
+    }
+
+    .alert-danger-custom {
+        background: rgba(239,68,68,0.08);
+        color: #b91c1c;
+    }
+
+    .empty-state {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+        .empty-state i {
+            font-size: 28px;
+        }
+
+    .small-empty {
+        min-height: 120px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .confirm-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-card {
+            position: static;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-top {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>

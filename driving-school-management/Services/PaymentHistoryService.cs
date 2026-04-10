@@ -18,40 +18,41 @@ namespace driving_school_management.Services
         {
             var result = new List<PaymentHistoryDto>();
 
-            using (var conn = new OracleConnection(_connectionString))
-            using (var cmd = new OracleCommand("SP_PAYMENT_HISTORY_BY_USER", conn))
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PKG_PAYMENT_HISTORY.GET_ALL_PAYMENT_HISTORY", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
-                cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
-
-                conn.Open();
-
-                using (var reader = cmd.ExecuteReader())
+                result.Add(new PaymentHistoryDto
                 {
-                    while (reader.Read())
-                    {
-                        result.Add(new PaymentHistoryDto
-                        {
-                            PhieuId = GetInt32Value(reader["phieuId"]),
-                            TenPhieu = GetStringValue(reader["tenPhieu"]),
-                            NgayLap = GetNullableDateTimeValue(reader["ngayLap"]),
-                            NgayNop = GetNullableDateTimeValue(reader["ngayNop"]),
-                            TongTien = GetDecimalValue(reader["tongTien"]),
-                            PhuongThuc = GetStringValue(reader["phuongThuc"]),
-                            LoaiPhi = GetStringValue(reader["loaiPhi"]),
-                            GhiChu = GetStringValue(reader["ghiChu"]),
-                            HoSoId = GetInt32Value(reader["hoSoId"]),
-                            TenHoSo = GetStringValue(reader["tenHoSo"]),
-                            HoTenHocVien = GetStringValue(reader["hoTenHocVien"]),
-                            KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                            TenKhoaHoc = GetStringValue(reader["tenKhoaHoc"]),
-                            TenHang = GetStringValue(reader["tenHang"]),
-                            TrangThaiThanhToan = GetStringValue(reader["trangThaiThanhToan"]),
-                            CoTheTaiHoaDon = GetInt32Value(reader["coTheTaiHoaDon"])
-                        });
-                    }
-                }
+                    PhieuId = GetInt32Value(reader["PHIEUID"]),
+                    TenPhieu = GetStringValue(reader["TENPHIEU"]),
+                    NgayLap = GetNullableDateTimeValue(reader["NGAYLAP"]),
+                    NgayNop = GetNullableDateTimeValue(reader["NGAYNOP"]),
+                    TongTien = GetDecimalValue(reader["TONGTIEN"]),
+                    PhuongThuc = GetStringValue(reader["PHUONGTHUC"]),
+                    LoaiPhi = GetStringValue(reader["LOAIPHI"]),
+                    GhiChu = GetStringValue(reader["GHICHU"]),
+                    HoSoId = GetInt32Value(reader["HOSOID"]),
+                    TenHoSo = GetStringValue(reader["TENHOSO"]),
+                    HoTenHocVien = GetStringValue(reader["HOTENHOCVIEN"]),
+                    KhoaHocId = GetInt32Value(reader["KHOAHOCID"]),
+                    TenKhoaHoc = GetStringValue(reader["TENKHOAHOC"]),
+                    KyThiId = GetInt32Value(reader["KYTHIID"]),
+                    TenKyThi = GetStringValue(reader["TENKYTHI"]),
+                    TenHang = GetStringValue(reader["TENHANG"]),
+                    TrangThaiThanhToan = GetStringValue(reader["TRANGTHAITHANHTOAN"]),
+                    CoTheTaiHoaDon = GetInt32Value(reader["COTHETAIHOADON"])
+                });
             }
 
             return result;
@@ -59,57 +60,152 @@ namespace driving_school_management.Services
 
         public PaymentHistoryDetailDto? GetPaymentHistoryDetail(int userId, int phieuId)
         {
+            var historyItem = GetPaymentHistoryType(userId, phieuId);
+            if (historyItem == null)
+                return null;
+
+            if (string.Equals(historyItem.LoaiPhi, "Kỳ thi", StringComparison.OrdinalIgnoreCase))
+                return GetExamPaymentHistoryDetail(userId, phieuId);
+
+            return GetCoursePaymentHistoryDetail(userId, phieuId);
+        }
+
+        private PaymentHistoryDto? GetPaymentHistoryType(int userId, int phieuId)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PKG_PAYMENT_HISTORY.GET_ALL_PAYMENT_HISTORY", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var currentPhieuId = GetInt32Value(reader["PHIEUID"]);
+                if (currentPhieuId != phieuId)
+                    continue;
+
+                return new PaymentHistoryDto
+                {
+                    PhieuId = currentPhieuId,
+                    LoaiPhi = GetStringValue(reader["LOAIPHI"])
+                };
+            }
+
+            return null;
+        }
+
+        private PaymentHistoryDetailDto? GetCoursePaymentHistoryDetail(int userId, int phieuId)
+        {
             PaymentHistoryDetailDto? result = null;
 
-            using (var conn = new OracleConnection(_connectionString))
-            using (var cmd = new OracleCommand("SP_PAYMENT_HISTORY_DETAIL", conn))
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("SP_PAYMENT_HISTORY_DETAIL", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
             {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
-                cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
-                cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
-
-                conn.Open();
-
-                using (var reader = cmd.ExecuteReader())
+                result = new PaymentHistoryDetailDto
                 {
-                    if (reader.Read())
-                    {
-                        result = new PaymentHistoryDetailDto
-                        {
-                            PhieuId = GetInt32Value(reader["phieuId"]),
-                            TenPhieu = GetStringValue(reader["tenPhieu"]),
-                            NgayLap = GetNullableDateTimeValue(reader["ngayLap"]),
-                            NgayNop = GetNullableDateTimeValue(reader["ngayNop"]),
-                            TongTien = GetDecimalValue(reader["tongTien"]),
-                            PhuongThuc = GetStringValue(reader["phuongThuc"]),
-                            LoaiPhi = GetStringValue(reader["loaiPhi"]),
-                            GhiChu = GetStringValue(reader["ghiChu"]),
-                            TrangThaiThanhToan = GetStringValue(reader["trangThaiThanhToan"]),
+                    PhieuId = GetInt32Value(reader["PHIEUID"]),
+                    TenPhieu = GetStringValue(reader["TENPHIEU"]),
+                    NgayLap = GetNullableDateTimeValue(reader["NGAYLAP"]),
+                    NgayNop = GetNullableDateTimeValue(reader["NGAYNOP"]),
+                    TongTien = GetDecimalValue(reader["TONGTIEN"]),
+                    PhuongThuc = GetStringValue(reader["PHUONGTHUC"]),
+                    LoaiPhi = GetStringValue(reader["LOAIPHI"]),
+                    GhiChu = GetStringValue(reader["GHICHU"]),
+                    TrangThaiThanhToan = GetStringValue(reader["TRANGTHAITHANHTOAN"]),
 
-                            HoSoId = GetInt32Value(reader["hoSoId"]),
-                            TenHoSo = GetStringValue(reader["tenHoSo"]),
-                            TrangThaiHoSo = GetStringValue(reader["trangThaiHoSo"]),
+                    HoSoId = GetInt32Value(reader["HOSOID"]),
+                    TenHoSo = GetStringValue(reader["TENHOSO"]),
+                    TrangThaiHoSo = GetStringValue(reader["TRANGTHAIHOSO"]),
 
-                            HocVienId = GetInt32Value(reader["hocVienId"]),
-                            HoTenHocVien = GetStringValue(reader["hoTenHocVien"]),
-                            Sdt = GetStringValue(reader["sdt"]),
-                            Email = GetStringValue(reader["email"]),
+                    HocVienId = GetInt32Value(reader["HOCVIENID"]),
+                    HoTenHocVien = GetStringValue(reader["HOTENHOCVIEN"]),
+                    Sdt = GetStringValue(reader["SDT"]),
+                    Email = GetStringValue(reader["EMAIL"]),
 
-                            KhoaHocId = GetInt32Value(reader["khoaHocId"]),
-                            TenKhoaHoc = GetStringValue(reader["tenKhoaHoc"]),
-                            DiaDiem = GetStringValue(reader["diaDiem"]),
-                            NgayBatDau = GetNullableDateTimeValue(reader["ngayBatDau"]),
-                            NgayKetThuc = GetNullableDateTimeValue(reader["ngayKetThuc"]),
-                            TrangThaiKhoaHoc = GetStringValue(reader["trangThaiKhoaHoc"]),
+                    KhoaHocId = GetInt32Value(reader["KHOAHOCID"]),
+                    TenKhoaHoc = GetStringValue(reader["TENKHOAHOC"]),
+                    DiaDiem = GetStringValue(reader["DIADIEM"]),
+                    NgayBatDau = GetNullableDateTimeValue(reader["NGAYBATDAU"]),
+                    NgayKetThuc = GetNullableDateTimeValue(reader["NGAYKETTHUC"]),
+                    TrangThaiKhoaHoc = GetStringValue(reader["TRANGTHAIKHOAHOC"]),
 
-                            HangId = GetInt32Value(reader["hangId"]),
-                            TenHang = GetStringValue(reader["tenHang"]),
-                            LoaiPhuongTien = GetStringValue(reader["loaiPhuongTien"]),
-                            HocPhi = GetDecimalValue(reader["hocPhi"])
-                        };
-                    }
-                }
+                    HangId = GetInt32Value(reader["HANGID"]),
+                    TenHang = GetStringValue(reader["TENHANG"]),
+                    LoaiPhuongTien = GetStringValue(reader["LOAIPHUONGTIEN"]),
+                    HocPhi = GetDecimalValue(reader["HOCPHI"])
+                };
+            }
+
+            return result;
+        }
+
+        private PaymentHistoryDetailDto? GetExamPaymentHistoryDetail(int userId, int phieuId)
+        {
+            PaymentHistoryDetailDto? result = null;
+
+            using var conn = new OracleConnection(_connectionString);
+            using var cmd = new OracleCommand("PKG_EXAM_PAYMENT.GET_PAYMENT_HISTORY_DETAIL", conn);
+
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.BindByName = true;
+
+            cmd.Parameters.Add("p_userId", OracleDbType.Int32).Value = userId;
+            cmd.Parameters.Add("p_phieuId", OracleDbType.Int32).Value = phieuId;
+            cmd.Parameters.Add("p_cursor", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+
+            conn.Open();
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                result = new PaymentHistoryDetailDto
+                {
+                    PhieuId = GetInt32Value(reader["PHIEUID"]),
+                    TenPhieu = GetStringValue(reader["TENPHIEU"]),
+                    NgayLap = GetNullableDateTimeValue(reader["NGAYLAP"]),
+                    NgayNop = GetNullableDateTimeValue(reader["NGAYNOP"]),
+                    TongTien = GetDecimalValue(reader["TONGTIEN"]),
+                    PhuongThuc = GetStringValue(reader["PHUONGTHUC"]),
+                    LoaiPhi = GetStringValue(reader["LOAIPHI"]),
+                    GhiChu = GetStringValue(reader["GHICHU"]),
+                    TrangThaiThanhToan = GetStringValue(reader["TRANGTHAITHANHTOAN"]),
+
+                    HoSoId = GetInt32Value(reader["HOSOID"]),
+                    TenHoSo = GetStringValue(reader["TENHOSO"]),
+                    TrangThaiHoSo = GetStringValue(reader["TRANGTHAIHOSO"]),
+
+                    HocVienId = GetInt32Value(reader["HOCVIENID"]),
+                    HoTenHocVien = GetStringValue(reader["HOTENHOCVIEN"]),
+                    Sdt = GetStringValue(reader["SDT"]),
+                    Email = GetStringValue(reader["EMAIL"]),
+
+                    KyThiId = GetInt32Value(reader["KYTHIID"]),
+                    TenKyThi = GetStringValue(reader["TENKYTHI"]),
+                    LoaiKyThi = GetStringValue(reader["LOAIKYTHI"]),
+                    ThoiGianThi = GetNullableDateTimeValue(reader["THOIGIANTHI"]),
+                    DiaDiemThi = GetStringValue(reader["DIADIEMTHI"]),
+
+                    TenHang = GetStringValue(reader["TENHANG"]),
+                    HocPhi = GetDecimalValue(reader["HOCPHI"])
+                };
             }
 
             return result;
@@ -152,7 +248,11 @@ namespace driving_school_management.Services
         private DateTime? GetNullableDateTimeValue(object dbValue)
         {
             if (dbValue == null || dbValue == DBNull.Value) return null;
-            return Convert.ToDateTime(dbValue);
+
+            if (dbValue is DateTime dtValue)
+                return dtValue;
+
+            return DateTime.Parse(dbValue.ToString()!);
         }
     }
 }
