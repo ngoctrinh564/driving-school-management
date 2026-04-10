@@ -1,0 +1,30 @@
+﻿@model driving_school_management.ViewModels.DashboardReportVm
+
+<h4>Kỳ thi</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tháng</th>
+            <th class="text-end">Số kỳ thi</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.NewExamsByMonth)
+        {
+            <tr>
+                <td>@item.Label</td>
+                <td class="text-end">@item.Value</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h5>Phân bố loại kỳ thi</h5>
+
+<ul>
+    @foreach (var item in Model.ExamsByType)
+    {
+        <li>@item.Label - @item.Value</li>
+    }
+</ul>

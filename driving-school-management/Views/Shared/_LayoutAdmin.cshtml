@@ -963,6 +963,14 @@
                             </ul>
                         </li>
 
+                        <li class="nav-item">
+                            <a asp-controller="Report" asp-action="Index"
+                                   class="nav-link @(currentController == "Report" ? "active" : "")">
+                                <i class="nav-icon fa fa-chart-bar"></i>
+                                <p>Báo cáo thống kê</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item mt-3">
                             <a asp-controller="Auth" asp-action="Logout" class="nav-link">
                                 <i class="nav-icon fa fa-right-from-bracket text-danger"></i>

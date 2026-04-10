@@ -1,0 +1,138 @@
+﻿@model driving_school_management.ViewModels.DashboardReportVm
+@{
+    ViewData["Title"] = "Báo cáo thống kê";
+    var fromDateValue = Model.FromDate?.ToString("yyyy-MM-dd");
+    var toDateValue = Model.ToDate?.ToString("yyyy-MM-dd");
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    // var role = Context.Session.GetString("Role");
+
+    // if (!string.IsNullOrEmpty(role) && role.ToLower() == "admin")
+    // {
+    //     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    // }
+    // else
+    // {
+    //     Layout = "~/Views/Shared/_Layout.cshtml";
+    // }
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Báo cáo thống kê</h2>
+                    <p class="text-muted mb-0">Driving School Management</p>
+                </div>
+
+                <form method="get" asp-action="Index" class="row g-2 align-items-end">
+                    <div class="col-auto">
+                        <label class="form-label">Từ ngày</label>
+                        <input type="date" name="fromDate" value="@fromDateValue" class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-label">Đến ngày</label>
+                        <input type="date" name="toDate" value="@toDateValue" class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Lọc</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body">
+                            <div class="text-muted small">Tổng doanh thu</div>
+                            <div class="fw-bold fs-5">@Model.TongDoanhThu.ToString("N0")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body">
+                            <div class="text-muted small">Người mới</div>
+                            <div class="fw-bold fs-5">@Model.SoNguoiMoi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body">
+                            <div class="text-muted small">Khóa học</div>
+                            <div class="fw-bold fs-5">@Model.SoKhoaHocMoi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body">
+                            <div class="text-muted small">Kỳ thi</div>
+                            <div class="fw-bold fs-5">@Model.SoKyThiMoi</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB -->
+            <ul class="nav nav-pills mb-3" id="reportTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-tab="overview">Tổng quan</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-tab="users">Người dùng</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-tab="courses">Khóa học</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-tab="exams">Kỳ thi</button>
+                </li>
+            </ul>
+
+            <!-- EXPORT -->
+            <div class="mb-3 text-end">
+                <a id="btnExportPdf" class="btn btn-danger"
+                       href="/Report/ExportPdf?tab=overview">
+                    Xuất PDF
+                </a>
+            </div>
+
+            <!-- CONTENT -->
+            <div id="reportContent">
+                @await Html.PartialAsync("~/Views/Report/_TabOverview.cshtml", Model)
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const tabs = document.querySelectorAll('#reportTabs button');
+        const content = document.getElementById('reportContent');
+        const exportBtn = document.getElementById('btnExportPdf');
+
+        tabs.forEach(btn => {
+            btn.onclick = async () => {
+                tabs.forEach(x => x.classList.remove('active'));
+                btn.classList.add('active');
+
+                const tab = btn.getAttribute('data-tab');
+
+                const res = await fetch(`/Report/Tab/${tab}`);
+                const html = await res.text();
+
+                content.innerHTML = html;
+
+                exportBtn.href = `/Report/ExportPdf?tab=${tab}`;
+            }
+        });
+    </script>
+}

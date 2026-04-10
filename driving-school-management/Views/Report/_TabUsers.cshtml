@@ -1,0 +1,28 @@
+﻿@model driving_school_management.ViewModels.DashboardReportVm
+
+<h4>Người dùng mới</h4>
+
+@if (!Model.NewUsersByMonth.Any())
+{
+    <p>Không có dữ liệu</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tháng</th>
+                <th class="text-end">Số lượng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.NewUsersByMonth)
+            {
+                <tr>
+                    <td>@item.Label</td>
+                    <td class="text-end">@item.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

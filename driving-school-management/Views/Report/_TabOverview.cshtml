@@ -1,0 +1,28 @@
+﻿@model driving_school_management.ViewModels.DashboardReportVm
+
+<h4>Doanh thu theo tháng</h4>
+
+@if (!Model.RevenueByMonth.Any())
+{
+    <p>Không có dữ liệu</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tháng</th>
+                <th class="text-end">Doanh thu</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.RevenueByMonth)
+            {
+                <tr>
+                    <td>@item.Label</td>
+                    <td class="text-end">@item.Value.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
