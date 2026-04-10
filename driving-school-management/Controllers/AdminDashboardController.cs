@@ -1,17 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using driving_school_management.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 
-public class AdminDashboardController : Controller
+namespace driving_school_management.Controllers
 {
-    private readonly AdminDashboardService _service;
-
-    public AdminDashboardController(AdminDashboardService service)
+    public class AdminDashboardController : Controller
     {
-        _service = service;
-    }
+        private readonly AdminDashboardService _service;
 
-    public async Task<IActionResult> Index()
-    {
-        var vm = await _service.GetDashboard();
-        return View(vm);
+        public AdminDashboardController(AdminDashboardService service)
+        {
+            _service = service;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            DashboardVM vm = await _service.GetDashboard();
+            return View(vm);
+        }
     }
 }

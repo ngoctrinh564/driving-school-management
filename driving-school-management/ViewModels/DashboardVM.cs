@@ -12,6 +12,16 @@ namespace driving_school_management.ViewModels
         public int UserActive { get; set; }
         public int UserInactive { get; set; }
 
-        public List<UserVM> RecentUsers { get; set; } = new List<UserVM>();
+        public int HoSoDaDuyet { get; set; }
+        public int HoSoDangXuLy { get; set; }
+
+        public List<string> Thang { get; set; } = new();
+        public List<int> SoHoSoTheoThang { get; set; } = new();
+        public List<decimal> DoanhThuTheoThang { get; set; } = new();
+
+        public List<string> HangLabels { get; set; } = new();
+        public List<int> HangData { get; set; } = new();
+
+        public List<UserVM> RecentUsers { get; set; } = new();
     }
 }

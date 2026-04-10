@@ -241,38 +241,99 @@ END;
 -- DASHBOARD
 CREATE OR REPLACE PROCEDURE PROC_ADMIN_DASHBOARD
 (
-    o_totalUser OUT NUMBER,
-    o_totalHoSo OUT NUMBER,
-    o_totalGPLX OUT NUMBER,
-    o_totalBaiThi OUT NUMBER,
-    o_userActive OUT NUMBER,
-    o_userInactive OUT NUMBER,
-    o_recentUsers OUT SYS_REFCURSOR
+    o_totalUser         OUT NUMBER,
+    o_totalHoSo         OUT NUMBER,
+    o_totalGPLX         OUT NUMBER,
+    o_totalBaiThi       OUT NUMBER,
+    o_userActive        OUT NUMBER,
+    o_userInactive      OUT NUMBER,
+    o_hoSoDaDuyet       OUT NUMBER,
+    o_hoSoDangXuLy      OUT NUMBER,
+    o_recentUsers       OUT SYS_REFCURSOR,
+    o_chartMonth        OUT SYS_REFCURSOR,
+    o_chartHangGplx     OUT SYS_REFCURSOR
 )
 AS
 BEGIN
-    -- tổng user
-    SELECT COUNT(*) INTO o_totalUser FROM "User";
-    -- tổng hồ sơ
-    SELECT COUNT(*) INTO o_totalHoSo FROM HoSoThiSinh;
-    -- tổng GPLX
-    SELECT COUNT(*) INTO o_totalGPLX FROM GiayPhepLaiXe;
-    -- tổng bài thi
-    SELECT COUNT(*) INTO o_totalBaiThi FROM BaiThi;
-    -- user active
-    SELECT COUNT(*) INTO o_userActive FROM "User" WHERE isActive = 1;
-    -- user inactive
-    SELECT COUNT(*) INTO o_userInactive FROM "User" WHERE isActive = 0;
-    -- 5 user mới nhất
-    OPEN o_recentUsers FOR
-        SELECT *
-        FROM (
-            SELECT userId, userName, isActive
-            FROM "User"
-            ORDER BY userId DESC
-        )
-        WHERE ROWNUM <= 5;
+    SELECT COUNT(*) INTO o_totalUser
+    FROM "User";
 
+    SELECT COUNT(*) INTO o_totalHoSo
+    FROM HoSoThiSinh;
+
+    SELECT COUNT(*) INTO o_totalGPLX
+    FROM GiayPhepLaiXe;
+
+    SELECT COUNT(*) INTO o_totalBaiThi
+    FROM BaiThi;
+
+    SELECT COUNT(*) INTO o_userActive
+    FROM "User"
+    WHERE isActive = 1;
+
+    SELECT COUNT(*) INTO o_userInactive
+    FROM "User"
+    WHERE isActive = 0;
+
+    SELECT COUNT(*) INTO o_hoSoDaDuyet
+    FROM HoSoThiSinh
+    WHERE UPPER(TRIM(trangThai)) = UPPER('Đã duyệt');
+
+    SELECT COUNT(*) INTO o_hoSoDangXuLy
+    FROM HoSoThiSinh
+    WHERE UPPER(TRIM(trangThai)) = UPPER('Đang xử lý');
+
+    OPEN o_recentUsers FOR
+        SELECT
+            userId,
+            userName,
+            isActive
+        FROM "User"
+        ORDER BY userId DESC
+        FETCH FIRST 5 ROWS ONLY;
+
+    OPEN o_chartMonth FOR
+        SELECT
+            TO_CHAR(m.month_num, 'FM00') AS THANG,
+            NVL(hs.so_ho_so, 0) AS SO_HO_SO,
+            NVL(dt.doanh_thu, 0) AS DOANH_THU
+        FROM
+        (
+            SELECT LEVEL AS month_num
+            FROM dual
+            CONNECT BY LEVEL <= 12
+        ) m
+        LEFT JOIN
+        (
+            SELECT
+                EXTRACT(MONTH FROM ngayDangKy) AS thang,
+                COUNT(*) AS so_ho_so
+            FROM HoSoThiSinh
+            WHERE ngayDangKy IS NOT NULL
+            GROUP BY EXTRACT(MONTH FROM ngayDangKy)
+        ) hs
+            ON m.month_num = hs.thang
+        LEFT JOIN
+        (
+            SELECT
+                EXTRACT(MONTH FROM ngayLap) AS thang,
+                SUM(NVL(tongTien, 0)) AS doanh_thu
+            FROM PhieuThanhToan
+            WHERE ngayLap IS NOT NULL
+            GROUP BY EXTRACT(MONTH FROM ngayLap)
+        ) dt
+            ON m.month_num = dt.thang
+        ORDER BY m.month_num;
+
+    OPEN o_chartHangGplx FOR
+        SELECT
+            hg.tenHang AS TENHANG,
+            COUNT(hs.hoSoId) AS SO_LUONG
+        FROM HangGplx hg
+        LEFT JOIN HoSoThiSinh hs
+            ON hg.hangId = hs.hangId
+        GROUP BY hg.tenHang
+        ORDER BY hg.tenHang;
 END;
 /
 -- Exam: kì thi

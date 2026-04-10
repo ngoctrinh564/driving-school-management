@@ -1,96 +1,855 @@
-﻿@using driving_school_management.ViewModels
-@model DashboardVM
+﻿@model driving_school_management.ViewModels.DashboardVM
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
 
-<div class="row">
+<section class="content">
+    <div class="container-fluid admin-dashboard-page">
 
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-gradient-primary shadow">
-            <div class="inner">
-                <h3>@Model.TotalUser</h3>
-                <p>Người dùng</p>
-            </div>
-            <div class="icon"><i class="fa fa-users"></i></div>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-gradient-success shadow">
-            <div class="inner">
-                <h3>@Model.TotalHoSo</h3>
-                <p>Hồ sơ</p>
-            </div>
-            <div class="icon"><i class="fa fa-id-card"></i></div>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-gradient-warning shadow">
-            <div class="inner">
-                <h3>@Model.TotalGPLX</h3>
-                <p>GPLX</p>
-            </div>
-            <div class="icon"><i class="fa fa-car"></i></div>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-gradient-danger shadow">
-            <div class="inner">
-                <h3>@Model.TotalBaiThi</h3>
-                <p>Bài thi</p>
-            </div>
-            <div class="icon"><i class="fa fa-file"></i></div>
-        </div>
-    </div>
-
-</div>
-
-<div class="row mt-4">
-
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header fw-bold">Trạng thái User</div>
-            <div class="card-body">
-                <p class="text-success">Active: @Model.UserActive</p>
-                <p class="text-danger">Inactive: @Model.UserInactive</p>
+        <!-- HERO -->
+        <div class="dashboard-hero mb-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <div class="hero-badge">
+                        <i class="fa fa-chart-line"></i>
+                        <span>Dashboard quản trị</span>
+                    </div>
+                    <h2 class="hero-title mb-2">Tổng quan hệ thống</h2>
+                    <div class="hero-subtitle">
+                        Theo dõi nhanh số lượng người dùng, hồ sơ, giấy phép lái xe, bài thi và các thống kê quan trọng.
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header fw-bold">User mới</div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var u in Model.RecentUsers)
-                        {
-                            <tr>
-                                <td>@u.UserId</td>
-                                <td>@u.Username</td>
-                                <td>
-                                    @if (u.IsActive)
+        <!-- KPI -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <a asp-controller="AdminUser" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-kpi kpi-blue">
+                        <div class="kpi-content">
+                            <div class="kpi-label">Người dùng</div>
+                            <div class="kpi-value">@Model.TotalUser</div>
+                            <div class="kpi-desc">Tổng tài khoản hệ thống</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div class="kpi-glow"></div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <a asp-controller="AdminHoSo" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-kpi kpi-green">
+                        <div class="kpi-content">
+                            <div class="kpi-label">Hồ sơ</div>
+                            <div class="kpi-value">@Model.TotalHoSo</div>
+                            <div class="kpi-desc">Tổng hồ sơ thí sinh</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fa fa-folder-open"></i>
+                        </div>
+                        <div class="kpi-glow"></div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="dashboard-kpi kpi-orange">
+                    <div class="kpi-content">
+                        <div class="kpi-label">GPLX</div>
+                        <div class="kpi-value">@Model.TotalGPLX</div>
+                        <div class="kpi-desc">Tổng giấy phép đã cấp</div>
+                    </div>
+                    <div class="kpi-icon">
+                        <i class="fa fa-id-card"></i>
+                    </div>
+                    <div class="kpi-glow"></div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <a asp-controller="AdminExam" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-kpi kpi-red">
+                        <div class="kpi-content">
+                            <div class="kpi-label">Bài thi</div>
+                            <div class="kpi-value">@Model.TotalBaiThi</div>
+                            <div class="kpi-desc">Tổng bài thi trong hệ thống</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <i class="fa fa-file-alt"></i>
+                        </div>
+                        <div class="kpi-glow"></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="card dashboard-card stat-card border-0 h-100">
+                    <div class="card-body">
+                        <div class="card-headline">
+                            <div>
+                                <div class="section-badge">
+                                    <i class="fa fa-user-check"></i>
+                                    <span>Trạng thái người dùng</span>
+                                </div>
+                                <h5 class="dashboard-section-title mb-1">Phân bố tài khoản</h5>
+                                <div class="dashboard-section-subtitle">Thống kê tài khoản đang hoạt động và ngưng hoạt động</div>
+                            </div>
+                        </div>
+
+                        <div class="status-metrics mt-4">
+                            <div class="status-item active-item">
+                                <div class="status-dot"></div>
+                                <div class="status-info">
+                                    <div class="status-name">Đang hoạt động</div>
+                                    <div class="status-value">@Model.UserActive</div>
+                                </div>
+                            </div>
+
+                            <div class="status-item inactive-item">
+                                <div class="status-dot"></div>
+                                <div class="status-info">
+                                    <div class="status-name">Ngưng hoạt động</div>
+                                    <div class="status-value">@Model.UserInactive</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mini-progress mt-4">
+                            @{
+                                var totalStatus = Model.UserActive + Model.UserInactive;
+                                var activePercent = totalStatus > 0 ? (Model.UserActive * 100 / totalStatus) : 0;
+                                var inactivePercent = totalStatus > 0 ? (Model.UserInactive * 100 / totalStatus) : 0;
+                            }
+                            <div class="progress-track">
+                                <div class="progress-active" style="width:@activePercent%"></div>
+                                <div class="progress-inactive" style="width:@inactivePercent%"></div>
+                            </div>
+                            <div class="progress-note mt-2">
+                                Active: @activePercent% | Inactive: @inactivePercent%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card dashboard-card border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+                            <div>
+                                <div class="section-badge">
+                                    <i class="fa fa-chart-area"></i>
+                                    <span>Biểu đồ chính</span>
+                                </div>
+                                <h5 class="dashboard-section-title mb-1">Hồ sơ và doanh thu theo tháng</h5>
+                                <div class="dashboard-section-subtitle">Theo dõi biến động hồ sơ đăng ký và doanh thu từng tháng</div>
+                            </div>
+                        </div>
+                        <div class="chart-wrap chart-lg">
+                            <canvas id="chartDashboardLine"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MORE CHARTS -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="card dashboard-card border-0 h-100">
+                    <div class="card-body">
+                        <div class="section-badge">
+                            <i class="fa fa-chart-pie"></i>
+                            <span>Hồ sơ</span>
+                        </div>
+                        <h5 class="dashboard-section-title mb-1">Trạng thái hồ sơ</h5>
+                        <div class="dashboard-section-subtitle mb-3">Phân bổ hồ sơ theo trạng thái xử lý</div>
+                        <div class="chart-wrap chart-md">
+                            <canvas id="chartHoSoStatus"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card dashboard-card border-0 h-100">
+                    <div class="card-body">
+                        <div class="section-badge">
+                            <i class="fa fa-chart-column"></i>
+                            <span>GPLX</span>
+                        </div>
+                        <h5 class="dashboard-section-title mb-1">Hồ sơ theo hạng GPLX</h5>
+                        <div class="dashboard-section-subtitle mb-3">So sánh số lượng hồ sơ giữa các hạng bằng lái</div>
+                        <div class="chart-wrap chart-md">
+                            <canvas id="chartHangGplx"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT USERS -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card dashboard-card border-0">
+                    <div class="card-body p-0">
+                        <div class="table-head-wrap">
+                            <div>
+                                <div class="section-badge">
+                                    <i class="fa fa-user-clock"></i>
+                                    <span>Dữ liệu gần đây</span>
+                                </div>
+                                <h5 class="dashboard-section-title mb-1">Người dùng mới</h5>
+                                <div class="dashboard-section-subtitle">Danh sách tài khoản được tạo gần đây trong hệ thống</div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table admin-dashboard-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.RecentUsers != null && Model.RecentUsers.Any())
                                     {
-                                        <span class="badge bg-success">Active</span>
+                                        foreach (var user in Model.RecentUsers)
+                                        {
+                                            <tr>
+                                                <td>@user.UserId</td>
+                                                <td>@user.Username</td>
+                                                <td>
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <span class="status-badge status-active">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="status-badge status-inactive">Inactive</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">Inactive</span>
+                                        <tr>
+                                            <td colspan="3" class="text-center py-4 text-muted">Không có dữ liệu</td>
+                                        </tr>
                                     }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-</div>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .admin-dashboard-page {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            color: #0f172a;
+        }
+
+        .dashboard-hero {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid rgba(15,23,42,0.06);
+            border-radius: 22px;
+            padding: 24px 26px;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .dashboard-hero::before {
+                content: "";
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 180px;
+                height: 180px;
+                background: radial-gradient(circle, rgba(59,130,246,0.14), transparent 70%);
+                pointer-events: none;
+            }
+
+        .hero-badge,
+        .section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(59,130,246,0.10);
+            color: #2563eb;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .hero-badge {
+            margin-bottom: 12px;
+        }
+
+        .hero-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .hero-subtitle,
+        .dashboard-section-subtitle,
+        .progress-note {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .dashboard-kpi {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            padding: 22px 22px;
+            min-height: 150px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            box-shadow: 0 14px 30px rgba(15,23,42,0.10);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+            .dashboard-kpi:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 20px 40px rgba(15,23,42,0.16);
+            }
+
+            .dashboard-kpi::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+                pointer-events: none;
+            }
+
+        .kpi-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            font-weight: 700;
+            opacity: .95;
+            margin-bottom: 12px;
+        }
+
+        .kpi-value {
+            font-size: 34px;
+            line-height: 1;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .kpi-desc {
+            font-size: 13px;
+            opacity: .9;
+        }
+
+        .kpi-icon {
+            position: relative;
+            z-index: 2;
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.14);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            backdrop-filter: blur(8px);
+        }
+
+        .kpi-glow {
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.10);
+            filter: blur(6px);
+        }
+
+        .kpi-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .kpi-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .kpi-orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+        }
+
+        .kpi-red {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .dashboard-card {
+            background: #ffffff;
+            border-radius: 22px;
+            box-shadow: 0 12px 32px rgba(15,23,42,0.06);
+            border: 1px solid rgba(15,23,42,0.06);
+            overflow: hidden;
+        }
+
+            .dashboard-card .card-body {
+                padding: 22px;
+            }
+
+        .dashboard-section-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .chart-lg {
+            height: 360px;
+        }
+
+        .chart-md {
+            height: 320px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .status-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid rgba(148,163,184,0.14);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .active-item .status-dot {
+            background: #22c55e;
+            box-shadow: 0 0 0 5px rgba(34,197,94,0.12);
+        }
+
+        .inactive-item .status-dot {
+            background: #ef4444;
+            box-shadow: 0 0 0 5px rgba(239,68,68,0.12);
+        }
+
+        .status-name {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 700;
+        }
+
+        .status-value {
+            font-size: 24px;
+            color: #0f172a;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 12px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #e2e8f0;
+            display: flex;
+        }
+
+        .progress-active {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .progress-inactive {
+            height: 100%;
+            background: linear-gradient(90deg, #f87171, #ef4444);
+        }
+
+        .table-head-wrap {
+            padding: 22px 22px 12px 22px;
+            border-bottom: 1px solid rgba(148,163,184,0.14);
+            background: linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+        }
+
+        .admin-dashboard-table thead th {
+            font-size: 13px;
+            font-weight: 800;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            white-space: nowrap;
+        }
+
+        .admin-dashboard-table tbody td {
+            padding: 16px 20px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eef2f7;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .admin-dashboard-table tbody tr {
+            transition: background .2s ease;
+        }
+
+            .admin-dashboard-table tbody tr:hover {
+                background: #f8fbff;
+            }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 82px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .status-active {
+            background: rgba(34,197,94,0.12);
+            color: #15803d;
+        }
+
+        .status-inactive {
+            background: rgba(239,68,68,0.12);
+            color: #b91c1c;
+        }
+
+        @@media (max-width: 991.98px) {
+            .dashboard-hero {
+                padding: 18px;
+            }
+
+            .hero-title {
+                font-size: 24px;
+            }
+
+            .dashboard-card .card-body,
+            .table-head-wrap {
+                padding: 18px;
+            }
+
+            .chart-lg,
+            .chart-md {
+                height: 300px;
+            }
+
+            .dashboard-kpi {
+                min-height: 132px;
+            }
+
+            .kpi-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const thangLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Thang));
+        const hoSoTheoThang = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SoHoSoTheoThang));
+        const doanhThuTheoThang = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DoanhThuTheoThang));
+        const hangLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HangLabels));
+        const hangData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HangData));
+
+        // Line chart
+        const lineCtx = document.getElementById('chartDashboardLine');
+        if (lineCtx) {
+        const lineContext = lineCtx.getContext('2d');
+        const gradientHoSo = lineContext.createLinearGradient(0, 0, 0, 350);
+        gradientHoSo.addColorStop(0, 'rgba(59,130,246,0.28)');
+        gradientHoSo.addColorStop(1, 'rgba(59,130,246,0.02)');
+
+        const gradientDoanhThu = lineContext.createLinearGradient(0, 0, 0, 350);
+        gradientDoanhThu.addColorStop(0, 'rgba(16,185,129,0.22)');
+        gradientDoanhThu.addColorStop(1, 'rgba(16,185,129,0.02)');
+
+        new Chart(lineCtx, {
+        type: 'line',
+        data: {
+        labels: thangLabels,
+        datasets: [
+        {
+        label: 'Hồ sơ',
+        data: hoSoTheoThang,
+        yAxisID: 'yHoSo',
+        borderColor: '#2563eb',
+        backgroundColor: gradientHoSo,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
+        },
+        {
+        label: 'Doanh thu',
+        data: doanhThuTheoThang,
+        yAxisID: 'yDoanhThu',
+        borderColor: '#10b981',
+        backgroundColor: gradientDoanhThu,
+        fill: true,
+        tension: 0.38,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
+        }
+        ]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+        mode: 'index',
+        intersect: false
+        },
+        animation: {
+        duration: 1300,
+        easing: 'easeOutQuart'
+        },
+        plugins: {
+        legend: {
+        position: 'top',
+        labels: {
+        usePointStyle: true,
+        boxWidth: 10,
+        font: {
+        size: 13,
+        weight: '600'
+        }
+        }
+        },
+        tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        padding: 12,
+        cornerRadius: 12,
+        callbacks: {
+        label: function (ctx) {
+        if (ctx.dataset.label === 'Doanh thu') {
+        return ctx.dataset.label + ': ' + Number(ctx.parsed.y).toLocaleString('vi-VN') + ' đ';
+        }
+        return ctx.dataset.label + ': ' + ctx.parsed.y;
+        }
+        }
+        }
+        },
+        scales: {
+        x: {
+        grid: {
+        display: false
+        },
+        ticks: {
+        color: '#64748b',
+        font: {
+        weight: '600'
+        }
+        }
+        },
+        yHoSo: {
+        type: 'linear',
+        position: 'left',
+        beginAtZero: true,
+        grid: {
+        color: 'rgba(148,163,184,0.16)'
+        },
+        ticks: {
+        color: '#64748b',
+        stepSize: 1
+        },
+        title: {
+        display: true,
+        text: 'Số hồ sơ'
+        }
+        },
+        yDoanhThu: {
+        type: 'linear',
+        position: 'right',
+        beginAtZero: true,
+        grid: {
+        drawOnChartArea: false
+        },
+        ticks: {
+        color: '#64748b',
+        callback: function (value) {
+        return Number(value).toLocaleString('vi-VN') + ' đ';
+        }
+        },
+        title: {
+        display: true,
+        text: 'Doanh thu'
+        }
+        }
+        }
+        }
+        });
+        }
+
+        // Doughnut chart
+        const pieCtx = document.getElementById('chartHoSoStatus');
+        if (pieCtx) {
+        new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+        labels: ['Đã duyệt', 'Đang xử lý'],
+        datasets: [{
+        data: [@Model.HoSoDaDuyet, @Model.HoSoDangXuLy],
+        backgroundColor: ['#10b981', '#f59e0b'],
+        borderWidth: 0,
+        hoverOffset: 8
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        animation: {
+        animateRotate: true,
+        duration: 1200
+        },
+        plugins: {
+        legend: {
+        position: 'bottom',
+        labels: {
+        usePointStyle: true,
+        boxWidth: 10,
+        padding: 18,
+        font: {
+        size: 13,
+        weight: '600'
+        }
+        }
+        }
+        }
+        }
+        });
+        }
+
+        // Bar chart
+        const barCtx = document.getElementById('chartHangGplx');
+        if (barCtx) {
+        new Chart(barCtx, {
+        type: 'bar',
+        data: {
+        labels: hangLabels,
+        datasets: [{
+        label: 'Số hồ sơ',
+        data: hangData,
+        backgroundColor: [
+        '#3b82f6',
+        '#6366f1',
+        '#8b5cf6',
+        '#10b981',
+        '#f59e0b',
+        '#ef4444',
+        '#14b8a6'
+        ],
+        borderRadius: 12,
+        borderSkipped: false,
+        maxBarThickness: 48
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+        duration: 1200,
+        easing: 'easeOutBack'
+        },
+        plugins: {
+        legend: {
+        display: false
+        },
+        tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        padding: 12,
+        cornerRadius: 12
+        }
+        },
+        scales: {
+        x: {
+        grid: {
+        display: false
+        },
+        ticks: {
+        color: '#64748b',
+        font: {
+        weight: '600'
+        }
+        }
+        },
+        y: {
+        beginAtZero: true,
+        grid: {
+        color: 'rgba(148,163,184,0.16)'
+        },
+        ticks: {
+        stepSize: 1,
+        color: '#64748b'
+        }
+        }
+        }
+        }
+        });
+        }
+    </script>
+}
