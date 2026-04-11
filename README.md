@@ -328,7 +328,33 @@ Contributions are welcome.
 
 This project is licensed under the **MIT License**.
 
----
+--- 
+
+## 👥 The Dev Team
+<div align="center">
+	<table>
+		<tr>
+			<td align="center" valign="top">
+					<img src="https://github.com/haihttt974.png?s=150" loading="lazy" width="150" height="150">
+	        <br>
+	        <a href="https://github.com/haihttt974">Duy Hải</a>
+	        <p>
+	          <a href="https://github.com/haihttt974/driving-school-management/commits/master/?author=haihttt974" title="Developer">💻</a>
+	        </p>
+			</td>
+			<td align="center" valign="top">
+					<img src="https://github.com/ngoctrinh564.png?s=150" loading="lazy" width="150" height="150">
+	        <br>
+	        <a href="https://github.com/ngoctrinh564">Ngọc Trinh</a>
+	        <p>
+	          <a href="https://github.com/haihttt974/driving-school-management/commits/master/?author=ngoctrinh564" title="Developer">💻</a>
+	        </p>
+			</td>
+		</tr>
+	</table>
+</div>
+
+--
 
 ## 📬 Contact
 
