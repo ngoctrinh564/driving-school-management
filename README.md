@@ -174,6 +174,13 @@ This project reads configuration from `appsettings.json` and environment variabl
     "SenderEmail": "noreply@example.com",
     "Username": "smtp-user",
     "Password": "smtp-password"
+  }"VnPay": {
+    "TmnCode": "your-tmn-code",
+    "HashSecret": "your-hash-secret",
+    "BaseUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+    "Locale": "vn",
+    "CurrCode": "VND",
+    "OrderType": "other"
   },
   "PayPal": {
     "Mode": "sandbox",
@@ -204,6 +211,11 @@ This project reads configuration from `appsettings.json` and environment variabl
 ![Screenshot](./assets/screenshot-1.png)
 ![Screenshot](./assets/screenshot-2.png)
 ![Screenshot](./assets/screenshot-3.png)
+![Screenshot](./assets/screenshot-4.png)
+![Screenshot](./assets/screenshot-5.png)
+![Screenshot](./assets/screenshot-6.png)
+![Screenshot](./assets/screenshot-7.png)
+![Screenshot](./assets/screenshot-8.png)
 
 ---
 
