@@ -208,14 +208,80 @@ This project reads configuration from `appsettings.json` and environment variabl
 
 ## 🖼️ Screenshots
 
-![Screenshot](./assets/screenshot-1.png)
-![Screenshot](./assets/screenshot-2.png)
-![Screenshot](./assets/screenshot-3.png)
-![Screenshot](./assets/screenshot-4.png)
-![Screenshot](./assets/screenshot-5.png)
-![Screenshot](./assets/screenshot-6.png)
-![Screenshot](./assets/screenshot-7.png)
-![Screenshot](./assets/screenshot-8.png)
+## 🖼️ Screenshots
+
+<p align="center">
+  <sub>Selected product views from the Driving School Management System</sub>
+</p>
+
+<br/>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-1.png" alt="Admin Dashboard" width="100%" />
+      <br/><br/>
+      <b>Admin Dashboard</b>
+      <br/>
+      <sub>System overview with KPIs, charts, and operational summary.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-2.png" alt="Course Management" width="100%" />
+      <br/><br/>
+      <b>Course Management</b>
+      <br/>
+      <sub>Manage courses, license classes, schedules, and status.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-3.png" alt="Student Profiles" width="100%" />
+      <br/><br/>
+      <b>Student Profiles</b>
+      <br/>
+      <sub>Track dossier information, registration date, and approval status.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-4.png" alt="Reports and Analytics" width="100%" />
+      <br/><br/>
+      <b>Reports & Analytics</b>
+      <br/>
+      <sub>Statistical reports with filters and export-ready workflow.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-5.png" alt="Learning and Simulation" width="100%" />
+      <br/><br/>
+      <b>Learning & Simulation</b>
+      <br/>
+      <sub>Theory practice, mock exams, and simulation training modules.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-6.png" alt="Payment History" width="100%" />
+      <br/><br/>
+      <b>Payment History</b>
+      <br/>
+      <sub>View transactions, payment methods, invoice status, and downloads.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-7.png" alt="Invoice PDF" width="100%" />
+      <br/><br/>
+      <b>Invoice PDF</b>
+      <br/>
+      <sub>Automatically generated invoice document for completed payments.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./assets/screenshot-8.png" alt="AI Chatbot" width="100%" />
+      <br/><br/>
+      <b>AI Chatbot</b>
+      <br/>
+      <sub>Integrated assistant for driving-license guidance and user support.</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
