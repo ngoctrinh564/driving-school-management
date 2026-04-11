@@ -12,11 +12,11 @@ A modern ASP.NET Core MVC platform for managing driving-school operations: stude
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
+- [Usage](#%EF%B8%8F-usage)
+- [Project Structure](#%EF%B8%8F-project-structure)
 - [API / Configuration](#-api--configuration)
-- [Screenshots](#-screenshots)
-- [Roadmap](#-roadmap)
+- [Screenshots](#%EF%B8%8F-screenshots)
+- [Roadmap](#%EF%B8%8F-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Contact](#-contact)
@@ -73,7 +73,7 @@ It is designed with a layered architecture (Controllers → Services → Data/DT
 ### 1) Clone repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/haihttt974/driving-school-management.git
 cd driving-school-management
 ```
 
@@ -334,6 +334,6 @@ This project is licensed under the **MIT License**.
 
 For technical discussions or collaboration:
 
-- Repository owner/maintainer: `@your-github-username`
-- Email: `your-email@example.com`
+- Repository owner/maintainer: [haihttt974](https://github.com/haihttt974)
+- Email: `leduyhai090704@gmail.com`
 - Issues: open a ticket in this repository
