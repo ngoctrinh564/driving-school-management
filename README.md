@@ -354,7 +354,7 @@ This project is licensed under the **MIT License**.
 	</table>
 </div>
 
---
+---
 
 ## 📬 Contact
 
