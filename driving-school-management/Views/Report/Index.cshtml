@@ -1,138 +1,439 @@
 ﻿@model driving_school_management.ViewModels.DashboardReportVm
 @{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     ViewData["Title"] = "Báo cáo thống kê";
+
     var fromDateValue = Model.FromDate?.ToString("yyyy-MM-dd");
     var toDateValue = Model.ToDate?.ToString("yyyy-MM-dd");
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    // var role = Context.Session.GetString("Role");
-
-    // if (!string.IsNullOrEmpty(role) && role.ToLower() == "admin")
-    // {
-    //     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
-    // }
-    // else
-    // {
-    //     Layout = "~/Views/Shared/_Layout.cshtml";
-    // }
 }
 
-<div class="container-fluid py-4">
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4">
+<style>
+    .report-page {
+        background: #f4f7fb;
+        min-height: calc(100vh - 72px);
+        padding: 20px;
+    }
 
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <div>
-                    <h2 class="fw-bold mb-1">Báo cáo thống kê</h2>
-                    <p class="text-muted mb-0">Driving School Management</p>
-                </div>
+    .report-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
 
-                <form method="get" asp-action="Index" class="row g-2 align-items-end">
-                    <div class="col-auto">
-                        <label class="form-label">Từ ngày</label>
-                        <input type="date" name="fromDate" value="@fromDateValue" class="form-control" />
-                    </div>
-                    <div class="col-auto">
-                        <label class="form-label">Đến ngày</label>
-                        <input type="date" name="toDate" value="@toDateValue" class="form-control" />
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">Lọc</button>
+    .report-hero {
+        background: linear-gradient(135deg, rgba(37,99,235,0.10), rgba(124,58,237,0.08));
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 20px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 24px;
+    }
+
+    .report-title {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+
+    .report-subtitle {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .report-toolbar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: end;
+        margin-top: 20px;
+    }
+
+    .report-filter-card,
+    .report-content-card,
+    .report-metric-card {
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+    }
+
+    .report-filter-card {
+        padding: 18px;
+    }
+
+    .report-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+        gap: 14px;
+        align-items: end;
+    }
+
+    .report-field label {
+        display: block;
+        margin-bottom: 8px;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .report-input {
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(15,23,42,0.10);
+        background: #fff;
+        color: #0f172a;
+        padding: 0 14px;
+        width: 100%;
+        transition: all .2s ease;
+    }
+
+    .report-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+    }
+
+    .report-action-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .report-btn {
+        height: 44px;
+        border: none;
+        border-radius: 14px;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all .2s ease;
+        cursor: pointer;
+    }
+
+    .report-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .report-btn-primary {
+        background: #2563eb;
+        color: #fff;
+    }
+
+    .report-btn-primary:hover {
+        background: #1d4ed8;
+        color: #fff;
+    }
+
+    .report-btn-light {
+        background: #fff;
+        color: #0f172a;
+        border: 1px solid rgba(15,23,42,0.10);
+    }
+
+    .report-btn-light:hover {
+        color: #0f172a;
+        background: #f8fafc;
+    }
+
+    .report-btn-danger {
+        background: #dc2626;
+        color: #fff;
+    }
+
+    .report-btn-danger:hover {
+        background: #b91c1c;
+        color: #fff;
+    }
+
+    .report-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .report-metric-card {
+        padding: 18px 18px 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .report-metric-card::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        opacity: .9;
+    }
+
+    .report-metric-label {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .report-metric-value {
+        color: #0f172a;
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .report-metric-note {
+        margin-top: 10px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .report-content-card {
+        padding: 18px;
+    }
+
+    .report-tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .report-tab-btn {
+        height: 42px;
+        padding: 0 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(15,23,42,0.08);
+        background: #fff;
+        color: #475569;
+        font-weight: 700;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s ease;
+        cursor: pointer;
+    }
+
+    .report-tab-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37,99,235,0.18);
+        color: #2563eb;
+    }
+
+    .report-tab-btn.active {
+        background: #2563eb;
+        color: #fff;
+        border-color: #2563eb;
+        box-shadow: 0 8px 18px rgba(37,99,235,0.18);
+    }
+
+    .report-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .report-section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .report-section-subtitle {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    @@media (max-width: 1200px) {
+        .report-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 992px) {
+        .report-toolbar {
+            grid-template-columns: 1fr;
+        }
+
+        .report-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .report-action-group {
+            justify-content: flex-start;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .report-page {
+            padding: 14px;
+        }
+
+        .report-hero,
+        .report-filter-card,
+        .report-content-card,
+        .report-metric-card {
+            border-radius: 16px;
+        }
+
+        .report-title {
+            font-size: 26px;
+        }
+
+        .report-metrics {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="report-page">
+    <div class="report-shell">
+        <div class="report-hero">
+            <h1 class="report-title">Báo cáo thống kê</h1>
+            <p class="report-subtitle">Theo dõi doanh thu, học viên, khóa học và kỳ thi trong hệ thống.</p>
+
+            <div class="report-toolbar">
+                <form method="get" asp-action="Index" class="report-filter-card">
+                    <div class="report-filter-grid">
+                        <div class="report-field">
+                            <label for="fromDate">Từ ngày</label>
+                            <input id="fromDate" type="date" name="fromDate" value="@fromDateValue" class="report-input" />
+                        </div>
+
+                        <div class="report-field">
+                            <label for="toDate">Đến ngày</label>
+                            <input id="toDate" type="date" name="toDate" value="@toDateValue" class="report-input" />
+                        </div>
+
+                        <div class="report-action-group">
+                            <button type="submit" class="report-btn report-btn-primary">
+                                <i class="fa-solid fa-filter"></i>
+                                <span>Lọc dữ liệu</span>
+                            </button>
+
+                            <a href="/Report/Index" class="report-btn report-btn-light">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Đặt lại</span>
+                            </a>
+                        </div>
                     </div>
                 </form>
-            </div>
 
-            <!-- SUMMARY -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body">
-                            <div class="text-muted small">Tổng doanh thu</div>
-                            <div class="fw-bold fs-5">@Model.TongDoanhThu.ToString("N0")</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body">
-                            <div class="text-muted small">Người mới</div>
-                            <div class="fw-bold fs-5">@Model.SoNguoiMoi</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body">
-                            <div class="text-muted small">Khóa học</div>
-                            <div class="fw-bold fs-5">@Model.SoKhoaHocMoi</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body">
-                            <div class="text-muted small">Kỳ thi</div>
-                            <div class="fw-bold fs-5">@Model.SoKyThiMoi</div>
-                        </div>
-                    </div>
+                <div class="report-action-group">
+                    <a id="btnExportPdf"
+                           class="report-btn report-btn-danger"
+                           href="/Report/ExportPdf?fromDate=@fromDateValue&toDate=@toDateValue&tab=overview">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>Xuất PDF</span>
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <!-- TAB -->
-            <ul class="nav nav-pills mb-3" id="reportTabs">
-                <li class="nav-item">
-                    <button class="nav-link active" data-tab="overview">Tổng quan</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-tab="users">Người dùng</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-tab="courses">Khóa học</button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-tab="exams">Kỳ thi</button>
-                </li>
-            </ul>
-
-            <!-- EXPORT -->
-            <div class="mb-3 text-end">
-                <a id="btnExportPdf" class="btn btn-danger"
-                       href="/Report/ExportPdf?tab=overview">
-                    Xuất PDF
-                </a>
+        <div class="report-metrics">
+            <div class="report-metric-card">
+                <div class="report-metric-label">Tổng doanh thu</div>
+                <div class="report-metric-value">@Model.TongDoanhThu.ToString("N0")</div>
+                <div class="report-metric-note">Tổng giá trị thanh toán trong khoảng thời gian lọc</div>
             </div>
 
-            <!-- CONTENT -->
+            <div class="report-metric-card">
+                <div class="report-metric-label">Người mới</div>
+                <div class="report-metric-value">@Model.SoNguoiMoi.ToString("N0")</div>
+                <div class="report-metric-note">Số học viên đăng ký hồ sơ mới</div>
+            </div>
+
+            <div class="report-metric-card">
+                <div class="report-metric-label">Khóa học mới</div>
+                <div class="report-metric-value">@Model.SoKhoaHocMoi.ToString("N0")</div>
+                <div class="report-metric-note">Số khóa học được mở trong kỳ</div>
+            </div>
+
+            <div class="report-metric-card">
+                <div class="report-metric-label">Kỳ thi mới</div>
+                <div class="report-metric-value">@Model.SoKyThiMoi.ToString("N0")</div>
+                <div class="report-metric-note">Số kỳ thi được tổ chức trong kỳ</div>
+            </div>
+        </div>
+
+        <div class="report-content-card">
+            <div class="report-section-head">
+                <div>
+                    <h2 class="report-section-title">Chi tiết thống kê</h2>
+                    <div class="report-section-subtitle">Dữ liệu được đồng bộ từ Oracle theo từng nhóm báo cáo</div>
+                </div>
+            </div>
+
+            <div class="report-tabs" id="reportTabs">
+                <button type="button" class="report-tab-btn active" data-tab="overview">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Tổng quan</span>
+                </button>
+
+                <button type="button" class="report-tab-btn" data-tab="users">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Người dùng</span>
+                </button>
+
+                <button type="button" class="report-tab-btn" data-tab="courses">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Khóa học</span>
+                </button>
+
+                <button type="button" class="report-tab-btn" data-tab="exams">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Kỳ thi</span>
+                </button>
+            </div>
+
             <div id="reportContent">
                 @await Html.PartialAsync("~/Views/Report/_TabOverview.cshtml", Model)
             </div>
-
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        const tabs = document.querySelectorAll('#reportTabs button');
-        const content = document.getElementById('reportContent');
-        const exportBtn = document.getElementById('btnExportPdf');
+        // exportBtn.href = `/Report/ExportPdf?fromDate=${fromDate || ''}&toDate=${toDate || ''}&tab=${tabName}`;
+        (() => {
+            const tabs = document.querySelectorAll('#reportTabs .report-tab-btn');
+            const content = document.getElementById('reportContent');
+            const exportBtn = document.getElementById('btnExportPdf');
 
-        tabs.forEach(btn => {
-            btn.onclick = async () => {
+            const fromDate = '@fromDateValue';
+            const toDate = '@toDateValue';
+
+            async function loadTab(tabName) {
                 tabs.forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
+                document.querySelector(`#reportTabs .report-tab-btn[data-tab="${tabName}"]`)?.classList.add('active');
 
-                const tab = btn.getAttribute('data-tab');
-
-                const res = await fetch(`/Report/Tab/${tab}`);
-                const html = await res.text();
+                const url = `/Report/Tab/${tabName}?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
+                const response = await fetch(url);
+                const html = await response.text();
 
                 content.innerHTML = html;
-
-                exportBtn.href = `/Report/ExportPdf?tab=${tab}`;
+                exportBtn.href = `/Report/ExportPdf?fromDate=${fromDate || ''}&toDate=${toDate || ''}&tab=${tabName}`;
             }
-        });
+
+            tabs.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const tab = this.getAttribute('data-tab');
+                    loadTab(tab);
+                });
+            });
+        })();
     </script>
 }

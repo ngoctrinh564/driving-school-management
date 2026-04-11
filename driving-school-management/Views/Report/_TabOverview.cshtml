@@ -1,28 +1,153 @@
 ﻿@model driving_school_management.ViewModels.DashboardReportVm
 
-<h4>Doanh thu theo tháng</h4>
+<style>
+    .report-block {
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 18px;
+    }
 
-@if (!Model.RevenueByMonth.Any())
-{
-    <p>Không có dữ liệu</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Tháng</th>
-                <th class="text-end">Doanh thu</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.RevenueByMonth)
-            {
-                <tr>
-                    <td>@item.Label</td>
-                    <td class="text-end">@item.Value.ToString("N0")</td>
-                </tr>
+        .report-block + .report-block {
+            margin-top: 16px;
+        }
+
+    .report-block-title {
+        margin: 0 0 14px;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .report-table thead th {
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.08);
+        }
+
+            .report-table thead th:first-child {
+                border-top-left-radius: 14px;
             }
-        </tbody>
-    </table>
-}
+
+            .report-table thead th:last-child {
+                border-top-right-radius: 14px;
+            }
+
+        .report-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.06);
+            color: #0f172a;
+            font-weight: 500;
+            background: #fff;
+        }
+
+        .report-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+    .report-empty {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed rgba(15,23,42,0.12);
+        border-radius: 14px;
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+    }
+
+    .report-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .report-mini-card {
+        background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.05));
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .report-mini-card-label {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .report-mini-card-value {
+        color: #0f172a;
+        font-size: 24px;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 992px) {
+        .report-mini-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="report-mini-grid">
+    <div class="report-mini-card">
+        <div class="report-mini-card-label">Số tháng có doanh thu</div>
+        <div class="report-mini-card-value">@Model.SoThangCoDoanhThu.ToString("N0")</div>
+    </div>
+
+    <div class="report-mini-card">
+        <div class="report-mini-card-label">Doanh thu trung bình tháng</div>
+        <div class="report-mini-card-value">@Model.DoanhThuTrungBinhThang.ToString("N0")</div>
+    </div>
+
+    <div class="report-mini-card">
+        <div class="report-mini-card-label">Số hạng GPLX</div>
+        <div class="report-mini-card-value">@Model.SoHangGplx.ToString("N0")</div>
+    </div>
+</div>
+
+<div class="report-block">
+    <h3 class="report-block-title">Doanh thu theo tháng</h3>
+
+    @if (Model.RevenueByMonth == null || !Model.RevenueByMonth.Any())
+    {
+        <div class="report-empty">Không có dữ liệu</div>
+    }
+    else
+    {
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Tháng</th>
+                        <th class="text-end">Doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RevenueByMonth)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td class="text-end">@item.Value.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

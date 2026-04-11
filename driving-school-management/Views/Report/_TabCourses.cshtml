@@ -1,30 +1,168 @@
 ﻿@model driving_school_management.ViewModels.DashboardReportVm
 
-<h4>Khóa học</h4>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Tháng</th>
-            <th class="text-end">Số khóa</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.NewCoursesByMonth)
-        {
-            <tr>
-                <td>@item.Label</td>
-                <td class="text-end">@item.Value</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<h5>Phân bố theo hạng</h5>
-
-<ul>
-    @foreach (var item in Model.CoursesByHang)
-    {
-        <li>@item.Label - @item.Value</li>
+<style>
+    .report-grid-2 {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 16px;
     }
-</ul>
+
+    .report-block {
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 18px;
+    }
+
+    .report-block-title {
+        margin: 0 0 14px;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .report-table thead th {
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.08);
+        }
+
+            .report-table thead th:first-child {
+                border-top-left-radius: 14px;
+            }
+
+            .report-table thead th:last-child {
+                border-top-right-radius: 14px;
+            }
+
+        .report-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.06);
+            color: #0f172a;
+            font-weight: 500;
+            background: #fff;
+        }
+
+        .report-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+    .report-empty {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed rgba(15,23,42,0.12);
+        border-radius: 14px;
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+    }
+
+    .report-pills {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .report-pill {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(15,23,42,0.08);
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .report-pill-label {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .report-pill-value {
+        min-width: 68px;
+        text-align: center;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 992px) {
+        .report-grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="report-grid-2">
+    <div class="report-block">
+        <h3 class="report-block-title">Khóa học mới theo tháng</h3>
+
+        @if (Model.NewCoursesByMonth == null || !Model.NewCoursesByMonth.Any())
+        {
+            <div class="report-empty">Không có dữ liệu</div>
+        }
+        else
+        {
+            <div class="report-table-wrap">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Tháng</th>
+                            <th class="text-end">Số khóa học</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.NewCoursesByMonth)
+                        {
+                            <tr>
+                                <td>@item.Label</td>
+                                <td class="text-end">@item.Value.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="report-block">
+        <h3 class="report-block-title">Phân bố khóa học theo hạng</h3>
+
+        @if (Model.CoursesByHang == null || !Model.CoursesByHang.Any())
+        {
+            <div class="report-empty">Không có dữ liệu</div>
+        }
+        else
+        {
+            <div class="report-pills">
+                @foreach (var item in Model.CoursesByHang)
+                {
+                    <div class="report-pill">
+                        <div class="report-pill-label">@item.Label</div>
+                        <div class="report-pill-value">@item.Value.ToString("N0")</div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

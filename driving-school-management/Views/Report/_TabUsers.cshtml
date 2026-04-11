@@ -1,28 +1,100 @@
 ﻿@model driving_school_management.ViewModels.DashboardReportVm
 
-<h4>Người dùng mới</h4>
+<style>
+    .report-block {
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        padding: 18px;
+    }
 
-@if (!Model.NewUsersByMonth.Any())
-{
-    <p>Không có dữ liệu</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Tháng</th>
-                <th class="text-end">Số lượng</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.NewUsersByMonth)
-            {
-                <tr>
-                    <td>@item.Label</td>
-                    <td class="text-end">@item.Value</td>
-                </tr>
+    .report-block-title {
+        margin: 0 0 14px;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .report-table thead th {
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.08);
+        }
+
+            .report-table thead th:first-child {
+                border-top-left-radius: 14px;
             }
-        </tbody>
-    </table>
-}
+
+            .report-table thead th:last-child {
+                border-top-right-radius: 14px;
+            }
+
+        .report-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(15,23,42,0.06);
+            color: #0f172a;
+            font-weight: 500;
+            background: #fff;
+        }
+
+        .report-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+
+    .report-empty {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed rgba(15,23,42,0.12);
+        border-radius: 14px;
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+    }
+</style>
+
+<div class="report-block">
+    <h3 class="report-block-title">Người dùng mới theo tháng</h3>
+
+    @if (Model.NewUsersByMonth == null || !Model.NewUsersByMonth.Any())
+    {
+        <div class="report-empty">Không có dữ liệu</div>
+    }
+    else
+    {
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Tháng</th>
+                        <th class="text-end">Số lượng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.NewUsersByMonth)
+                    {
+                        <tr>
+                            <td>@item.Label</td>
+                            <td class="text-end">@item.Value.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
