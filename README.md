@@ -108,17 +108,17 @@ A modern **ASP.NET Core MVC** platform designed to digitalize driving-school ope
       <td align="center" valign="top" width="250">
         <img src="https://github.com/ngoctrinh564.png?s=150" width="150" height="150" style="border-radius:50%; border: 3px solid #5C2D91;">
         <br>
-        <a href="https://github.com/ngoctrinh564"><b>Ngọc Trinh</b></a>
+        <a href="https://github.com/ngoctrinh564"><b>Nguyễn Ngọc Trinh</b></a>
         <p><b>Developer</b> 💻</p>
-        <p>Multimedia Communications & IT<br/>Hoa Sen University</p>
+        <p>Multimedia Communications & IT<br/>HUTECH UNIVERSITY</p>
       </td>
       <td width="80"></td> 
       <td align="center" valign="top" width="250">
         <img src="https://github.com/haihttt974.png?s=150" width="150" height="150" style="border-radius:50%; border: 3px solid #512BD4;">
         <br>
-        <a href="https://github.com/haihttt974"><b>Duy Hải</b></a>
+        <a href="https://github.com/haihttt974"><b>Lê Duy Hải</b></a>
         <p><b>Developer</b> 💻</p>
-        <p>Multimedia Communications & IT<br/>Hoa Sen University</p>
+        <p>Multimedia Communications & IT<br/>HUTECH UNIVERSITY</p>
       </td>
     </tr>
   </table>
